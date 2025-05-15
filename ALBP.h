@@ -20,7 +20,6 @@ struct ALBP{
     std::vector<int> t_close_mat;
     std::vector<PrecedenceRelation> precedence_relations; //Precedence relations
     std::vector<int> task_assignment; //Task assignment
-
     void print(bool print_prec_mat);
     bool loadFromFile(const std::string& filename);
 };

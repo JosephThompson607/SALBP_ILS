@@ -8,6 +8,7 @@
 struct ALBPSolution{
     std::vector<int> task_assignment; //Solution
     std::vector<std::vector<int>> station_assignments; //Solution
+    std::vector<int> ranking;
     int n_stations; 
     int n_tasks; //Number of tasks
     int n_violations; //Number of violations
@@ -23,6 +24,7 @@ struct ALBPSolution{
 int calc_lb_1(const std::vector<int>& task_time, int C);
 
 ALBPSolution generate_approx_solution(ALBP&albp);
-ALBPSolution iterated_local_search(ALBP& albp, int max_iter, float op_probs);
-
+void shallow_task_assignment( const ALBP&albp,  ALBPSolution& solution);
+ALBPSolution iterated_local_search(const ALBP& albp, int max_iter, float op_probs);
+ALBPSolution generate_approx_solution(const ALBP& albp);
 #endif // ILS_H
