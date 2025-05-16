@@ -1,4 +1,5 @@
 #include "ALBP.h"
+#include "albp_solution.h"
 #include "ils.h"
 #include <iostream>
 #include <filesystem>
