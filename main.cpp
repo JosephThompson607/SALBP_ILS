@@ -13,12 +13,14 @@ int main() {
     // for (const auto& entry : fs::directory_iterator(path)) {
     //     std::cout << entry.path() << std::endl;
     // }
-    if (!problem.loadFromFile("../test_12_task.alb")) {
+    if (!problem.loadFromFile("../test.alb")) {
         return 1;
     }
     std::cout << "Loaded " << problem.N << " tasks, cycle time " << problem.C << "\n";
     
     //runs the local search algorithm
-    iterated_local_search(problem, 1, 1.0);
+    ALBPSolution result =iterated_local_search(problem, 100, 0.5);
+    std::cout << "Here is the result" << std::endl;
+    result.print();
     return 0;
 }

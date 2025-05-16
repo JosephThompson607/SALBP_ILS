@@ -13,13 +13,14 @@
 #include <random>
 #include <ctime>
 #include <vector>
+#include <stdexcept>  // For std::runtime_error
 
-void ALBPSolution::print() {
-    std::cout << "ALBP Solution: " << std::endl;
+void ALBPSolution::print() const {
+    std::cout << "ALBP Solution with " << n_stations << " stations: " <<std::endl;
     for (int i = 0; i < n_stations; ++i) {
         std::cout << "Station " << i + 1 << ": ";
-        for (int j = 0; j < station_assignments[i].size(); ++j) {
-            std::cout << station_assignments[i][j] + 1 << " ";
+        for (int j : station_assignments[i]) {
+            std::cout << j + 1 << " ";
         }
         std::cout << std::endl;
     }
@@ -29,10 +30,8 @@ void ALBPSolution::task_to_station(){
     station_assignments.clear();
     station_assignments.resize(n_stations);
     for (int i = 0; i < task_assignment.size(); ++i) {
-        int station = task_assignment[i];
-        if (station >= 0 && station < n_stations) {
-            station_assignments[station].push_back(i);
-        }
+
+        station_assignments[task_assignment[i]].push_back(i);
     }
 }
 void ALBPSolution::station_to_task(){
@@ -117,7 +116,25 @@ void float_shift_op(std::vector<int>& ranking, const ALBP& albp) {
 }
 
 
+void inversion_op(std::vector<int>& ranking, const ALBP& albp) {
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<> dist(0, albp.N - 1);
 
+    // Pick two distinct random indices
+    int from = dist(gen);
+    int to = dist(gen);
+    while (from == to) {
+        to = dist(gen);
+    }
+    if (from > to) {
+        int holder = from;
+        from = to;
+        to = holder;
+    }
+    std::reverse(ranking.begin()+from, ranking.begin()+to+1);
+
+}
 void insertion_op(std::vector<int>& ranking, const ALBP& albp, const int range_start =0, int range_end = 0) {
     /*changes the ranking of an ALBPSolution by reinserting it into list*/
     if (range_end==0) {
@@ -136,9 +153,54 @@ void insertion_op(std::vector<int>& ranking, const ALBP& albp, const int range_s
     insertion(ranking, from, to);
 }
 
-void deep_task_assignment(ALBPSolution& solution, const ALBP& albp) {
-    std::vector<int> task_assignment(albp.N);
+void task_oriented_assignment(ALBPSolution& solution, const ALBP& albp) {
+    std::vector<int> task_assignment(albp.N, -1);
     std::vector<int> ranking = solution.ranking;
+    //std::vector<int> station_time(albp.N, 0);//Using N upper bound for station times
+    std::vector station_cap(albp.N, albp.C);
+    int task_index = 0;
+    int n_stations = 0;
+    while (!ranking.empty()) {
+        const int current_task = ranking[task_index];
+        bool can_assign = true;
+        int left_station = 0;
+        for (const int pred : albp.dir_pred[current_task]) {//Check if predecessors are all assigned
+            if (task_assignment[pred] == -1) {
+                can_assign = false;
+                break;
+            }
+            if (task_assignment[pred] > left_station) {
+                left_station = task_assignment[pred];
+            }
+        }
+        if (can_assign) { //assign task to first available station
+            for (int i = left_station; i < albp.N; ++i) {
+                if (station_cap[i] - albp.task_time[current_task] >=0) {
+                    task_assignment[current_task] = i;
+                    station_cap[i] -= albp.task_time[current_task];
+                    ranking.erase(ranking.begin()+task_index); //Potentially slow, will see
+                    if (i + 1> n_stations) {
+                        n_stations = i+1;
+                    }
+                    break;
+                }
+            }
+        task_index = 0; //go back to check first task
+        }
+        else {
+            task_index += 1;
+        }
+
+    }
+    solution.task_assignment = task_assignment;
+    solution.task_to_station();
+    solution.n_violations = count_violations(albp, solution.task_assignment);
+    solution.n_tasks = albp.N;
+    solution.n_stations = n_stations;
+    if (solution.n_violations > 0) {
+        throw std::runtime_error("Deep task assignment failed to create feasible solution");
+    }
+
 
 }
 void local_search(ALBPSolution& solution,const ALBP& albp,const float op_probs , const int n_tries=10) {
@@ -157,10 +219,6 @@ void local_search(ALBPSolution& solution,const ALBP& albp,const float op_probs ,
             float_shift_op(new_solution.ranking, albp);
         }
         else {
-            std::cout << std::endl << " Before swap " <<std::endl;
-            for (int num : new_solution.ranking) {
-                std::cout << num << " " ;
-            }
             if (op_probs < distribution(generator)) {
                 exchange_op(new_solution.ranking, albp);
 
@@ -168,14 +226,10 @@ void local_search(ALBPSolution& solution,const ALBP& albp,const float op_probs ,
             else {
                 insertion_op(new_solution.ranking, albp);
             }
-            std::cout <<std::endl << " after swap " <<std::endl;
-            for (int num : new_solution.ranking) {
-                std::cout << num << " " ;
-            }
         }
         shallow_task_assignment(albp, new_solution);
         if (new_solution.n_violations < solution.n_violations && new_solution.n_stations <= solution.n_stations) {
-            deep_task_assignment(new_solution, albp);
+            task_oriented_assignment(new_solution, albp);
             solution = new_solution;
             ni = 0;
         }
@@ -278,7 +332,7 @@ void shallow_task_assignment( const ALBP&albp,  ALBPSolution& solution) {
             }
         }
         solution.n_stations = max_station + 1;
-        //caculates the number of violations
+        //calculates the number of violations
         solution.n_violations = count_violations(albp, solution.task_assignment);
             
     }
@@ -290,15 +344,15 @@ std::vector<std::vector<int> > generate_rankings(const ALBP &albp, const int n_r
 
     // GEnerate PW ranking
 
-    // std::vector<int> pw_rank = pw_ranking( albp);
-    // rankings.push_back(pw_rank);
-    // // Generate more rankings
-    // for (int i = 0; i < n_random; ++i) {
-    //     std::vector<int> ranking = random_ranking( albp);
-    //     rankings.push_back(ranking);
-    // }
-    // std::vector<int> task_number_rank = task_number_ranking(albp);
-    // rankings.push_back(task_number_rank);
+    std::vector<int> pw_rank = pw_ranking( albp);
+    rankings.push_back(pw_rank);
+    // Generate more rankings
+    for (int i = 0; i < n_random; ++i) {
+        std::vector<int> ranking = random_ranking( albp);
+        rankings.push_back(ranking);
+    }
+    std::vector<int> task_number_rank = task_number_ranking(albp);
+    rankings.push_back(task_number_rank);
     std::vector<int> inverse_task_number_rank = inverse_task_number_ranking(albp);
     rankings.push_back(inverse_task_number_rank);
     return rankings;
@@ -343,25 +397,35 @@ ALBPSolution generate_approx_solution(const ALBP&albp)
 
 ALBPSolution iterated_local_search(const ALBP &albp, const int max_iter, float op_probs) {
 
-    int iter = 0;
-    int lb_1 = calc_lb_1(albp.task_time, albp.C);
-    // Initialize an initial (poetentially infeasible) solution
+
+    // Initialize an initial (potentially infeasible) solution
     ALBPSolution best_solution = generate_approx_solution(albp);
     //prints the best solution
     std::cout << "Best task assignment: ";
     for (int i = 0; i < best_solution.task_assignment.size(); ++i) {
         std::cout << best_solution.task_assignment[i] + 1 << " ";
     }
-    std::cout << std::endl;
-    std::cout << "Best solution found: " << best_solution.n_stations << " stations" << std::endl;
-    std::cout << "Best solution found: " << best_solution.n_violations << " violations" << std::endl;
+    ALBPSolution candidate = best_solution;
     //Improves the solution with local search
-    local_search(best_solution, albp, op_probs);
+    int iter = 0;
+    const int lb_1 = calc_lb_1(albp.task_time, albp.C);
+    local_search(candidate, albp, op_probs);
     //improves solution until iteration are reached or lower bound is reached
-    while (iter < max_iter && best_solution.n_stations > lb_1) {
+    while (iter < max_iter && candidate.n_stations > lb_1) {
         // Perform local search
-        local_search(best_solution, albp, op_probs);
+        inversion_op(candidate.ranking, albp);
+        shallow_task_assignment(albp, candidate);
+        local_search(candidate, albp, op_probs);
+        if (candidate.n_stations < best_solution.n_stations && candidate.n_violations  == 0) {
+
+            best_solution = candidate;
+        } 
         iter++;
+    }
+    if (best_solution.n_violations > 0) {
+        task_oriented_assignment(best_solution, albp);
+        std::cout <<std::endl << "fixing broken solution" <<std::endl;
+
     }
     // Return the best solution found
     return best_solution;

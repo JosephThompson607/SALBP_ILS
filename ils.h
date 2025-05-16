@@ -16,7 +16,7 @@ struct ALBPSolution{
     // std::vector<int> cycle_times; //Cycle times
     
 
-    void print();
+    void print() const;
     void task_to_station();
     void station_to_task();
 };
@@ -27,4 +27,5 @@ ALBPSolution generate_approx_solution(ALBP&albp);
 void shallow_task_assignment( const ALBP&albp,  ALBPSolution& solution);
 ALBPSolution iterated_local_search(const ALBP& albp, int max_iter, float op_probs);
 ALBPSolution generate_approx_solution(const ALBP& albp);
+int count_violations(const ALBP&albp, const std::vector<int>& task_assignment);
 #endif // ILS_H

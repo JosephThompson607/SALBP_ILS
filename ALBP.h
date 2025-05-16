@@ -18,6 +18,8 @@ struct ALBP{
     std::vector<int> task_time; //Task times
     std::vector<int> prec_mat; //Precedence matrix
     std::vector<int> t_close_mat;
+    std::vector<std::vector<int>> dir_suc;
+    std::vector<std::vector<int>> dir_pred;
     std::vector<PrecedenceRelation> precedence_relations; //Precedence relations
     std::vector<int> task_assignment; //Task assignment
     void print(bool print_prec_mat);

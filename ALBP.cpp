@@ -65,6 +65,8 @@ void ALBP::print(bool print_prec_mat = false) {
     std::cout << std::endl;
 }
 
+
+
 // Load from .alb file; returns true on success
 bool ALBP::loadFromFile(const std::string& filename) {
     std::ifstream infile(filename);
@@ -98,6 +100,8 @@ bool ALBP::loadFromFile(const std::string& filename) {
             section = Precedences;
             // initialize matrix
             prec_mat.assign(N * N, 0);
+            dir_pred.resize(N);
+            dir_suc.resize(N);
             continue;
         }
         if (line == "<end>") {
@@ -126,6 +130,8 @@ bool ALBP::loadFromFile(const std::string& filename) {
                 if (u >= 1 && u <= N && v >= 1 && v <= N) {
                     precedence_relations.push_back({u, v});
                     prec_mat[(u - 1) * N + (v - 1)] = 1;
+                    dir_suc[u - 1].push_back(v-1);
+                    dir_pred[v-1].push_back(u-1);
                 }
             }
         }
