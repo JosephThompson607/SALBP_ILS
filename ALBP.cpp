@@ -12,11 +12,7 @@
 //function that returns a matrix that is the transitiive closure of the precedence matrix
 std::vector<int> transitive_closure(const std::vector<int>& prec_mat, int N) {
     std::vector<int> t_close_mat(N * N, 0);
-    for (int i = 0; i < N; ++i) {
-        for (int j = 0; j < N; ++j) {
-            t_close_mat[i * N + j] = prec_mat[i * N + j];
-        }
-    }
+    t_close_mat = prec_mat;
 
     for (int k = 0; k < N; ++k) {
         for (int i = 0; i < N; ++i) {
@@ -29,7 +25,61 @@ std::vector<int> transitive_closure(const std::vector<int>& prec_mat, int N) {
 }
 
 
+std::vector<std::vector<int>> all_successors(const std::vector<int>& t_close_mat, const int N) {
+    std::vector<std::vector<int>> all_suc(N);
+    for (int i = 0; i <N; ++i) {
+        for (int j = 0; j < N; ++j) {
+            if (t_close_mat[i * N + j]) {
+                all_suc[i ].push_back(j);
+            }
+        }
 
+    }
+    return all_suc;
+}
+std::vector<std::vector<int>> all_predecessors(const std::vector<int>& t_close_mat, const int N) {
+    std::vector<std::vector<int>> all_pred(N);
+    for (int j = 0; j < N; ++j) {
+        for (int i = 0; i <N; ++i) {
+            if (t_close_mat[i * N + j]) {
+                all_pred[j ].push_back(i);
+            }
+        }
+
+    }
+    return all_pred;
+}
+
+ALBP::ALBP(int C_, int N_, const std::vector<int>& task_times_, const std::vector<std::vector<int>>& raw_precedence) {
+    if (task_times_.size() != static_cast<size_t>(N_)) {
+        throw std::invalid_argument("task_times size does not match N");
+    }
+    C = C_;
+    N = N_;
+    S= N_; //Not used for SALBP_1
+    task_time = task_times_;
+    name = "constructed_from_data";
+
+    // Initialize empty vectors for size
+    prec_mat.resize(N * N, 0);
+    dir_suc.resize(N);
+    dir_pred.resize(N);
+    suc.resize(N);
+    pred.resize(N);
+    for (const auto& pair : raw_precedence) {
+        const int u = pair[0];
+        const int v = pair[1];
+        if (u < 1 || u > N || v < 1 || v > N) {
+            std::cerr << "Invalid precedence pair. Assuming 1 indexed based pairs: (" << u << ", " << v << ")\n";
+            continue;
+        }
+        precedence_relations.push_back({u, v});
+        prec_mat[(u - 1) * N + (v - 1)] = 1;
+        dir_suc[u - 1].push_back(v-1);
+        dir_pred[v-1].push_back(u-1);
+    }
+    calc_trans_closure();
+}
 
 
 //print function
@@ -42,6 +92,7 @@ void ALBP::print(bool print_prec_mat = false) {
         std::cout << task_time[i] << " ";
     }
     std::cout << std::endl;
+    std::cout << "Number of precedence relations: " << precedence_relations.size() << std::endl;
     std::cout << "Precedence relations: ";
     for (const auto& rel : precedence_relations) {
         std::cout << "(" << rel.parent << ", " << rel.child << ") ";
@@ -66,6 +117,11 @@ void ALBP::print(bool print_prec_mat = false) {
 }
 
 
+void ALBP::calc_trans_closure() {
+    t_close_mat = transitive_closure(prec_mat, N);
+    suc = all_successors(t_close_mat, N);
+    pred = all_predecessors(t_close_mat, N);
+}
 
 // Load from .alb file; returns true on success
 bool ALBP::loadFromFile(const std::string& filename) {
@@ -78,12 +134,20 @@ bool ALBP::loadFromFile(const std::string& filename) {
     std::filesystem::path p(filename);
     name = p.filename().string();
     std::string line;
-    enum Section { None, NumTasks, CycleTime, TaskTimes, Precedences } section = None;
+    enum Section { None, NumTasks, OrderStrength, CycleTime, TaskTimes, Precedences } section = None;
 
     while (std::getline(infile, line)) {
+        // Trim whitespace including \r and \n
+        line.erase(line.find_last_not_of(" \t\r\n") + 1);
+        line.erase(0, line.find_first_not_of(" \t\r\n"));
         if (line.empty()) continue;
         if (line == "<number of tasks>") {
             section = NumTasks;
+            continue;
+        }
+        if (line == "<order strength>") {
+            // Skip order strength for now as it's not in the struct
+            section = OrderStrength;
             continue;
         }
         if (line == "<cycle time>") {
@@ -139,7 +203,7 @@ bool ALBP::loadFromFile(const std::string& filename) {
 
     infile.close();
     // Calculate transitive closure
-    t_close_mat = transitive_closure(prec_mat, N);
+    calc_trans_closure();
     return true;
 }
 

@@ -7,6 +7,6 @@
 #include "albp_solution.h"
 #include "ALBP.h"
 
-ALBPSolution iterated_local_search(const ALBP& albp, int max_iter, float op_probs);
+ALBPSolution iterated_local_search(const ALBP& albp, int max_iter, float op_probs, bool verbose=false);
 
 #endif //ILS_H
