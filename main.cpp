@@ -8,13 +8,13 @@ int default_run() {
     ALBP problem;
     namespace fs = std::filesystem;
 
-    if (!problem.loadFromFile("/Users/letshopethisworks2/Documents/phd_paper_material/MMABPWW/SALBP_benchmark/small data set_n=20/instance_n=20_400.alb")) {
+    if (!problem.loadFromFile("/Users/letshopethisworks2/Documents/phd_paper_material/MMABPWW/SALBP_benchmark/medium data set_n=50/instance_n=50_108.alb")) {
         return 1;
     }
     std::cout << "Loaded " << problem.N << " tasks, cycle time " << problem.C << "\n";
 
     //runs the local search algorithm
-    ALBPSolution result =iterated_local_search(problem, 1000, 0.5);
+    ALBPSolution result =iterated_local_search(problem, 50000, 0.5);
     std::cout << "Here is the result" << std::endl;
     result.print();
     return 0;
@@ -34,24 +34,26 @@ int python_constructor_test() {
     };
 
     ALBP albp(C, N, task_times, precedence);
-
-    std::cout << "Name: " << albp.name << std::endl;
-    std::cout << "Cycle time: " << albp.C << std::endl;
-    std::cout << "Number of tasks: " << albp.N << std::endl;
-
-    std::cout << "Precedence matrix:" << std::endl;
-    for (int i = 0; i < N; ++i) {
-        for (int j = 0; j < N; ++j) {
-            std::cout << albp.prec_mat[i * N + j] << " ";
-        }
-        std::cout << std::endl;
-    }
-
-    std::cout << "Precedence relations:" << std::endl;
-    for (const auto& rel : albp.precedence_relations) {
-        std::cout << rel.parent << " -> " << rel.child << std::endl;
-    }
-
+    ALBPSolution result =  ils_solve_SALBP1(C, N, task_times, precedence, 10, 0.5, true);
+    std::cout << "Here is the result" << std::endl;
+    result.print();
+    // std::cout << "Name: " << albp.name << std::endl;
+    // std::cout << "Cycle time: " << albp.C << std::endl;
+    // std::cout << "Number of tasks: " << albp.N << std::endl;
+    //
+    // std::cout << "Precedence matrix:" << std::endl;
+    // for (int i = 0; i < N; ++i) {
+    //     for (int j = 0; j < N; ++j) {
+    //         std::cout << albp.prec_mat[i * N + j] << " ";
+    //     }
+    //     std::cout << std::endl;
+    // }
+    //
+    // std::cout << "Precedence relations:" << std::endl;
+    // for (const auto& rel : albp.precedence_relations) {
+    //     std::cout << rel.parent << " -> " << rel.child << std::endl;
+    // }
+    //
     return 0;
 }
 

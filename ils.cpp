@@ -225,3 +225,11 @@ ALBPSolution iterated_local_search(const ALBP &albp, const int max_iter, float o
     // Return the best solution found
     return best_solution;
 }
+
+
+ALBPSolution ils_solve_SALBP1(const int C,const int N, const std::vector<int> &task_times, const std::vector<std::vector<int> > &raw_precedence, int max_iter, float op_probs, bool verbose,  const std::vector<int> &initial_solution) {
+    ALBP albp(C, N, task_times, raw_precedence);
+    //TODO: Allow for passing initial solution
+    ALBPSolution result =iterated_local_search(albp, max_iter, op_probs, verbose);
+    return result;
+}
