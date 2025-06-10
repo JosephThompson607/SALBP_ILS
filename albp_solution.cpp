@@ -530,9 +530,26 @@ std::vector<ALBPSolution> generate_solutions( const ALBP &albp, const int n_rand
     return solutions;
 }
 
-ALBPSolution generate_approx_solution(const ALBP&albp, const int n_random)
+ALBPSolution process_init_solution( const ALBP &albp, const std::vector<int> &initial_solution) {
+    /* Reads in an initial task assignment. Assumes indexing starts at zero and initial solution is feasible*/
+    ALBPSolution solution(albp.N);
+    solution.n_stations = *std::max_element(initial_solution.begin(), initial_solution.end()) + 1;
+    solution.task_assignment = initial_solution;
+    solution.task_to_station();
+    solution.station_to_ranking();
+    solution.ranking_to_task_ranking();
+    solution.n_violations = 0;
+
+    return solution;
+}
+
+ALBPSolution generate_approx_solution(const ALBP&albp, const int n_random, const std::vector<int> &initial_solution)
 {
-    const std::vector<ALBPSolution>  candidates = generate_solutions(albp, n_random);
+     std::vector<ALBPSolution>  candidates = generate_solutions(albp, n_random);
+    if (!initial_solution.empty()) {
+        candidates.push_back( process_init_solution(albp, initial_solution) );
+    }
+
     // Select the best solution from the generated solutions
     std::cout <<"finding best initial solution" << std::endl;
     ALBPSolution best_solution = candidates[0];

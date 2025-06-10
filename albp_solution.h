@@ -34,7 +34,7 @@ public:
 
 int calc_lb_1(const std::vector<int>& task_time, int C);
 
-ALBPSolution generate_approx_solution( const ALBP&albp,  int n_random);
+ALBPSolution generate_approx_solution( const ALBP&albp,  int n_random,  const std::vector<int> &initial_solution = std::vector<int>());
 void shallow_task_assignment( const ALBP&albp,  ALBPSolution& solution);
 void task_oriented_assignment( const ALBP& albp,ALBPSolution& solution);
 int count_violations(const ALBP&albp, const std::vector<int>& task_assignment);

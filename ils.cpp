@@ -9,7 +9,6 @@
 #include <algorithm>
 #include <iostream>
 #include <random>
-#include <__ostream/basic_ostream.h>
 #include "albp_solution.h"
 #include "ALBP.h"
 
@@ -175,12 +174,12 @@ void local_search(ALBPSolution& solution,const ALBP& albp,const float op_probs ,
 }
 
 
-ALBPSolution iterated_local_search(const ALBP &albp, const int max_iter, float op_probs, bool verbose) {
+ALBPSolution iterated_local_search(const ALBP &albp, const int max_iter, float op_probs, bool verbose,const std::vector<int> &initial_solution) {
 
 
     // Initialize an initial (potentially infeasible) solution
 
-    ALBPSolution best_solution = generate_approx_solution(albp, 250);
+    ALBPSolution best_solution = generate_approx_solution(albp, 250, initial_solution);
     //prints the best solution
     ALBPSolution candidate = best_solution;
     //Improves the solution with local search
@@ -230,6 +229,6 @@ ALBPSolution iterated_local_search(const ALBP &albp, const int max_iter, float o
 ALBPSolution ils_solve_SALBP1(const int C,const int N, const std::vector<int> &task_times, const std::vector<std::vector<int> > &raw_precedence, int max_iter, float op_probs, bool verbose,  const std::vector<int> &initial_solution) {
     ALBP albp(C, N, task_times, raw_precedence);
     //TODO: Allow for passing initial solution
-    ALBPSolution result =iterated_local_search(albp, max_iter, op_probs, verbose);
+    ALBPSolution result =iterated_local_search(albp, max_iter, op_probs, verbose, initial_solution);
     return result;
 }

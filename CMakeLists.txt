@@ -16,13 +16,8 @@ set(COMMON_SOURCES
 
 if(BUILD_PYTHON_MODULE)
     # Find Python and pybind11
-    set(Python3_ROOT_DIR "/Users/letshopethisworks2/miniforge3/envs/ils_env")
-    set(Python3_INCLUDE_DIR "/Users/letshopethisworks2/miniforge3/envs/ils_env/include/python3.11")
-    set(Python3_LIBRARY "/Users/letshopethisworks2/miniforge3/envs/ils_env/lib/libpython3.11.dylib")
-
-    find_package(Python COMPONENTS Interpreter Development REQUIRED)
+    set(PYBIND11_FINDPYTHON ON)
     find_package(pybind11 CONFIG REQUIRED)
-
     # Python module sources
     set(PYTHON_SOURCES
             ${COMMON_SOURCES}
