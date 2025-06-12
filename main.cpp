@@ -1,6 +1,7 @@
 #include "ALBP.h"
 #include "albp_solution.h"
 #include "ils.h"
+#include "mhh.h"
 #include <iostream>
 #include <filesystem>
 
@@ -56,6 +57,42 @@ int python_constructor_test() {
     //
     return 0;
 }
+int mhh_test() {
+    int C = 10;
+    int N = 5;
+    std::vector<int> task_times = {1, 2, 3, 4, 5};
+
+    // Precedence constraints: each pair is (pred, succ), using 1-based indexing
+    std::vector<std::vector<int>> precedence = {
+        {1, 2},
+        {1, 3},
+        {2, 4},
+        {3, 5}
+    };
+    std::vector<int> test_assignments = {0,1,2,3,4};
+    ALBP albp(C, N, task_times, precedence);
+    ALBPSolution result =  mhh_solve_salbp1(C, N, task_times, precedence, true);
+    std::cout << "Here is the result" << std::endl;
+    result.print();
+    // std::cout << "Name: " << albp.name << std::endl;
+    // std::cout << "Cycle time: " << albp.C << std::endl;
+    // std::cout << "Number of tasks: " << albp.N << std::endl;
+    //
+    // std::cout << "Precedence matrix:" << std::endl;
+    // for (int i = 0; i < N; ++i) {
+    //     for (int j = 0; j < N; ++j) {
+    //         std::cout << albp.prec_mat[i * N + j] << " ";
+    //     }
+    //     std::cout << std::endl;
+    // }
+    //
+    // std::cout << "Precedence relations:" << std::endl;
+    // for (const auto& rel : albp.precedence_relations) {
+    //     std::cout << rel.parent << " -> " << rel.child << std::endl;
+    // }
+    //
+    return 0;
+}
 
 int main(int argc, char* argv[]) {
     // Check command line arguments
@@ -64,7 +101,7 @@ int main(int argc, char* argv[]) {
         std::cerr << "Example: " << argv[0] << " problem.alb" << std::endl;
         std::cerr << "Performing default run to test system" << std::endl;
         //default_run();
-        python_constructor_test();
+        mhh_test();
         return 1;
     }
 

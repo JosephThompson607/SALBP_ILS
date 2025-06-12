@@ -139,7 +139,7 @@ void insertion_op(std::vector<int>& ranking, const ALBP& albp, const int range_s
     insertion(ranking, from, to);
 }
 
-void local_search(ALBPSolution& solution,const ALBP& albp,const float op_probs , const int n_tries=10) {
+void local_search(ALBPSolution& solution,const ALBP& albp,const float op_probs , const int n_tries=50) {
     //solution.station_to_ranking();
     std::random_device rd;  // Uses hardware randomness if available
     std::mt19937 generator(rd());
@@ -174,19 +174,18 @@ void local_search(ALBPSolution& solution,const ALBP& albp,const float op_probs ,
 }
 
 
-ALBPSolution iterated_local_search(const ALBP &albp, const int max_iter, float op_probs, bool verbose,const std::vector<int> &initial_solution) {
+ALBPSolution iterated_local_search(const ALBP &albp, const int max_iter, float op_probs, const bool verbose,const std::vector<int> &initial_solution) {
 
 
     // Initialize an initial (potentially infeasible) solution
-
-    ALBPSolution best_solution = generate_approx_solution(albp, 250, initial_solution);
+    ALBPSolution best_solution = generate_approx_solution(albp, 800, initial_solution);
     //prints the best solution
     ALBPSolution candidate = best_solution;
     //Improves the solution with local search
     int iter = 0;
     const int lb_1 = calc_lb_1(albp.task_time, albp.C);
     const int lb_2 = calc_lb_2(albp.task_time, albp.C);
-    std::cout << "Performing local search. first iter " << std::endl;
+    if (verbose) std::cout << "Performing local search. first iter " << std::endl;
     local_search(candidate, albp, op_probs, 50);
     // std::cout << "assigning tasks deep" << std::endl;
     // task_oriented_assignment(albp, candidate);
@@ -203,14 +202,15 @@ ALBPSolution iterated_local_search(const ALBP &albp, const int max_iter, float o
         shallow_task_assignment(albp, candidate);
         local_search(candidate, albp, op_probs);
         if ((candidate.n_stations < best_solution.n_stations && candidate.n_violations  <= best_solution.n_violations) || (candidate.n_stations <= best_solution.n_stations && candidate.n_violations < best_solution.n_violations)) {
-            std::cout << "found good solution . Iteration no: " << iter << " n_violations: " <<  candidate.n_violations <<" n_stations: " << candidate.n_stations << std::endl;
+            if (verbose) std::cout << "found good solution . Iteration no: " << iter << " n_violations: " <<  candidate.n_violations <<" n_stations: " << candidate.n_stations << std::endl;
+
             best_solution = candidate;
             if (candidate.n_stations == lb_1 && candidate.n_violations == 0) {
-                std::cout << "Found optimal solution, proven by lb_1. terminating search at: " << iter << std::endl;
+               if (verbose) std::cout << "Found optimal solution, proven by lb_1. terminating search at: " << iter << std::endl;
                 break;
             }
             else if (candidate.n_stations == lb_2 && candidate.n_violations == 0) {
-                std::cout << "Found optimal solution, proven by lb_1. terminating search at: " << iter << std::endl;
+                if (verbose) std::cout << "Found optimal solution, proven by lb_2. terminating search at: " << iter << std::endl;
                 break;
             }
         }
@@ -218,7 +218,7 @@ ALBPSolution iterated_local_search(const ALBP &albp, const int max_iter, float o
     }
     if (best_solution.n_violations > 0) {
         task_oriented_assignment(albp, best_solution );
-        std::cout <<std::endl << "fixing broken solution" <<std::endl;
+        if (verbose) std::cout <<std::endl << "fixing broken solution" <<std::endl;
 
     }
     // Return the best solution found
@@ -226,9 +226,8 @@ ALBPSolution iterated_local_search(const ALBP &albp, const int max_iter, float o
 }
 
 
-ALBPSolution ils_solve_SALBP1(const int C,const int N, const std::vector<int> &task_times, const std::vector<std::vector<int> > &raw_precedence, int max_iter, float op_probs, bool verbose,  const std::vector<int> &initial_solution) {
+ALBPSolution ils_solve_SALBP1(const int C,const int N, const std::vector<int> &task_times, const std::vector<std::vector<int> > &raw_precedence, const int max_iter, const float op_probs,const bool verbose,  const std::vector<int> &initial_solution) {
     ALBP albp(C, N, task_times, raw_precedence);
-    //TODO: Allow for passing initial solution
     ALBPSolution result =iterated_local_search(albp, max_iter, op_probs, verbose, initial_solution);
     return result;
 }

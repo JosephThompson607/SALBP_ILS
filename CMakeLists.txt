@@ -12,6 +12,8 @@ set(COMMON_SOURCES
         ALBP.cpp
         albp_solution.cpp
         ils.cpp
+        mhh.cpp
+        mhh.h
 )
 
 if(BUILD_PYTHON_MODULE)
