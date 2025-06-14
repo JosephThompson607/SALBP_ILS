@@ -21,7 +21,11 @@ public:
     // std::vector<int> cycle_times; //Cycle times
 
     //constructor
-    explicit ALBPSolution(const int n_tasks) : n_tasks(n_tasks) {}
+    explicit ALBPSolution(const int n_tasks) : n_tasks(n_tasks), n_stations(n_tasks) {
+        task_assignment.resize(n_tasks,-1);
+        ranking.resize(n_tasks,-1);
+        task_ranking.resize(n_tasks,-1);
+    }
 
     [[nodiscard]] int get_n_tasks() const { return n_tasks; }  // Read-only access
     //utility functions
@@ -33,7 +37,7 @@ public:
 };
 
 int calc_lb_1(const std::vector<int>& task_time, int C);
-
+std::vector<int>  get_positional_weight(const ALBP &albp);
 ALBPSolution generate_approx_solution( const ALBP&albp,  int n_random,  const std::vector<int> &initial_solution = std::vector<int>());
 void shallow_task_assignment( const ALBP&albp,  ALBPSolution& solution);
 void task_oriented_assignment( const ALBP& albp,ALBPSolution& solution);

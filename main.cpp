@@ -53,7 +53,7 @@ int python_constructor_test() {
     // std::cout << "Precedence relations:" << std::endl;
     // for (const auto& rel : albp.precedence_relations) {
     //     std::cout << rel.parent << " -> " << rel.child << std::endl;
-    // }
+    // } n_attempts_++;
     //
     return 0;
 }
@@ -71,8 +71,8 @@ int mhh_test() {
     };
     std::vector<int> test_assignments = {0,1,2,3,4};
     ALBP albp(C, N, task_times, precedence);
-    ALBPSolution result =  mhh_solve_salbp1(C, N, task_times, precedence, true);
-    std::cout << "Here is the result" << std::endl;
+    ALBPSolution result =  mhh_solve_salbp1(C, N, task_times, precedence);
+     std::cout << "Here is the result" << std::endl;
     result.print();
     // std::cout << "Name: " << albp.name << std::endl;
     // std::cout << "Cycle time: " << albp.C << std::endl;
@@ -134,7 +134,7 @@ int main(int argc, char* argv[]) {
 
     // Print the problem details (assuming you have a print method)
     std::cout << "\n--- Problem Details ---" << std::endl;
-    problem.print(false);  // print with precedence matrix
+    problem.print(false);  // print without precedence matrix
 
     ALBPSolution result =iterated_local_search(problem, 1000, 0.5);
     std::cout << "Here is the result" << std::endl;

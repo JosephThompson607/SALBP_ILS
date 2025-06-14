@@ -58,7 +58,6 @@ void ALBPSolution::station_to_task(){
 void ALBPSolution::station_to_ranking() {
     // Convert task assignment to ranking
     ranking.clear();
-    ranking.reserve(n_tasks);
     task_ranking.resize(n_tasks);
     int ranking_counter = 0;
     for (int i = 0; i < n_stations; ++i) {

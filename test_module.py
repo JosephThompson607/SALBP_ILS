@@ -2,12 +2,15 @@
 import sys
 import os
 
+
+
 # Add the build directory to Python path
-build_dir = '/Users/letshopethisworks2/CLionProjects/SALBP_ILS/cmake-build-python_interface'
+build_dir = 'cmake-build-python_interface/'
 sys.path.insert(0, build_dir)
 
 print(f"Python version: {sys.version}")
 print(f"Python path: {sys.path[:3]}...")  # Show first few paths
+print(f"current interpreter: {sys.executable}")
 print(f"Looking for module in: {build_dir}")
 print(f"Directory exists: {os.path.exists(build_dir)}")
 
@@ -18,11 +21,9 @@ if os.path.exists(build_dir):
             full_path = os.path.join(build_dir, f)
             print(f"  {f} (size: {os.path.getsize(full_path)} bytes)")
 
-# Test if we can import directly by changing to the directory
-original_cwd = os.getcwd()
+sys.path.insert(0, 'cmake-build-python_interface/')
 try:
-    os.chdir(build_dir)
-    print(f"\nChanged to directory: {os.getcwd()}")
+
 
     # Try importing
     import ILS_ALBP
@@ -133,5 +134,3 @@ except Exception as e:
 
 
 
-finally:
-    os.chdir(original_cwd)

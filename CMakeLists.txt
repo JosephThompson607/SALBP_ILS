@@ -13,7 +13,6 @@ set(COMMON_SOURCES
         albp_solution.cpp
         ils.cpp
         mhh.cpp
-        mhh.h
 )
 
 if(BUILD_PYTHON_MODULE)
@@ -26,7 +25,7 @@ if(BUILD_PYTHON_MODULE)
             bindings.cpp
     )
 
-    # Create Python module
+    # Create Python modulea
     pybind11_add_module(ILS_ALBP ${PYTHON_SOURCES})
 
     message(STATUS "Building Python module")
