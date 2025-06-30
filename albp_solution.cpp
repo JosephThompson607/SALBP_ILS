@@ -545,6 +545,7 @@ ALBPSolution process_init_solution( const ALBP &albp, const std::vector<int> &in
 ALBPSolution generate_approx_solution(const ALBP&albp, const int n_random, const std::vector<int> &initial_solution)
 {
      std::vector<ALBPSolution>  candidates = generate_solutions(albp, n_random);
+    //Add in optional initial solution to the pool of candidates
     if (!initial_solution.empty()) {
         candidates.push_back( process_init_solution(albp, initial_solution) );
     }

@@ -7,6 +7,7 @@
 #include "ALBP.h"
 #include "ils.h"
 #include "albp_solution.h"
+#include "mhh.h"
 namespace py = pybind11;
 
 PYBIND11_MODULE(ILS_ALBP, m) {
@@ -127,6 +128,28 @@ PYBIND11_MODULE(ILS_ALBP, m) {
           initial_solution : list of int, optional
               Initial solution (default: empty)
 
+          Returns:
+          --------
+          ALBPSolution
+              The solved ALBP solution
+          )pbdoc");
+    m.def("mhh_solve_salbp1", &mhh_solve_salbp1,
+          py::arg("C"), py::arg("N"),
+          py::arg("task_times"), py::arg("raw_precedence"),
+          "Solve SALBP1 using MHH algorithm",
+    R"pbdoc(
+          Solve SALBP1 using Hoffman heuristic
+
+          Parameters:
+          -----------
+          C : int
+              Cycle time
+          N : int
+              Number of tasks
+          task_times : list of int
+              Task processing times
+          raw_precedence : list of list of int
+              Precedence relationships
           Returns:
           --------
           ALBPSolution

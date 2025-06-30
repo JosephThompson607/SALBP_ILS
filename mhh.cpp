@@ -19,8 +19,8 @@ MHH::MHH(const ALBP& albp, const float alpha, const float beta, const int max_at
     // Initialize to 0
      min_cost_(FLT_MAX)
     {
-    s_task_assign_.reserve(albp.N),            // Size = num_tasks, init to -1 (unassigned)
-    best_s_task_assign_.reserve(albp.N),       // Size = num_tasks, init to -1
+    s_task_assign_.reserve(albp.N),
+    best_s_task_assign_.reserve(albp.N),
     eligible_tasks_.resize(albp.N,-1);
     pw_ = get_positional_weight(albp_) ;
     //initilize counts of unassigned predecessors
@@ -72,6 +72,7 @@ MHH::MHH(const ALBP& albp, const float alpha, const float beta, const int max_at
 
     ALBPSolution mhh_solve_salbp1(int C, int N, const std::vector<int>& task_times, const std::vector<std::vector<int>>& raw_precedence) {
         ALBP albp(C, N, task_times, raw_precedence);
+        for(float i = 0; i < albp.N; i++) {}
         auto mhh= MHH(albp);
         ALBPSolution result =mhh.solve();
         return result;

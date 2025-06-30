@@ -188,7 +188,7 @@ ALBPSolution iterated_local_search(const ALBP &albp, const int max_iter, float o
     if (verbose) std::cout << "Performing local search. first iter " << std::endl;
     local_search(candidate, albp, op_probs, 50);
     // std::cout << "assigning tasks deep" << std::endl;
-    // task_oriented_assignment(albp, candidate);
+    //task_oriented_assignment(albp, candidate);
 
     //improves solution until iteration are reached or lower bound is reached
     // while (iter < max_iter && candidate.n_stations > lb_1) {
@@ -202,6 +202,7 @@ ALBPSolution iterated_local_search(const ALBP &albp, const int max_iter, float o
         shallow_task_assignment(albp, candidate);
         local_search(candidate, albp, op_probs);
         if ((candidate.n_stations < best_solution.n_stations && candidate.n_violations  <= best_solution.n_violations) || (candidate.n_stations <= best_solution.n_stations && candidate.n_violations < best_solution.n_violations)) {
+        //if (candidate.n_stations < best_solution.n_stations && candidate.n_violations == 0){
             if (verbose) std::cout << "found good solution . Iteration no: " << iter << " n_violations: " <<  candidate.n_violations <<" n_stations: " << candidate.n_stations << std::endl;
 
             best_solution = candidate;
