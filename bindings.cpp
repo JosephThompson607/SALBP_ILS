@@ -133,10 +133,14 @@ PYBIND11_MODULE(ILS_ALBP, m) {
           ALBPSolution
               The solved ALBP solution
           )pbdoc");
-    m.def("mhh_solve_salbp1", &mhh_solve_salbp1,
-          py::arg("C"), py::arg("N"),
-          py::arg("task_times"), py::arg("raw_precedence"),
-          "Solve SALBP1 using MHH algorithm",
+
+    m.def("mhh_solve_salbp1",
+      [](int C, int N, const std::vector<int>& task_times, const std::vector<std::vector<int>>& raw_precedence) {
+          return mhh_solve_salbp1(C, N, task_times, raw_precedence);
+    },        py::arg("C"),
+            py::arg("N"),
+            py::arg("task_times"),
+          py::arg("raw_precedence"),
     R"pbdoc(
           Solve SALBP1 using Hoffman heuristic
 
@@ -154,7 +158,27 @@ PYBIND11_MODULE(ILS_ALBP, m) {
           --------
           ALBPSolution
               The solved ALBP solution
+          )pbdoc"
+      );
+
+    // Second overload using lambda
+    m.def("mhh_solve_salbp1",
+          [](const ALBP& albp) {
+              return mhh_solve_salbp1(albp);
+    },
+    R"pbdoc(
+          Solve SALBP1 using Hoffman heuristic
+
+          Parameters:
+          -----------
+            albp : ALBP (struct)
+
+          Returns:
+          --------
+          ALBPSolution
+              The solved ALBP solution
           )pbdoc");
+
 
 
 

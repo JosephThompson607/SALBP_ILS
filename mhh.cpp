@@ -69,8 +69,13 @@ MHH::MHH(const ALBP& albp, const float alpha, const float beta, const int max_at
         return mhh_sol;
     }
 
+    ALBPSolution mhh_solve_salbp1(const ALBP &albp) {
+        auto mhh= MHH(albp);
+        ALBPSolution result =mhh.solve();
+        return result;
+}
 
-    ALBPSolution mhh_solve_salbp1(int C, int N, const std::vector<int>& task_times, const std::vector<std::vector<int>>& raw_precedence) {
+    ALBPSolution mhh_solve_salbp1(const int C,const int N, const std::vector<int>& task_times, const std::vector<std::vector<int>>& raw_precedence) {
         ALBP albp(C, N, task_times, raw_precedence);
         for(float i = 0; i < albp.N; i++) {}
         auto mhh= MHH(albp);

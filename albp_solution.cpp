@@ -1,6 +1,7 @@
 
 #include "albp_solution.h"
 #include "ALBP.h"
+#include "mhh.h"
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -526,6 +527,8 @@ std::vector<ALBPSolution> generate_solutions( const ALBP &albp, const int n_rand
         shallow_task_assignment(albp, solution);
         solutions.push_back(solution);
     }
+    //Add in hoffman solution
+    solutions.push_back( mhh_solve_salbp1(albp));
     return solutions;
 }
 
@@ -549,6 +552,7 @@ ALBPSolution generate_approx_solution(const ALBP&albp, const int n_random, const
     if (!initial_solution.empty()) {
         candidates.push_back( process_init_solution(albp, initial_solution) );
     }
+
 
     // Select the best solution from the generated solutions
     std::cout <<"finding best initial solution" << std::endl;

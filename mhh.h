@@ -27,5 +27,7 @@ private:
 
     std::vector<int>  pw_{};
 };
+
 ALBPSolution mhh_solve_salbp1(int C, int N, const std::vector<int>& task_times, const std::vector<std::vector<int>>& raw_precedence);
+ALBPSolution mhh_solve_salbp1(const ALBP &albp);
 #endif //MHH_H
