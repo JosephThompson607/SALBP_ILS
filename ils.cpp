@@ -6,6 +6,7 @@
 
 #include <vector>
 #include <numeric>
+#include <tuple>
 #include <algorithm>
 #include <iostream>
 #include <random>

@@ -297,7 +297,7 @@ std::vector<int>  pw_ranking(const ALBP&albp) {
     //sorts
 
     // Sort indices based on corresponding weights
-    std::ranges::sort(indices, [&](const int a, const int b) {
+    std::sort(indices.begin(),indices.end(), [&](const int a, const int b) {
         return weights[a] > weights[b];  // Ascending order
     });
     for (int rank = 0; rank < indices.size(); ++rank) {
@@ -319,7 +319,7 @@ std::vector<int> cumulative_pw_ranking(const ALBP&albp){
         }
     }
     // Sort indices based on corresponding weights
-    std::ranges::sort(indices, [&](const int a, const int b) {
+    std::sort(indices.begin(),indices.end(), [&](const int a, const int b) {
         return cum_pw[a] > cum_pw[b];  // Ascending order
     });
     for (int rank = 0; rank < indices.size(); ++rank) {
@@ -333,7 +333,7 @@ std::vector<int> average_pw_ranking(const ALBP&albp) {
     std::vector<int> indices(albp.N);
     std::iota( indices.begin(), indices.end(), 0 );
     std::vector<int> weights = get_positional_weight(albp);
-    std::ranges::sort(indices, [&](const int a, const int b) {
+    std::sort(indices.begin(),indices.end(), [&](const int a, const int b) {
     return weights[a]/ static_cast <double>(albp.suc[a].size()) > weights[b]/static_cast <double>(albp.suc[b].size());  // Ascending order
     });
     for (int rank = 0; rank < indices.size(); ++rank) {
@@ -347,7 +347,7 @@ std::vector<int> as_up_avg_ranking(const ALBP&albp) {
     std::vector<int> indices(albp.N);
     std::iota( indices.begin(), indices.end(), 0 );
     std::vector<int> weights = get_alloc_station_ub(albp);
-    std::ranges::sort(indices, [&](const int a, const int b) {
+    std::sort(indices.begin(),indices.end(), [&](const int a, const int b) {
     return weights[a]/static_cast <double>( albp.suc[a].size() )< weights[b] /static_cast <double>(albp.suc[b].size());  // Ascending order
 });
     for (int rank = 0; rank < indices.size(); ++rank) {
@@ -361,7 +361,7 @@ std::vector<int> as_up_ranking(const ALBP&albp) {
     std::vector<int> indices(albp.N);
     std::iota( indices.begin(), indices.end(), 0 );
     std::vector<int> weights = get_alloc_station_ub(albp);
-    std::ranges::sort(indices, [&](const int a, const int b) {
+    std::sort(indices.begin(),indices.end(), [&](const int a, const int b) {
     return weights[a] < weights[b];  // Ascending order
 });
     for (int rank = 0; rank < indices.size(); ++rank) {
@@ -375,7 +375,7 @@ std::vector<int> t_over_as_up_ranking(const ALBP&albp) {
     std::vector<int> indices(albp.N);
     std::iota( indices.begin(), indices.end(), 0 );
     std::vector<int> weights = get_alloc_station_ub(albp);
-    std::ranges::sort(indices, [&](const int a, const int b) {
+    std::sort(indices.begin(),indices.end(), [&](const int a, const int b) {
     return static_cast<double>(albp.task_time[a]) / weights[a] < static_cast<double>(albp.task_time[b]) / weights[b];
 });
     for (int rank = 0; rank < indices.size(); ++rank) {
@@ -390,7 +390,7 @@ std::vector<int> as_lb_ranking(const ALBP&albp) {
     std::vector<int> weights = get_alloc_station_lb(albp);
 
 
-    std::ranges::sort(indices, [&](const int a, const int b) {
+    std::sort(indices.begin(),indices.end(), [&](const int a, const int b) {
 return  weights[a]  < weights[b];
     });
     for (int rank = 0; rank < indices.size(); ++rank) {
@@ -407,7 +407,7 @@ std::vector<int> slack_ranking(const ALBP&albp) {
     static std::vector<int> ub = get_alloc_station_ub(albp);
 
 
-    std::ranges::sort(indices, [&](const int a, const int b) {
+    std::sort(indices.begin(),indices.end(), [&](const int a, const int b) {
 return  ub[a]-lb[a]  < ub[b]-lb[b];
     });
     for (int rank = 0; rank < indices.size(); ++rank) {
@@ -424,7 +424,7 @@ std::vector<int> suc_over_slack_ranking(const ALBP&albp) {
     static std::vector<int> ub = get_alloc_station_ub(albp);
 
 
-    std::ranges::sort(indices, [&](const int a, const int b) {
+    std::sort(indices.begin(),indices.end(), [&](const int a, const int b) {
 return   static_cast<double>(albp.suc[a].size())/ (ub[a]-lb[a])  < static_cast<double>(albp.suc[b].size())/ (ub[b]-lb[b]);
     });
     for (int rank = 0; rank < indices.size(); ++rank) {
