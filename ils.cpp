@@ -13,25 +13,6 @@
 #include "albp_solution.h"
 #include "ALBP.h"
 
-int calc_lb_1(const std::vector<int>& task_time, const int C) {
-    int lb_1 = std::accumulate(task_time.begin(), task_time.end(), 0);
-    lb_1 = (lb_1 + C - 1) / C; // ceil(lb_1 / C)
-    return lb_1;
-}
-
-int calc_lb_2(const std::vector<int>& task_time, const int C) {
-    int red_count = 0; //tasks over C/2
-    int blue_count = 0; // tasks under or equal to C/2
-    for (const auto& task : task_time) {
-        if (static_cast<double>(task) > static_cast<double>(C)/2) {
-            ++red_count;
-        }
-        else {
-            ++blue_count;
-        }
-    }
-    return red_count + (blue_count+1)/2;
-}
 
 
 

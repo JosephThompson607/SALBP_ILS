@@ -8,6 +8,7 @@
 #include "ils.h"
 #include "albp_solution.h"
 #include "mhh.h"
+#include "vdls.h"
 namespace py = pybind11;
 
 PYBIND11_MODULE(ILS_ALBP, m) {
@@ -134,9 +135,9 @@ PYBIND11_MODULE(ILS_ALBP, m) {
               The solved ALBP solution
           )pbdoc");
 
-    m.def("mhh_solve_salbp1",
+    m.def("hoff_solve_salbp1",
       [](int C, int N, const std::vector<int>& task_times, const std::vector<std::vector<int>>& raw_precedence) {
-          return mhh_solve_salbp1(C, N, task_times, raw_precedence);
+          return hoff_solve_salbp1(C, N, task_times, raw_precedence);
     },        py::arg("C"),
             py::arg("N"),
             py::arg("task_times"),
@@ -162,9 +163,9 @@ PYBIND11_MODULE(ILS_ALBP, m) {
       );
 
     // Second overload using lambda
-    m.def("mhh_solve_salbp1",
+    m.def("hoff_solve_salbp1",
           [](const ALBP& albp) {
-              return mhh_solve_salbp1(albp);
+              return hoff_solve_salbp1(albp);
     },
     R"pbdoc(
           Solve SALBP1 using Hoffman heuristic
@@ -178,6 +179,50 @@ PYBIND11_MODULE(ILS_ALBP, m) {
           ALBPSolution
               The solved ALBP solution
           )pbdoc");
+    m.def("vdls_solve_salbp1",
+  [](int C, int N, const std::vector<int>& task_times, const std::vector<std::vector<int>>& raw_precedence) {
+      return vdls_solve_salbp1(C, N, task_times, raw_precedence);
+},        py::arg("C"),
+        py::arg("N"),
+        py::arg("task_times"),
+      py::arg("raw_precedence"),
+R"pbdoc(
+          Solve SALBP1 using vdls heuristic
+
+          Parameters:
+          -----------
+          C : int
+              Cycle time
+          N : int
+              Number of tasks
+          task_times : list of int
+              Task processing times
+          raw_precedence : list of list of int
+              Precedence relationships
+          Returns:
+          --------
+          ALBPSolution
+              The solved ALBP solution
+          )pbdoc"
+  );
+
+    m.def("vdls_solve_salbp1",
+          [](const ALBP& albp) {
+              return vdls_solve_salbp1(albp);
+    },
+    R"pbdoc(
+          Solve SALBP1 using vdls heuristic
+
+          Parameters:
+          -----------
+            albp : ALBP (struct)
+
+          Returns:
+          --------
+          ALBPSolution
+              The solved ALBP solution
+          )pbdoc");
+
 
 
 

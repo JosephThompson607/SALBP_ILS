@@ -13,6 +13,8 @@ set(COMMON_SOURCES
         albp_solution.cpp
         ils.cpp
         mhh.cpp
+        vdls.cpp
+        vdls.h
 )
 
 if(BUILD_PYTHON_MODULE)

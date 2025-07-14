@@ -42,6 +42,79 @@ void ALBPSolution::task_to_station(){
         station_assignments[task_assignment[i]].push_back(i);
     }
 }
+
+void ALBPSolution::station_to_load(const ALBP &albp) {
+    load.clear();
+    load.resize(n_stations);
+    for (int i = 0; i < n_stations; ++i) {
+
+        for ( const int task: station_assignments[i]) {
+            load[i] += (albp.task_time[task]);
+        }
+    }
+}
+/* Finds earliest and latest stations for all task **/
+void ALBPSolution::find_windows(const ALBP &albp) {
+    find_all_earliest(albp);
+    find_all_latest(albp);
+}
+
+/* Finds earliest stations for a task **/
+void ALBPSolution::find_earliest(const ALBP &albp, int i) {
+    for (int j: albp.dir_pred[i]){
+        if (task_assignment[j] > earliest[i]){
+            earliest[i] = task_assignment[j];
+        }
+    }
+}
+
+void ALBPSolution::find_all_earliest(const ALBP &albp) {
+    earliest.resize(albp.N,0);
+    for (int i =0; i < albp.N; i++){
+        find_earliest(albp, i);
+
+    }
+}
+
+/* Finds latest stations for a task **/
+void ALBPSolution::find_latest(const ALBP &albp, const int i) {
+    for (int j: albp.dir_suc[i]) {
+        if (task_assignment[j] < latest[i]){
+            latest[i] = task_assignment[j];
+        }
+    }
+}
+/* updates the latest station of the predecessors of a task, in the case where the task is before all other successors*/
+void ALBPSolution::update_pred_latest(const ALBP &albp, const int i) {
+    for (int j: albp.dir_pred[i]) {
+        if (task_assignment[i] < latest[j]) {
+            latest[j] = task_assignment[i];
+        }
+    }
+}
+
+void ALBPSolution::update_suc_earliest(const ALBP &albp, const int i) {
+    for (int j: albp.dir_suc[i]) {
+        if (task_assignment[i] > earliest[j]) {
+            earliest[j] = task_assignment[i];
+        }
+    }
+}
+
+void ALBPSolution::update_window(const ALBP &albp, const int i) {
+    update_pred_latest(albp,i);
+    update_suc_earliest(albp,i);
+}
+ void ALBPSolution::find_all_latest(const ALBP &albp){
+    latest.resize(albp.N,n_stations-1);
+    for (int i =0; i < albp.N; i++){
+        find_latest(albp, i);
+
+        }
+    }
+
+
+
 void ALBPSolution::station_to_task(){
     // Convert station assignment to task assignment
     task_assignment.clear();
@@ -80,8 +153,59 @@ void ALBPSolution::ranking_to_task_ranking() {
 }
 
 
+int calc_lb_1(const std::vector<int>& task_time, const int C) {
+    int lb_1 = std::accumulate(task_time.begin(), task_time.end(), 0);
+    lb_1 = (lb_1 + C - 1) / C; // ceil(lb_1 / C)
+    return lb_1;
+}
 
+int calc_lb_2(const std::vector<int>& task_time, const int C) {
+    int red_count = 0; //tasks over C/2
+    int blue_count = 0; // tasks under or equal to C/2
+    for (const auto& task : task_time) {
+        if (static_cast<double>(task) > static_cast<double>(C)/2) {
+            ++red_count;
+        }
+        else {
+            ++blue_count;
+        }
+    }
+    return red_count + (blue_count+1)/2;
+}
 
+int calc_salbp_2_lb_1(const std::vector<int>& task_time, const int S) {
+    return (std::accumulate(task_time.begin(), task_time.end(), 0)+ S-1)/ S;
+}
+
+int calc_salbp_2_lb_2(const std::vector<int>& task_time, const int S) {
+    return ( *std::max_element(task_time.begin(),task_time.end()));
+}
+
+int calc_salb_2_lb_3(const std::vector<int>& task_time, const int S) {
+    std::vector<int> sorted = task_time;
+    std::sort(sorted.begin(), sorted.end());
+    int hole_size = size(task_time)/S;
+    return std::accumulate(sorted.begin(), sorted.begin()+hole_size, 0) ;
+}
+int calc_salbp_2_lbs(const std::vector<int>& task_time, const int S) {
+    std::vector<int> lbs = {calc_salbp_2_lb_1(task_time,S), calc_salbp_2_lb_2(task_time,S), calc_salb_2_lb_3(task_time,S)};
+    return ( *std::max_element(lbs.begin(),lbs.end()));
+}
+
+int calc_salbp_2_ub(const std::vector<int>& task_time, int S) {
+    int length = size(task_time);
+    int up = 0;
+    if (length ==1) return task_time[0]; //Only 1 element, C is its duration
+    const int t_max = *std::max_element(task_time.begin(),task_time.end());
+    const int t_sum = std::accumulate(task_time.begin(), task_time.end(), 0);
+    if (length % 2 == 0) {
+        up = (2 * t_sum + S-1)/ S;
+    }
+    else {
+        up = (2 * t_sum + S-1) / (S +1);
+    }
+    return std::max(t_max, up);
+}
 
 void task_oriented_assignment(const ALBP& albp,ALBPSolution& solution) {
     std::vector<int> task_assignment(albp.N, -1);

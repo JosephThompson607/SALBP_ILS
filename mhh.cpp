@@ -4,7 +4,7 @@
 #include "albp_solution.h"
 #include "ALBP.h"
 #include "mhh.h"
-
+#include <iostream>
 #include <cfloat>
 
 MHH::MHH(const ALBP& albp, const float alpha, const float beta, const int max_attempts):
@@ -35,11 +35,6 @@ MHH::MHH(const ALBP& albp, const float alpha, const float beta, const int max_at
     ALBPSolution MHH::solve() {
         ALBPSolution mhh_sol = ALBPSolution(albp_.N);
         mhh_sol.n_stations = 0;
-
-
-
-
-
         int total_assigned = 0;
         while (total_assigned < albp_.N) {
             s_task_assign_.clear();
@@ -64,24 +59,57 @@ MHH::MHH(const ALBP& albp, const float alpha, const float beta, const int max_at
             total_assigned +=  best_s_task_assign_.size();
             mhh_sol.n_stations++;
             }
+
         mhh_sol.task_to_station();
         mhh_sol.station_to_ranking();
+        mhh_sol.station_to_load(albp_);
+        mhh_sol.find_windows(albp_);
+        mhh_sol.cycle_time = *std::max_element(mhh_sol.load.begin(), mhh_sol.load.end());
         return mhh_sol;
     }
 
-    ALBPSolution mhh_solve_salbp1(const ALBP &albp) {
+    ALBPSolution hoff_solve_salbp1(const ALBP &albp) {
         auto mhh= MHH(albp);
         ALBPSolution result =mhh.solve();
         return result;
 }
 
-    ALBPSolution mhh_solve_salbp1(const int C,const int N, const std::vector<int>& task_times, const std::vector<std::vector<int>>& raw_precedence) {
+    ALBPSolution hoff_solve_salbp1(const int C,const int N, const std::vector<int>& task_times, const std::vector<std::vector<int>>& raw_precedence) {
         ALBP albp(C, N, task_times, raw_precedence);
-        for(float i = 0; i < albp.N; i++) {}
         auto mhh= MHH(albp);
         ALBPSolution result =mhh.solve();
         return result;
     }
+
+ALBPSolution mhh_solve(const ALBP &albp) {
+    auto mhh= MHH(albp);
+    ALBPSolution best_result =mhh.solve();
+
+    for(int i = 0; i <=4; i++) {
+        float alpha = 0.005 * i;
+        for (int j = 0; j < albp.N; j++) {
+            float beta = 0.005 * j;
+            auto mhh1= MHH(albp, alpha, beta);
+
+            if (ALBPSolution result =mhh1.solve(); result.n_stations < best_result.n_stations){
+                std::cout << "best stations: " << best_result.n_stations << " new: "<<result.n_stations << std::endl;
+                best_result = result;
+            }
+        }
+    }
+
+    return best_result;
+}
+ALBPSolution mhh_solve_salbp1(const ALBP &albp) {
+    ALBPSolution best_result = mhh_solve(albp);
+    return best_result;
+}
+
+ALBPSolution mhh_solve_salbp1(const int C,const int N, const std::vector<int>& task_times, const std::vector<std::vector<int>>& raw_precedence) {
+    ALBP albp(C, N, task_times, raw_precedence);
+    ALBPSolution best_result = mhh_solve(albp);
+    return best_result;
+}
 
     void MHH::gen_load( int depth, int remaining_time,const int start, int n_eligible, float cost) {
 

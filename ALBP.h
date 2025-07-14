@@ -13,9 +13,9 @@ struct PrecedenceRelation {
 
 struct ALBP{
     std::string name; //Name of the ALBPß
-    int C; //Cycle time
+    int C; //Cycle time (for SALBP-1)
     int N; //Number of tasks
-    int S; //Number of stations (not used for SALBP-1)
+    int S; //Number of stations (For SALBP-2)
     std::vector<int> task_time; //Task times
     std::vector<int> prec_mat; //Precedence matrix
     std::vector<int> t_close_mat;

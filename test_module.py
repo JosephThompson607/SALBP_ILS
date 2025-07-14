@@ -118,14 +118,13 @@ try:
         N = len(tasks_times_list)
 
         try:
-            mhh_sol = ILS_ALBP.mhh_solve_salbp1(
+            mhh_sol = ILS_ALBP.hoff_solve_salbp1(
                 C=cycle_time,
                 N=N,
                 task_times=tasks_times_list,
                 raw_precedence=precedence_list,
 
             )
-            print("THIS IS THE MHH return",mhh_sol)
 
 
 
