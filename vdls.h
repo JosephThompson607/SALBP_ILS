@@ -4,6 +4,8 @@
 
 #ifndef VDLS_H
 #define VDLS_H
+#include <chrono>
+
 #include "ALBP.h"
 #include "albp_solution.h"
 
@@ -11,9 +13,9 @@
 class VDLS {
 public:
     //explicit ALBP(const std::string& filename) { loadFromFile(filename); }
-    explicit VDLS(const ALBP& albp,  int max_attempts = 5000):albp_(albp), max_attempts_(max_attempts) {}
+    explicit VDLS(const ALBP& albp,  int max_attempts = 5000, int time_limit=7200):albp_(albp), max_attempts_(max_attempts), time_limit_(time_limit) {}
     ALBPSolution solve_type_1( );
-
+    bool time_exceeded() const;
 private:
     //Variables
     const ALBP& albp_;
@@ -23,6 +25,8 @@ private:
     int max_depth_=6; //number of shifts to consider
     int lb_;
     int n_perts_ = 6;
+    std::chrono::steady_clock::time_point start_time_;
+    std::chrono::seconds time_limit_;
     std::vector<int>  pw_{};
 
     //Methods
@@ -33,6 +37,6 @@ private:
     void perturbation(ALBPSolution& incumbent_solution);
 };
 
-ALBPSolution vdls_solve_salbp1(const ALBP &albp);
-ALBPSolution vdls_solve_salbp1( int C,int N, const std::vector<int>& task_times, const std::vector<std::vector<int>>& raw_precedence);
+ALBPSolution vdls_solve_salbp1(const ALBP &albp, int max_attempts=5000, int time_limit = 7200);
+ALBPSolution vdls_solve_salbp1( int C,int N, const std::vector<int>& task_times, const std::vector<std::vector<int>>& raw_precedence, int max_attempts=5000, int time_limit = 7200);
 #endif //VDLS_H

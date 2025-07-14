@@ -10,11 +10,16 @@
 
 #include "mhh.h"
 
+bool VDLS::time_exceeded() const {
+        auto now = std::chrono::steady_clock::now();
+        return (now - start_time_) >= time_limit_;
+}
+
 ALBPSolution VDLS::solve_type_1( ) {
         best_= mhh_solve_salbp1(albp_); //Get initial SALBP-1 solution
         int n_stations = best_.n_stations;
         const int salbp_1_lb = calc_lb_1(albp_.task_time, albp_.C); //TODO: add in other lower bounds
-        while (best_.n_stations > salbp_1_lb) {
+        while (best_.n_stations > salbp_1_lb && !time_exceeded() ) {
                 ALBPSolution candidate = best_;
                 n_stations --;//Try again with one fewer station
                 //Check to see if even possible in allotted cycle time
@@ -25,7 +30,7 @@ ALBPSolution VDLS::solve_type_1( ) {
                 }
 
 
-                ALBPSolution local_best = vdls_heuristic(n_stations, albp_.C *1.0);
+                ALBPSolution local_best = vdls_heuristic(n_stations, albp_.C);
                 if (local_best.cycle_time <= albp_.C) {
                         best_ = local_best;
 
@@ -224,7 +229,7 @@ void VDLS::perturbation(ALBPSolution &new_sol) {
 ALBPSolution VDLS::vdls_heuristic( int n_stations,  int lb) {
         ALBPSolution local_best = hoff_search(n_stations);
         ALBPSolution new_sol = local_best;
-        while ((n_attempts_ < max_attempts_ ) && (local_best.cycle_time > lb)) {
+        while ((n_attempts_ < max_attempts_ ) && (local_best.cycle_time > lb) &&(!time_exceeded())) {
                 bool improved = false;
                 do {//Perform local search, restarting if we find an improved solution with depth 0
                         improved = local_search(local_best,new_sol, 0, -1, improved);
@@ -236,15 +241,15 @@ ALBPSolution VDLS::vdls_heuristic( int n_stations,  int lb) {
         return local_best;
 
 }
-ALBPSolution vdls_solve_salbp1(const ALBP &albp) {
-        auto vdls= VDLS(albp);
+ALBPSolution vdls_solve_salbp1(const ALBP &albp, const int max_attempts, const int time_limit) {
+        auto vdls= VDLS(albp, max_attempts, time_limit);
         ALBPSolution result =vdls.solve_type_1();
         return result;
 }
 
-ALBPSolution vdls_solve_salbp1(const int C,const int N, const std::vector<int>& task_times, const std::vector<std::vector<int>>& raw_precedence) {
+ALBPSolution vdls_solve_salbp1(const int C,const int N, const std::vector<int>& task_times, const std::vector<std::vector<int>>& raw_precedence, const int max_attempts, const int time_limit) {
         ALBP albp(C, N, task_times, raw_precedence);
-        auto vdls= VDLS(albp);
+        auto vdls= VDLS(albp, max_attempts, time_limit);
         ALBPSolution best = vdls.solve_type_1();
         return best;
 }
