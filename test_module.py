@@ -145,6 +145,7 @@ try:
                 N=N,
                 task_times=tasks_times_list,
                 raw_precedence=precedence_list,
+                time_limit = 20,
 
             )
 
@@ -153,6 +154,29 @@ try:
         except Exception as e:
             print(f"Error solving SALBP1: {e}")
             print(f"Here are the function types:C {type(C)}, N {type(N)}, task_times{type(tasks_times_list)} (task_times[0] {type(tasks_times_list[0])}, raw_precedence{type(precedence_list)}")
+            return None
+
+    def vdls_type2_call(S, tasks_times_list, precedence_list,
+                      ):
+
+
+        N = len(tasks_times_list)
+
+        try:
+            vdls_sol = ILS_ALBP.vdls_solve_salbp2(
+                S=S,
+                N=N,
+                task_times=tasks_times_list,
+                raw_precedence=precedence_list,
+                time_limit = 20,
+
+            )
+
+            return vdls_sol
+
+        except Exception as e:
+            print(f"Error solving SALBP2: {e}")
+            print(f"Here are the function types:S {type(S)}, N {type(N)}, task_times{type(tasks_times_list)} (task_times[0] {type(tasks_times_list[0])}, raw_precedence{type(precedence_list)}")
             return None
 
 
@@ -174,6 +198,10 @@ try:
     results = vdls_call(cycle_time=C, tasks_times_list= t_times, precedence_list=precs)
     end = time.time()- start
     print(f"✅ Created ALBPSolution using vdls with {results.n_stations} stations in {end} seconds")
+    start  = time.time()
+    results = vdls_type2_call(S=4, tasks_times_list= t_times, precedence_list=precs)
+    end = time.time()- start
+    print(f"✅ Created ALBPSolution using vdls with {results.cycle_time} cycle time in {end} seconds")
 
 
 

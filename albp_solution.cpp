@@ -664,6 +664,8 @@ ALBPSolution process_init_solution( const ALBP &albp, const std::vector<int> &in
     solution.task_to_station();
     solution.station_to_ranking();
     solution.ranking_to_task_ranking();
+    solution.station_to_load(albp);
+    solution.find_windows(albp);
     solution.n_violations = 0;
 
     return solution;

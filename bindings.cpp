@@ -13,92 +13,98 @@ namespace py = pybind11;
 
 PYBIND11_MODULE(ILS_ALBP, m) {
     py::class_<PrecedenceRelation>(m, "PrecedenceRelation")
-        .def(py::init<>())
-        .def_readwrite("parent", &PrecedenceRelation::parent)
-        .def_readwrite("child", &PrecedenceRelation::child);
+            .def(py::init<>())
+            .def_readwrite("parent", &PrecedenceRelation::parent)
+            .def_readwrite("child", &PrecedenceRelation::child);
 
     py::class_<ALBP>(m, "ALBP")
-        .def(py::init<>())  // default
-        .def(py::init<const std::string&>())  // from filename
-        .def(py::init<int, int, const std::vector<int>&, const std::vector<std::vector<int>>&>(),  // custom constructor
-             py::arg("C"),
-             py::arg("N"),
-             py::arg("task_times"),
-             py::arg("raw_precedence"))
-        .def("print", &ALBP::print)
-        .def("loadFromFile", &ALBP::loadFromFile)
-        .def_readwrite("name", &ALBP::name)
-        .def_readwrite("C", &ALBP::C)
-        .def_readwrite("N", &ALBP::N)
-        .def_readwrite("S", &ALBP::S)
-        .def_readwrite("task_time", &ALBP::task_time)
-        .def_readwrite("prec_mat", &ALBP::prec_mat)
-        .def_readwrite("t_close_mat", &ALBP::t_close_mat)
-        .def_readwrite("dir_suc", &ALBP::dir_suc)
-        .def_readwrite("dir_pred", &ALBP::dir_pred)
-        .def_readwrite("suc", &ALBP::suc)
-        .def_readwrite("pred", &ALBP::pred)
-        .def_readwrite("precedence_relations", &ALBP::precedence_relations)
-        .def_readwrite("task_assignment", &ALBP::task_assignment);
+            .def(py::init<>()) // default
+            .def(py::init<const std::string &>()) // from filename
+                // Bind static factory methods as static methods
+            .def_static("type_1", &ALBP::type_1,
+                py::arg("C"), py::arg("N"), py::arg("task_times"), py::arg("raw_precedence"),
+                "Factory constructor for type_1")
+
+            .def_static("type_2", &ALBP::type_2,
+                py::arg("S"), py::arg("N"), py::arg("task_times"), py::arg("raw_precedence"),
+                "Factory constructor for type_2")
+
+            .def("print", &ALBP::print)
+            .def("loadFromFile", &ALBP::loadFromFile)
+            .def_readwrite("name", &ALBP::name)
+            .def_readwrite("C", &ALBP::C)
+            .def_readwrite("N", &ALBP::N)
+            .def_readwrite("S", &ALBP::S)
+            .def_readwrite("task_time", &ALBP::task_time)
+            .def_readwrite("prec_mat", &ALBP::prec_mat)
+            .def_readwrite("t_close_mat", &ALBP::t_close_mat)
+            .def_readwrite("dir_suc", &ALBP::dir_suc)
+            .def_readwrite("dir_pred", &ALBP::dir_pred)
+            .def_readwrite("suc", &ALBP::suc)
+            .def_readwrite("pred", &ALBP::pred)
+            .def_readwrite("precedence_relations", &ALBP::precedence_relations)
+            .def_readwrite("task_assignment", &ALBP::task_assignment);
 
 
     // Bind the ALBPSolution class
     py::class_<ALBPSolution>(m, "ALBPSolution")
-        // Constructor
-        .def(py::init<int>(), "Create ALBPSolution with number of tasks", py::arg("n_tasks"))
+            // Constructor
+            .def(py::init<int>(), "Create ALBPSolution with number of tasks", py::arg("n_tasks"))
 
-        // Public attributes (read/write)
-        .def_readwrite("task_assignment", &ALBPSolution::task_assignment,
-                      "Task assignment solution vector")
-        .def_readwrite("station_assignments", &ALBPSolution::station_assignments,
-                      "Station assignments solution (vector of vectors)")
-        .def_readwrite("ranking", &ALBPSolution::ranking,
-                      "Tasks in order of ranking")
-        .def_readwrite("task_ranking", &ALBPSolution::task_ranking,
-                      "Ranking for each task")
-        .def_readwrite("n_stations", &ALBPSolution::n_stations,
-                      "Number of stations")
-        .def_readwrite("n_violations", &ALBPSolution::n_violations,
-                      "Number of violations")
-        .def_readwrite("n_ranking_violations", &ALBPSolution::n_ranking_violations,
-                      "Number of violations from ranking")
+            // Public attributes (read/write)
+            .def_readwrite("task_assignment", &ALBPSolution::task_assignment,
+                           "Task assignment solution vector")
+            .def_readwrite("station_assignments", &ALBPSolution::station_assignments,
+                           "Station assignments solution (vector of vectors)")
+            .def_readwrite("ranking", &ALBPSolution::ranking,
+                           "Tasks in order of ranking")
+            .def_readwrite("task_ranking", &ALBPSolution::task_ranking,
+                           "Ranking for each task")
+            .def_readwrite("n_stations", &ALBPSolution::n_stations,
+                           "Number of stations")
+            .def_readwrite("cycle_time", &ALBPSolution::cycle_time ,
+               "Cycle time")
+            .def_readwrite("n_violations", &ALBPSolution::n_violations,
+                           "Number of violations")
+            .def_readwrite("n_ranking_violations", &ALBPSolution::n_ranking_violations,
+                           "Number of violations from ranking")
 
-        // Read-only property for n_tasks (since it's private with getter)
-        .def_property_readonly("n_tasks", &ALBPSolution::get_n_tasks,
-                              "Number of tasks (read-only)")
+            // Read-only property for n_tasks (since it's private with getter)
+            .def_property_readonly("n_tasks", &ALBPSolution::get_n_tasks,
+                                   "Number of tasks (read-only)")
 
-        // Public methods
-        .def("print", &ALBPSolution::print,
-             "Print the solution")
-        .def("task_to_station", &ALBPSolution::task_to_station,
-             "Convert task assignment to station assignment")
-        .def("station_to_task", &ALBPSolution::station_to_task,
-             "Convert station assignment to task assignment")
-        .def("station_to_ranking", &ALBPSolution::station_to_ranking,
-             "Convert station assignment to ranking")
-        .def("ranking_to_task_ranking", &ALBPSolution::ranking_to_task_ranking,
-             "Convert ranking to task ranking")
+            // Public methods
+            .def("print", &ALBPSolution::print,
+                 "Print the solution")
+            .def("task_to_station", &ALBPSolution::task_to_station,
+                 "Convert task assignment to station assignment")
+            .def("station_to_task", &ALBPSolution::station_to_task,
+                 "Convert station assignment to task assignment")
+            .def("station_to_ranking", &ALBPSolution::station_to_ranking,
+                 "Convert station assignment to ranking")
+            .def("ranking_to_task_ranking", &ALBPSolution::ranking_to_task_ranking,
+                 "Convert ranking to task ranking")
 
-        // String representation for Python
-        .def("__repr__", [](const ALBPSolution &sol) {
-            return "<ALBPSolution: " + std::to_string(sol.get_n_tasks()) +
-                   " tasks, " + std::to_string(sol.n_stations) +
-                   " stations, " + std::to_string(sol.n_violations) + " violations>";
-        })
+            // String representation for Python
+            .def("__repr__", [](const ALBPSolution &sol) {
+                return "<ALBPSolution: " + std::to_string(sol.get_n_tasks()) +
+                       " tasks, " + std::to_string(sol.n_stations) +
+                       " stations, " + std::to_string(sol.n_violations) + " violations>";
+            })
 
-        // Optional: Add a method to get solution summary as dict
-        .def("to_dict", [](const ALBPSolution &sol) {
-            py::dict d;
-            d["n_tasks"] = sol.get_n_tasks();
-            d["n_stations"] = sol.n_stations;
-            d["n_violations"] = sol.n_violations;
-            d["n_ranking_violations"] = sol.n_ranking_violations;
-            d["task_assignment"] = sol.task_assignment;
-            d["station_assignments"] = sol.station_assignments;
-            d["ranking"] = sol.ranking;
-            d["task_ranking"] = sol.task_ranking;
-            return d;
-        }, "Convert solution to dictionary");
+            // Optional: Add a method to get solution summary as dict
+            .def("to_dict", [](const ALBPSolution &sol) {
+                py::dict d;
+                d["n_tasks"] = sol.get_n_tasks();
+                d["n_stations"] = sol.n_stations;
+                d["n_violations"] = sol.n_violations;
+                d["n_ranking_violations"] = sol.n_ranking_violations;
+                d["task_assignment"] = sol.task_assignment;
+                d["station_assignments"] = sol.station_assignments;
+                d["ranking"] = sol.ranking;
+                d["task_ranking"] = sol.task_ranking;
+                return d;
+            }, "Convert solution to dictionary");
 
     // Bind your main solver function
     m.def("ils_solve_SALBP1", &ils_solve_SALBP1,
@@ -136,13 +142,13 @@ PYBIND11_MODULE(ILS_ALBP, m) {
           )pbdoc");
 
     m.def("hoff_solve_salbp1",
-      [](int C, int N, const std::vector<int>& task_times, const std::vector<std::vector<int>>& raw_precedence) {
-          return hoff_solve_salbp1(C, N, task_times, raw_precedence);
-    },        py::arg("C"),
-            py::arg("N"),
-            py::arg("task_times"),
+          [](int C, int N, const std::vector<int> &task_times, const std::vector<std::vector<int> > &raw_precedence) {
+              return hoff_solve_salbp1(C, N, task_times, raw_precedence);
+          }, py::arg("C"),
+          py::arg("N"),
+          py::arg("task_times"),
           py::arg("raw_precedence"),
-    R"pbdoc(
+          R"pbdoc(
           Solve SALBP1 using Hoffman heuristic
 
           Parameters:
@@ -160,14 +166,14 @@ PYBIND11_MODULE(ILS_ALBP, m) {
           ALBPSolution
               The solved ALBP solution
           )pbdoc"
-      );
+    );
 
     // Second overload using lambda
     m.def("hoff_solve_salbp1",
-          [](const ALBP& albp) {
+          [](const ALBP &albp) {
               return hoff_solve_salbp1(albp);
-    },
-    R"pbdoc(
+          },
+          R"pbdoc(
           Solve SALBP1 using Hoffman heuristic
 
           Parameters:
@@ -180,51 +186,99 @@ PYBIND11_MODULE(ILS_ALBP, m) {
               The solved ALBP solution
           )pbdoc");
     m.def("vdls_solve_salbp1",
-  [](int C, int N, const std::vector<int>& task_times, const std::vector<std::vector<int>>& raw_precedence) {
-      return vdls_solve_salbp1(C, N, task_times, raw_precedence);
-},        py::arg("C"),
-        py::arg("N"),
-        py::arg("task_times"),
-      py::arg("raw_precedence"),
-R"pbdoc(
-          Solve SALBP1 using vdls heuristic
+          [](int C,
+             int N,
+             const std::vector<int> &task_times,
+             const std::vector<std::vector<int> > &raw_precedence,
+             const std::vector<int> &initial_solution,
+             const std::optional<int> &max_attempts,
+             const std::optional<int> &time_limit
+  ) {
+              return vdls_solve_salbp1(C, N, task_times, raw_precedence,initial_solution, max_attempts, time_limit);
+          }, py::arg("C"),
+          py::arg("N"),
+          py::arg("task_times"),
+          py::arg("raw_precedence"),
+          py::arg("initial_solution")= std::vector<int>(),
+          py::arg("max_attempts") = std::nullopt,
+          py::arg("time_limit") = std::nullopt,
+          R"pbdoc(
+                          Solve SALBP1 using vdls heuristic
 
-          Parameters:
-          -----------
-          C : int
-              Cycle time
-          N : int
-              Number of tasks
-          task_times : list of int
-              Task processing times
-          raw_precedence : list of list of int
-              Precedence relationships
-          Returns:
-          --------
-          ALBPSolution
-              The solved ALBP solution
-          )pbdoc"
-  );
+                  Parameters:
+                  -----------
+                  C : int
+                      Cycle time
+                  N : int
+                      Number of tasks
+                  task_times : list of int
+                      Task processing times
+                  raw_precedence : list of list of int
+                      Precedence relationships
+                  Returns:
+                  --------
+                  ALBPSolution
+                      The solved ALBP solution
+                  )pbdoc"
+    );
 
     m.def("vdls_solve_salbp1",
-          [](const ALBP& albp) {
-              return vdls_solve_salbp1(albp);
-    },
-    R"pbdoc(
-          Solve SALBP1 using vdls heuristic
+          [](const ALBP &albp,
+             const std::optional<int> &max_attempts,
+             const std::optional<int> &time_limit) {
+              return vdls_solve_salbp1(albp,  max_attempts, time_limit);
+          },
+          py::arg("albp"),
+          py::arg("max_attempts") = std::nullopt,
+          py::arg("time_limit") = std::nullopt,
+          R"pbdoc(
+              Solve SALBP1 using vdls heuristic
 
-          Parameters:
-          -----------
-            albp : ALBP (struct)
+              Parameters:
+              -----------
+                albp : ALBP (struct)
 
-          Returns:
-          --------
-          ALBPSolution
-              The solved ALBP solution
-          )pbdoc");
+              Returns:
+              --------
+              ALBPSolution
+                  The solved ALBP solution
+              )pbdoc");
+    m.def("vdls_solve_salbp2",
+          [](int S,
+             int N,
+             const std::vector<int> &task_times,
+             const std::vector<std::vector<int> > &raw_precedence,
+             const std::vector<int> &initial_solution,
+             const std::optional<int> &max_attempts,
+             const std::optional<int> &time_limit
+  ) {
+              return vdls_solve_salbp2(S, N, task_times, raw_precedence,initial_solution, max_attempts, time_limit);
+          }, py::arg("S"),
+          py::arg("N"),
+          py::arg("task_times"),
+          py::arg("raw_precedence"),
+          py::arg("initial_solution")= std::vector<int>(),
+          py::arg("max_attempts") = std::nullopt,
+          py::arg("time_limit") = std::nullopt,
+          R"pbdoc(
+                          Solve SALBP1 using vdls heuristic
 
-
-
-
-
+                  Parameters:
+                  -----------
+                  S : int
+                      Number of stations
+                  N : int
+                      Number of tasks
+                  task_times : list of int
+                      Task processing times
+                  raw_precedence : list of list of int
+                      Precedence relationships
+                  Returns:
+                  --------
+                  ALBPSolution
+                      The solved ALBP solution
+                  )pbdoc"
+    );
 }
+
+

@@ -29,12 +29,16 @@ struct ALBP{
 
     ALBP() = default;
     explicit ALBP(const std::string& filename) { loadFromFile(filename); }
-    ALBP(int C, int N, const std::vector<int>& task_times, const std::vector<std::vector<int>>& raw_precedence);
+    static ALBP type_1(int C, int N, const std::vector<int>& task_times, const std::vector<std::vector<int>>& raw_precedence);
+    static ALBP type_2(int S, int N, const std::vector<int>& task_times_, const std::vector<std::vector<int>>& raw_precedence);
     void print(bool print_prec_mat);
 
     void calc_trans_closure();
 
     bool loadFromFile(const std::string& filename);
+    private:
+        ALBP(int S, int C, int N, const std::vector<int>& task_times,const std::vector<std::vector<int>>& raw_precedence);
+
 };
 
 #endif // ALBP_H

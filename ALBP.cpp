@@ -50,13 +50,13 @@ std::vector<std::vector<int>> all_predecessors(const std::vector<int>& t_close_m
     return all_pred;
 }
 
-ALBP::ALBP(int C_, int N_, const std::vector<int>& task_times_, const std::vector<std::vector<int>>& raw_precedence) {
+ALBP::ALBP(int C_, int S_, int N_, const std::vector<int>& task_times_, const std::vector<std::vector<int>>& raw_precedence) {
     if (task_times_.size() != static_cast<size_t>(N_)) {
         throw std::invalid_argument("task_times size does not match N");
     }
     C = C_;
     N = N_;
-    S= N_; //Not used for SALBP_1
+    S= S_; //Not used for SALBP_1
     task_time = task_times_;
     name = "constructed_from_data";
 
@@ -80,6 +80,17 @@ ALBP::ALBP(int C_, int N_, const std::vector<int>& task_times_, const std::vecto
     }
     calc_trans_closure();
 }
+
+ALBP ALBP::type_2(int S_, int N_, const std::vector<int>& task_times_, const std::vector<std::vector<int>>& raw_precedence) {
+    int C_ub = std::accumulate(task_times_.begin(), task_times_.end(), 0);
+   return ALBP(C_ub, S_, N_, task_times_, raw_precedence);
+}
+
+ALBP ALBP::type_1(int C_, int N_, const std::vector<int>& task_times_, const std::vector<std::vector<int>>& raw_precedence) {
+    int S_ub = N_;
+    return ALBP(C_, S_ub, N_, task_times_, raw_precedence);
+}
+
 
 
 //print function

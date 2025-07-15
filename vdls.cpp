@@ -14,9 +14,15 @@ bool VDLS::time_exceeded() const {
         auto now = std::chrono::steady_clock::now();
         return (now - start_time_) >= time_limit_;
 }
-
-ALBPSolution VDLS::solve_type_1( ) {
-        best_= mhh_solve_salbp1(albp_); //Get initial SALBP-1 solution
+void VDLS::add_init_solution(std::vector<int>init_solution) {
+        std::cout<<"Initial solution added, processing"<<std::endl;
+        best_ = process_init_solution(albp_, init_solution);
+}
+ALBPSolution VDLS::solve_type_1(  ) {
+        if (best_.station_assignments.empty()) {
+                std::cout<<"no initial solution, calculating new solution"<<std::endl;
+                best_= mhh_solve_salbp1(albp_); //Get initial SALBP-1 solution
+        }
         int n_stations = best_.n_stations;
         const int salbp_1_lb = calc_lb_1(albp_.task_time, albp_.C); //TODO: add in other lower bounds
         while (best_.n_stations > salbp_1_lb && !time_exceeded() ) {
@@ -38,6 +44,11 @@ ALBPSolution VDLS::solve_type_1( ) {
                 }
                 else break; //Couldn't find an SALBP-2 solution <C for the given number of stations. Give up.
         }
+        return best_;
+}
+
+ALBPSolution VDLS::solve_type_2(  ) {
+        best_ = vdls_heuristic(albp_.S, albp_.C);
         return best_;
 }
 
@@ -239,17 +250,48 @@ ALBPSolution VDLS::vdls_heuristic( int n_stations,  int lb) {
                 n_attempts_ ++;
         }
         return local_best;
-
 }
-ALBPSolution vdls_solve_salbp1(const ALBP &albp, const int max_attempts, const int time_limit) {
-        auto vdls= VDLS(albp, max_attempts, time_limit);
+
+
+ALBPSolution vdls_solve_salbp1(const ALBP &albp, std::optional<int> max_attempts , std::optional<int> time_limit   ) {
+        int attempts = max_attempts.value_or(5000);  // default if not passed
+        int limit = time_limit.value_or(7200);
+
+        auto vdls= VDLS(albp, attempts, limit);
         ALBPSolution result =vdls.solve_type_1();
         return result;
 }
 
-ALBPSolution vdls_solve_salbp1(const int C,const int N, const std::vector<int>& task_times, const std::vector<std::vector<int>>& raw_precedence, const int max_attempts, const int time_limit) {
-        ALBP albp(C, N, task_times, raw_precedence);
-        auto vdls= VDLS(albp, max_attempts, time_limit);
+ALBPSolution vdls_solve_salbp2(const ALBP &albp, std::optional<int> max_attempts , std::optional<int> time_limit   ) {
+        int attempts = max_attempts.value_or(5000);  // default if not passed
+        int limit = time_limit.value_or(7200);
+
+        auto vdls= VDLS(albp, attempts, limit);
+        ALBPSolution result =vdls.solve_type_2();
+        return result;
+}
+ALBPSolution vdls_solve_salbp2(const int S,const int N, const std::vector<int>& task_times, const std::vector<std::vector<int>>& raw_precedence, const std::vector<int> &initial_solution,std::optional<int> max_attempts,
+                                std::optional<int> time_limit) {
+        int attempts = max_attempts.value_or(5000);  // default if not passed
+        int limit = time_limit.value_or(7200);      // default if not passed
+        ALBP albp = ALBP::type_2(S, N, task_times, raw_precedence);
+        auto vdls= VDLS(albp, attempts, limit);
+        if (!initial_solution.empty()) {
+                vdls.add_init_solution(initial_solution);
+        }
+        ALBPSolution best = vdls.solve_type_2();
+        return best;
+}
+
+ALBPSolution vdls_solve_salbp1(const int C,const int N, const std::vector<int>& task_times, const std::vector<std::vector<int>>& raw_precedence, const std::vector<int> &initial_solution,std::optional<int> max_attempts,
+                                std::optional<int> time_limit) {
+        int attempts = max_attempts.value_or(5000);  // default if not passed
+        int limit = time_limit.value_or(7200);      // default if not passed
+        ALBP albp = ALBP::type_1(C, N, task_times, raw_precedence);
+        auto vdls= VDLS(albp, attempts, limit);
+        if (!initial_solution.empty()) {
+                vdls.add_init_solution(initial_solution);
+        }
         ALBPSolution best = vdls.solve_type_1();
         return best;
 }

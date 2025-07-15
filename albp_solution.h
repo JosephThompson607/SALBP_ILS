@@ -54,6 +54,7 @@ int calc_salbp_2_lbs(const std::vector<int>& task_time, int S);
 int calc_salbp_2_ub(const std::vector<int>& task_time, int S);
 std::vector<int>  get_positional_weight(const ALBP &albp);
 ALBPSolution generate_approx_solution( const ALBP&albp,  int n_random,  const std::vector<int> &initial_solution = std::vector<int>());
+ALBPSolution process_init_solution( const ALBP &albp, const std::vector<int> &initial_solution);
 void shallow_task_assignment( const ALBP&albp,  ALBPSolution& solution);
 void task_oriented_assignment( const ALBP& albp,ALBPSolution& solution);
 int count_violations(const ALBP&albp, const std::vector<int>& task_assignment);
