@@ -96,7 +96,8 @@ ALBP ALBP::type_1(int C_, int N_, const std::vector<int>& task_times_, const std
 //print function
 void ALBP::print(bool print_prec_mat = false) {
     std::cout << "ALBP Name: " << name << std::endl;
-    std::cout << "Cycle time: " << C << std::endl;
+    std::cout << "Cycle time (SALBP-1 only: " << C << std::endl;
+    std::cout << "Number of stations (SALBP-2 only): " << S << std::endl;
     std::cout << "Number of tasks: " << N << std::endl;
     std::cout << "Task times: ";
     for (int i = 0; i < N; ++i) {

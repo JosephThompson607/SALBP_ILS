@@ -12,6 +12,7 @@
 
 bool VDLS::time_exceeded() const {
         auto now = std::chrono::steady_clock::now();
+
         return (now - start_time_) >= time_limit_;
 }
 void VDLS::add_init_solution(std::vector<int>init_solution) {
@@ -48,7 +49,8 @@ ALBPSolution VDLS::solve_type_1(  ) {
 }
 
 ALBPSolution VDLS::solve_type_2(  ) {
-        best_ = vdls_heuristic(albp_.S, albp_.C);
+        int lb = calc_salbp_2_lbs(albp_.task_time, albp_.S);
+        best_ = vdls_heuristic(albp_.S, lb);
         return best_;
 }
 
@@ -93,8 +95,10 @@ void VDLS::perform_shift(ALBPSolution &sol, int task, int task_idx, int old_stat
         sol.station_assignments[old_station].pop_back();// Remove last element
         sol.station_assignments[new_station].push_back(task);
         //Changes the station loads
-        sol.load[old_station] += albp_.task_time[task];
-        sol.load[new_station] -= albp_.task_time[task];
+        sol.loads[old_station] -= albp_.task_time[task];
+        sol.loads[new_station] += albp_.task_time[task];
+        //Update the cycle time (if applicable)
+        sol.cycle_time = *std::max_element(sol.loads.begin(),sol.loads.end());
         //Changes the earliest and latest for parents and children
         sol.update_window(albp_,task);
 
@@ -106,12 +110,12 @@ void VDLS::perform_shift(ALBPSolution &sol, int task, int task_idx, int old_stat
  * improvement to the solution
  */
 bool VDLS::local_search(ALBPSolution &local_best, ALBPSolution &incumbent, int depth, int last_task, bool improved) {
-        if (depth ==max_depth_ || local_best.cycle_time <= lb_) {
+        if (depth ==max_depth_ || local_best.cycle_time <= lb_ || time_exceeded()) {
                 return false;
         }
-        //Get the station with the highest load
-        auto max_it = std::max_element(incumbent.load.begin(),incumbent.load.end());
-        int station_idx = std::distance(incumbent.load.begin(),max_it);
+        //Get the station with the highest loads
+        auto max_it = std::max_element(incumbent.loads.begin(),incumbent.loads.end());
+        int station_idx = std::distance(incumbent.loads.begin(),max_it);
         //Reassign tasks to other stations, provided it wasn't previous task (DFS)
         for (int i=0; i < incumbent.station_assignments[station_idx].size(); i++){
                 int task = incumbent.station_assignments[station_idx][i];
@@ -186,7 +190,7 @@ int select_new_station(ALBPSolution &sol, int task, int station_idx) {
         }
         int selected_station = station_range[0];
         for (int i = 1; i < station_range.size(); ++i) {
-                if (sol.load[station_range[i]] < sol.load[selected_station]) {
+                if (sol.loads[station_range[i]] < sol.loads[selected_station]) {
                         selected_station = station_range[i];
                 }
 
@@ -212,7 +216,7 @@ void VDLS::perturbation(ALBPSolution &new_sol) {
         std:: vector<int> can_change;
         can_change.resize(new_sol.n_stations, 1 );//Keeps track of stations that were already perturbed
         for (int i=0; i<n_perts_; i++) {
-                std::vector<int> max_indices = get_max_indices(new_sol.load, can_change);
+                std::vector<int> max_indices = get_max_indices(new_sol.loads, can_change);
                 //if there are no more max indices, that means that we have ran out of changeable stations
                 if (max_indices.empty()) {
                         return;
@@ -240,11 +244,17 @@ void VDLS::perturbation(ALBPSolution &new_sol) {
 ALBPSolution VDLS::vdls_heuristic( int n_stations,  int lb) {
         ALBPSolution local_best = hoff_search(n_stations);
         ALBPSolution new_sol = local_best;
+        bool time_excee = time_exceeded();
         while ((n_attempts_ < max_attempts_ ) && (local_best.cycle_time > lb) &&(!time_exceeded())) {
                 bool improved = false;
                 do {//Perform local search, restarting if we find an improved solution with depth 0
                         improved = local_search(local_best,new_sol, 0, -1, improved);
-                        if (improved == true) new_sol = local_best;
+                        if (improved == true) {
+                                new_sol = local_best;
+                                auto now = std::chrono::steady_clock::now();
+
+                                new_sol.elapsed_ms = std::chrono::duration_cast<std::chrono::milliseconds>(now - start_time_);
+                        }
                 } while (improved == true);
                 perturbation(new_sol);
                 n_attempts_ ++;
@@ -262,11 +272,14 @@ ALBPSolution vdls_solve_salbp1(const ALBP &albp, std::optional<int> max_attempts
         return result;
 }
 
-ALBPSolution vdls_solve_salbp2(const ALBP &albp, std::optional<int> max_attempts , std::optional<int> time_limit   ) {
+ALBPSolution vdls_solve_salbp2(const ALBP &albp,const std::vector<int> &initial_solution, std::optional<int> max_attempts , std::optional<int> time_limit   ) {
         int attempts = max_attempts.value_or(5000);  // default if not passed
         int limit = time_limit.value_or(7200);
 
         auto vdls= VDLS(albp, attempts, limit);
+        if (!initial_solution.empty()) {
+                vdls.add_init_solution(initial_solution);
+        }
         ALBPSolution result =vdls.solve_type_2();
         return result;
 }

@@ -63,7 +63,9 @@ PYBIND11_MODULE(ILS_ALBP, m) {
             .def_readwrite("n_stations", &ALBPSolution::n_stations,
                            "Number of stations")
             .def_readwrite("cycle_time", &ALBPSolution::cycle_time ,
-               "Cycle time")
+                            "Cycle time")
+            .def_readwrite("loads", &ALBPSolution::loads,
+                            "loads of the stations")
             .def_readwrite("n_violations", &ALBPSolution::n_violations,
                            "Number of violations")
             .def_readwrite("n_ranking_violations", &ALBPSolution::n_ranking_violations,

@@ -18,21 +18,21 @@
 #include <functional>
 #include <stdexcept>  // For std::runtime_error
 
-void ALBPSolution::print() const {
-    std::cout << "ALBP Solution with " << n_stations << " stations: " <<std::endl;
+ void ALBPSolution::print() const {
+    std::cout << "ALBP Solution with S: " << n_stations << "  C: " <<cycle_time <<std::endl;
     for (int i = 0; i < n_stations; ++i) {
-        std::cout << "Station " << i + 1 << ": ";
+        std::cout << "Station " << i + 1 <<" load "<< loads[i] << " : ";
         for (int j : station_assignments[i]) {
             std::cout << j + 1 << " ";
         }
         std::cout << std::endl;
     }
-    std::cout << "Here is the ranking :" << std::endl;
-    for (int i = 0; i < n_tasks; ++i) {
-        std::cout << ranking[i] << " ";
-    }
-    std::cout << std::endl;
+
 }
+
+
+
+
 void ALBPSolution::task_to_station(){
     // Convert task assignment to station assignment
     station_assignments.clear();
@@ -44,12 +44,12 @@ void ALBPSolution::task_to_station(){
 }
 
 void ALBPSolution::station_to_load(const ALBP &albp) {
-    load.clear();
-    load.resize(n_stations);
+    loads.clear();
+    loads.resize(n_stations);
     for (int i = 0; i < n_stations; ++i) {
 
         for ( const int task: station_assignments[i]) {
-            load[i] += (albp.task_time[task]);
+            loads[i] += (albp.task_time[task]);
         }
     }
 }

@@ -64,7 +64,7 @@ MHH::MHH(const ALBP& albp, const float alpha, const float beta, const int max_at
         mhh_sol.station_to_ranking();
         mhh_sol.station_to_load(albp_);
         mhh_sol.find_windows(albp_);
-        mhh_sol.cycle_time = *std::max_element(mhh_sol.load.begin(), mhh_sol.load.end());
+        mhh_sol.cycle_time = *std::max_element(mhh_sol.loads.begin(), mhh_sol.loads.end());
         return mhh_sol;
     }
 

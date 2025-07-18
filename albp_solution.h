@@ -1,5 +1,7 @@
 #ifndef ALBP_SOLUTION_H
 #define ALBP_SOLUTION_H
+#include <chrono>
+using std::chrono::milliseconds;
 #include "ALBP.h"
 #include <string>
 #include <vector>
@@ -11,9 +13,10 @@ private:
 public:
     std::vector<int> task_assignment; //Solution
     std::vector<std::vector<int>> station_assignments; //Solution
-    std::vector<int> load;// how much time is used at each station (VDLS)
+    std::vector<int> loads;// how much time is used at each station (VDLS)
     std::vector<int> earliest; //Earliest station each task can be assigned to, based on predecessors/successors (VDLS)
     std::vector<int> latest; //Latest station each task can be assigned to, based on predecessors/successors (VDLS)
+    milliseconds elapsed_ms; //Run time TODO implement for hoffman and ILS
     std::vector<int> ranking; //Gives the tasks in order of ranking (ILS)
     std::vector<int> task_ranking; //Gives the ranking for each task (ILS)
     int n_stations{};//For SALBP-1
