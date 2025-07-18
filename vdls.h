@@ -15,7 +15,7 @@ class VDLS {
 public:
     //explicit ALBP(const std::string& filename) { loadFromFile(filename); }
     explicit VDLS(const ALBP& albp,  int max_attempts, int time_limit):albp_(albp), max_attempts_(max_attempts), time_limit_(time_limit) {
-        start_time_ = std::chrono::high_resolution_clock::now();
+        start_time_ = std::chrono::steady_clock::now();
     }
     ALBPSolution solve_type_1( );
     ALBPSolution solve_type_2( );

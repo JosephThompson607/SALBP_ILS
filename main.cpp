@@ -163,7 +163,7 @@ int vdls_salbp_2_test() {
     };
     //std::vector<int> test_assignments = {0,1,2,3,4};
     ALBP albp = ALBP::type_2(S, N, task_times, precedence);
-    ALBPSolution result =  vdls_solve_salbp2(S, N, task_times, precedence);
+    ALBPSolution result =  vdls_solve_salbp2(S, N, task_times, precedence, {}, 1000, 2000);
     std::cout << "Here is the result" << std::endl;
     result.print();
     // std::cout << "Name: " << albp.name << std::endl;

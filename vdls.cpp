@@ -6,7 +6,7 @@
 
 #include <iostream>
 #include <random>
-#include <__ostream/basic_ostream.h>
+
 
 #include "mhh.h"
 
@@ -50,6 +50,7 @@ ALBPSolution VDLS::solve_type_1(  ) {
 
 ALBPSolution VDLS::solve_type_2(  ) {
         int lb = calc_salbp_2_lbs(albp_.task_time, albp_.S);
+        lb_ = lb; //Had to feed in separate lower bound for SALBP-1, that is why it looks goofy on this one
         best_ = vdls_heuristic(albp_.S, lb);
         return best_;
 }
@@ -244,7 +245,6 @@ void VDLS::perturbation(ALBPSolution &new_sol) {
 ALBPSolution VDLS::vdls_heuristic( int n_stations,  int lb) {
         ALBPSolution local_best = hoff_search(n_stations);
         ALBPSolution new_sol = local_best;
-        bool time_excee = time_exceeded();
         while ((n_attempts_ < max_attempts_ ) && (local_best.cycle_time > lb) &&(!time_exceeded())) {
                 bool improved = false;
                 do {//Perform local search, restarting if we find an improved solution with depth 0
