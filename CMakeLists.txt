@@ -6,7 +6,7 @@ option(BUILD_PYTHON_MODULE "Build Python module" ON)
 option(BUILD_EXECUTABLE "Build standalone executable" ON)
 
 set(CMAKE_CXX_STANDARD 23)
-
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # Common sources
 set(COMMON_SOURCES
         ALBP.cpp

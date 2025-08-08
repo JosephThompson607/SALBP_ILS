@@ -7,7 +7,8 @@ import os
 # Add the build directory to Python path
 build_dir = 'cmake-build-python_interface/'
 sys.path.insert(0, build_dir)
-
+build_dir_2 = 'build/'
+sys.path.insert(0, build_dir_2)
 print(f"Python version: {sys.version}")
 print(f"Python path: {sys.path[:3]}...")  # Show first few paths
 print(f"current interpreter: {sys.executable}")
