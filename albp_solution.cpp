@@ -46,12 +46,17 @@ void ALBPSolution::task_to_station(){
 void ALBPSolution::station_to_load(const ALBP &albp) {
     loads.clear();
     loads.resize(n_stations);
+     int max_load = 0;
     for (int i = 0; i < n_stations; ++i) {
 
         for ( const int task: station_assignments[i]) {
             loads[i] += (albp.task_time[task]);
         }
+        if (loads[i] > max_load) {
+            max_load = loads[i];
+        }
     }
+     cycle_time = max_load;
 }
 /* Finds earliest and latest stations for all task **/
 void ALBPSolution::find_windows(const ALBP &albp) {

@@ -186,6 +186,7 @@ try:
     precs = alb_dict['precedence_relations']
     t_times = [val for _, val in alb_dict['task_times'].items()]
     precs = [[int(child), int(parent)]  for child, parent in alb_dict['precedence_relations']]
+
     start  = time.time()
     results = ils_call(cycle_time=C, tasks_times_list= t_times, precedence_list=precs,show_verbose=False, max_iterations=1000)
     end = time.time()- start
@@ -199,9 +200,12 @@ try:
     end = time.time()- start
     print(f"✅ Created ALBPSolution using vdls with {results.n_stations} stations in {end} seconds")
     start  = time.time()
-    results = vdls_type2_call(S=4, tasks_times_list= t_times, precedence_list=precs)
+    S = 4
+    my_lb = ILS_ALBP.calc_salbp_2_lbs(t_times, S)
+    my_ub = ILS_ALBP.calc_salbp_2_ub(t_times, S)
+    results = vdls_type2_call(S=S, tasks_times_list= t_times, precedence_list=precs)
     end = time.time()- start
-    print(f"✅ Created ALBPSolution using vdls with {results.cycle_time} cycle time in {end} seconds")
+    print(f"✅ Created ALBPSolution using vdls with {results.cycle_time} cycle time in {end} seconds. The lower bound is {my_lb}, upperbound is {my_ub}")
 
 
 

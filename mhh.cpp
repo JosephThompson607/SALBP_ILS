@@ -6,7 +6,7 @@
 #include "mhh.h"
 #include <iostream>
 #include <cfloat>
-
+#include <algorithm>
 MHH::MHH(const ALBP& albp, const float alpha, const float beta, const int max_attempts):
     albp_(albp),
 

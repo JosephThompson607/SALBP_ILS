@@ -87,6 +87,7 @@ PYBIND11_MODULE(ILS_ALBP, m) {
             .def("ranking_to_task_ranking", &ALBPSolution::ranking_to_task_ranking,
                  "Convert ranking to task ranking")
 
+
             // String representation for Python
             .def("__repr__", [](const ALBPSolution &sol) {
                 return "<ALBPSolution: " + std::to_string(sol.get_n_tasks()) +
@@ -108,7 +109,13 @@ PYBIND11_MODULE(ILS_ALBP, m) {
                 return d;
             }, "Convert solution to dictionary");
 
-    // Bind your main solver function
+    m.def("calc_salbp_2_lbs", &calc_salbp_2_lbs,"Calculates several lower bounds for salbp_2 and returns their maximum",
+        py::arg("task_time"),
+        py::arg("n_stations"));
+    m.def("calc_salbp_2_ub", &calc_salbp_2_ub,"Calculates upper bound for salbp_2",
+        py::arg("task_time"),
+        py::arg("n_stations"));
+    // Binding main solver function
     m.def("ils_solve_SALBP1", &ils_solve_SALBP1,
           "Solve SALBP1 using Iterated Local Search",
           py::arg("C"), py::arg("N"), py::arg("task_times"),
