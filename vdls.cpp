@@ -7,7 +7,7 @@
 #include <iostream>
 #include <random>
 #include <optional>
-
+#include <algorithm>
 #include "mhh.h"
 
 bool VDLS::time_exceeded() const {
