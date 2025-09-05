@@ -120,6 +120,7 @@ PYBIND11_MODULE(ILS_ALBP, m) {
           "Solve SALBP1 using Iterated Local Search",
           py::arg("C"), py::arg("N"), py::arg("task_times"),
           py::arg("raw_precedence"), py::arg("max_iter"),
+          py::arg("time_limit"),
           py::arg("op_probs"), py::arg("verbose"),
           py::arg("initial_solution") = std::vector<int>(),
           R"pbdoc(
@@ -137,6 +138,8 @@ PYBIND11_MODULE(ILS_ALBP, m) {
               Precedence relationships
           max_iter : int
               Maximum iterations
+          time_limit : int
+            Number of seconds to run
           op_probs : float
               Operation probabilities
           verbose : bool

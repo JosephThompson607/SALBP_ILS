@@ -16,7 +16,7 @@ int default_run() {
     std::cout << "Loaded " << problem.N << " tasks, cycle time " << problem.C << "\n";
 
     //runs the local search algorithm
-    ALBPSolution result =iterated_local_search(problem, 50000, 0.5);
+    ALBPSolution result =iterated_local_search(problem, 50000,10, 0.5);
     std::cout << "Here is the result" << std::endl;
     result.print();
     return 0;
@@ -36,7 +36,7 @@ int python_constructor_test() {
     };
     std::vector<int> test_assignments = {0,1,2,3,4};
     ALBP albp = ALBP::type_1(C, N, task_times, precedence);
-    ALBPSolution result =  ils_solve_SALBP1(C, N, task_times, precedence, 10, 0.5, true, test_assignments);
+    ALBPSolution result =  ils_solve_SALBP1(C, N, task_times, precedence, 10, 30,0.5, true, test_assignments);
     std::cout << "Here is the result" << std::endl;
     result.print();
     // std::cout << "Name: " << albp.name << std::endl;

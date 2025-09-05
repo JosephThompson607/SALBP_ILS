@@ -99,6 +99,7 @@ try:
                 task_times=tasks_times_list,
                 raw_precedence=precedence_list,
                 max_iter=max_iterations,
+                time_limit = 20,
                 op_probs=operation_probs,
                 verbose=show_verbose,
                 initial_solution=init_sol
