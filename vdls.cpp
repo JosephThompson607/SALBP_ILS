@@ -9,6 +9,7 @@
 #include <optional>
 #include <algorithm>
 #include "mhh.h"
+#include "salbp_basics.h"
 
 bool VDLS::time_exceeded() const {
         auto now = std::chrono::steady_clock::now();
@@ -38,6 +39,7 @@ ALBPSolution VDLS::solve_type_1(  ) {
 
 
                 ALBPSolution local_best = vdls_heuristic(n_stations, albp_.C);
+                local_best.method = "VDLS_SALBP1";
                 if (local_best.cycle_time <= albp_.C) {
                         best_ = local_best;
 
@@ -52,6 +54,7 @@ ALBPSolution VDLS::solve_type_2(  ) {
         int lb = calc_salbp_2_lbs(albp_.task_time, albp_.S);
         lb_ = lb; //Had to feed in separate lower bound for SALBP-1, that is why it looks goofy on this one
         best_ = vdls_heuristic(albp_.S, lb);
+        best_.method = "VDLS_SALBP2";
         return best_;
 }
 

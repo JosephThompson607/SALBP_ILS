@@ -14,7 +14,8 @@ set(COMMON_SOURCES
         ils.cpp
         mhh.cpp
         vdls.cpp
-        vdls.h
+        salbp_basics.cpp
+
 )
 
 if(BUILD_PYTHON_MODULE)
@@ -44,6 +45,8 @@ if(BUILD_EXECUTABLE)
     set(EXECUTABLE_SOURCES
             ${COMMON_SOURCES}
             main.cpp
+            salbp_basics.cpp
+            salbp_basics.h
     )
 
     # Create executable

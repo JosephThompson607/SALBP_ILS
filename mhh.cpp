@@ -7,6 +7,7 @@
 #include <iostream>
 #include <cfloat>
 #include <algorithm>
+#include "salbp_basics.h"
 MHH::MHH(const ALBP& albp, const float alpha, const float beta, const int max_attempts):
     albp_(albp),
 
@@ -84,6 +85,7 @@ MHH::MHH(const ALBP& albp, const float alpha, const float beta, const int max_at
 ALBPSolution mhh_solve(const ALBP &albp) {
     auto mhh= MHH(albp);
     ALBPSolution best_result =mhh.solve();
+    best_result.method = "mhh";
 
     for(int i = 0; i <=4; i++) {
         float alpha = 0.005 * i;

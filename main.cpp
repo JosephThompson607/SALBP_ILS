@@ -5,6 +5,8 @@
 #include "vdls.h"
 #include <iostream>
 #include <filesystem>
+#include "salbp_basics.h"
+
 
 int default_run() {
     ALBP problem;
@@ -137,6 +139,51 @@ int vdls_salbp_1_test() {
     return 0;
 }
 
+int priority_methods_salbp_1_test() {
+    int C = 20;
+    int N = 8;
+    std::vector<int> task_times = {11, 17, 9, 5, 8, 12, 10, 3};
+
+    // Precedence constraints: each pair is (pred, succ), using 1-based indexing
+    std::vector<std::vector<int>> precedence = {
+        {1, 2},
+        {2, 3},
+        {2, 4},
+        {3, 5},
+        {3, 6},
+        {4, 6},
+        {5, 7},
+        {6, 8}
+    };
+    //std::vector<int> test_assignments = {0,1,2,3,4};
+    ALBP albp = ALBP::type_1(C, N, task_times, precedence);
+    std::vector<ALBPSolution> results =  priority_solve_salbp_1(C, N, task_times, precedence);
+    for (int i = 0; i < results.size(); ++i) {
+        ALBPSolution result = results[i];
+        std::cout << "Here is the result" << std::endl;
+        result.print();
+    }
+
+    // std::cout << "Name: " << albp.name << std::endl;
+    // std::cout << "Cycle time: " << albp.C << std::endl;
+    // std::cout << "Number of tasks: " << albp.N << std::endl;
+    //
+    // std::cout << "Precedence matrix:" << std::endl;
+    // for (int i = 0; i < N; ++i) {
+    //     for (int j = 0; j < N; ++j) {
+    //         std::cout << albp.prec_mat[i * N + j] << " ";
+    //     }
+    //     std::cout << std::endl;
+    // }
+    //
+    // std::cout << "Precedence relations:" << std::endl;
+    // for (const auto& rel : albp.precedence_relations) {
+    //     std::cout << rel.parent << " -> " << rel.child << std::endl;
+    // }
+    //
+    return 0;
+}
+
 
 int vdls_salbp_2_test() {
     int S = 10;
@@ -193,7 +240,7 @@ int main(int argc, char* argv[]) {
         std::cerr << "Example: " << argv[0] << " problem.alb" << std::endl;
         std::cerr << "Performing default run to test system" << std::endl;
         //default_run();
-        vdls_salbp_2_test();
+       priority_methods_salbp_1_test();
         return 1;
     }
     bool salbp2 =false;

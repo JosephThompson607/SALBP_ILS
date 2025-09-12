@@ -12,7 +12,7 @@
 #include <random>
 #include "albp_solution.h"
 #include "ALBP.h"
-
+#include "salbp_basics.h"
 
 
 
@@ -210,6 +210,8 @@ ALBPSolution iterated_local_search(const ALBP &albp, const int max_iter, const i
 
     }
     // Return the best solution found
+    best_solution.station_to_load(albp);
+    best_solution.method = "ILS";
     return best_solution;
 }
 

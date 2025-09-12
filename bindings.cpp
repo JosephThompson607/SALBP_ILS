@@ -9,6 +9,7 @@
 #include "albp_solution.h"
 #include "mhh.h"
 #include "vdls.h"
+#include "salbp_basics.h"
 namespace py = pybind11;
 
 PYBIND11_MODULE(ILS_ALBP, m) {
@@ -70,6 +71,7 @@ PYBIND11_MODULE(ILS_ALBP, m) {
                            "Number of violations")
             .def_readwrite("n_ranking_violations", &ALBPSolution::n_ranking_violations,
                            "Number of violations from ranking")
+            .def_readwrite("method", &ALBPSolution::method)
 
             // Read-only property for n_tasks (since it's private with getter)
             .def_property_readonly("n_tasks", &ALBPSolution::get_n_tasks,
@@ -291,6 +293,32 @@ PYBIND11_MODULE(ILS_ALBP, m) {
                       The solved ALBP solution
                   )pbdoc"
     );
+    m.def("priority_solve_salbp1", &priority_solve_salbp_1,
+      "Solve SALBP-1 using priority methods",
+      py::arg("C"),
+      py::arg("N"),
+      py::arg("task_times"),
+      py::arg("raw_precedence"),
+      py::arg("n_random"),
+      R"pbdoc(
+                          Solve SALBP1 using different priority methods and station oriented task assignment
+
+                  Parameters:
+                  -----------
+                  S : int
+                      Number of stations
+                  N : int
+                      Number of tasks
+                  task_times : list of int
+                      Task processing times
+                  raw_precedence : list of list of int
+                      Precedence relationships
+                  Returns:
+                  --------
+                  list(ALBPSolution)
+                      The solved ALBP solution
+                  )pbdoc");
 }
+
 
 

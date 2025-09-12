@@ -11,6 +11,7 @@
 #include "albp_solution.h"
 
 
+
 class VDLS {
 public:
     //explicit ALBP(const std::string& filename) { loadFromFile(filename); }
