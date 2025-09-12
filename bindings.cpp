@@ -73,11 +73,14 @@ PYBIND11_MODULE(ILS_ALBP, m) {
             .def_readwrite("n_ranking_violations", &ALBPSolution::n_ranking_violations,
                            "Number of violations from ranking")
             .def_readwrite("method", &ALBPSolution::method)
-            .def_readwrite("elapsed_ms", &ALBPSolution::elapsed_ms)
+
 
             // Read-only property for n_tasks (since it's private with getter)
             .def_property_readonly("n_tasks", &ALBPSolution::get_n_tasks,
                                    "Number of tasks (read-only)")
+    .def_property_readonly("elapsed_ms", [](const ALBPSolution& self) -> long {
+                                return self.elapsed_ms.count();  // Convert chrono to milliseconds as long
+                                }, "Elapsed time in milliseconds")
 
             // Public methods
             .def("print", &ALBPSolution::print,
@@ -110,7 +113,7 @@ PYBIND11_MODULE(ILS_ALBP, m) {
                 d["station_assignments"] = sol.station_assignments;
                 d["ranking"] = sol.ranking;
                 d["task_ranking"] = sol.task_ranking;
-                d["solution_time"]= sol.elapsed_ms;
+                d["solution_time"]= sol.elapsed_ms.count();
                 d["method"] = sol.method;
                 return d;
             }, "Convert solution to dictionary");

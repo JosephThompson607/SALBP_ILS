@@ -17,6 +17,7 @@ public:
     std::vector<int> earliest; //Earliest station each task can be assigned to, based on predecessors/successors (VDLS)
     std::vector<int> latest; //Latest station each task can be assigned to, based on predecessors/successors (VDLS)
     milliseconds elapsed_ms; //Run time TODO implement for hoffman and ILS
+
     std::vector<int> ranking; //Gives the tasks in order of ranking (ILS)
     std::vector<int> task_ranking; //Gives the ranking for each task (ILS)
     int n_stations{};//For SALBP-1
