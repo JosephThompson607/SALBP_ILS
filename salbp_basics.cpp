@@ -192,6 +192,53 @@ ALBPSolution station_oriented_assignment(const ALBP& albp,const std::vector<int>
     return solution;
 
 }
+ALBPSolution filler_heuristic(const ALBP& albp,const std::vector<int>& original_ranking) {
+    ALBPSolution solution(albp.N) ;
+    solution.ranking = original_ranking;
+    std::vector<int> ranking = original_ranking;
+    //std::vector<int> station_time(albp.N, 0);//Using N upper bound for station times
+    solution.loads.resize(albp.S, 0);
+    int target =  calc_salbp_2_lb_1(albp.task_time, albp.S);
+    int max_time = 0;
+    int task_index = 0;
+    int station = 0;
+
+    while (!ranking.empty()) {
+        const int current_task = ranking[task_index];
+        if (check_assignability(albp, solution.task_assignment, current_task) && solution.loads[station] <= target)  { //assign task to first available station
+            solution.task_assignment[current_task] = station;
+            solution.loads[station] += albp.task_time[current_task];
+            ranking.erase(ranking.begin()+task_index); //Potentially slow, will see
+            if (solution.loads[station] > max_time) {
+                max_time = solution.loads[station];
+            }
+            task_index = 0;
+            continue;
+        }
+
+        if (task_index >= ranking.size()-1) {
+            station += 1;
+            task_index = 0;
+
+        }
+        else {
+            task_index += 1;
+        }
+
+    }
+    solution.n_stations = station + 1;
+    solution.cycle_time = max_time;
+    solution.task_to_station();
+    solution.n_violations = count_violations(albp, solution.task_assignment);//real assignment violations
+    solution.n_ranking_violations = count_violations(albp, solution.task_ranking); //ranking violations
+
+
+    if (solution.n_violations > 0 || solution.n_stations > albp.S) {
+        throw std::runtime_error("filler heuristic failed to create feasible solution");
+    }
+    return solution;
+
+}
 
 
 std::vector<int> random_ranking(const ALBP&albp) {
@@ -630,7 +677,6 @@ ALBPSolution generate_approx_solution(const ALBP&albp, const int n_random, const
             }
         }
     }
-    std::cout << "stations: " << n_stations << " violations: " << n_violations << std::endl;
     if (candidates.empty()) {
         throw std::runtime_error("No solutions generated");
     }
@@ -690,6 +736,66 @@ std::vector< ALBPSolution> generate_priority_ranking_solutions(const ALBP &albp,
 
     return solutions;
 }
+
+std::vector< ALBPSolution> priority_salbp_2(const ALBP &albp, const int n_random) {
+
+    // Define ranking functions with their names
+    std::vector<std::pair<std::string, std::function<std::vector<int>(const ALBP&)>>> ranking_functions = {
+         {"task_number_ranking", task_number_ranking},
+         {"inverse_task_number_ranking", inverse_task_number_ranking},
+         {"ascending_task_time_ranking", ascending_task_time_ranking},
+         {"descending_task_time_ranking", descending_task_time_ranking},
+         {"n_parents_ranking", n_parents_ranking},
+         {"n_children_ranking", n_children_ranking},
+         {"n_suc_ranking", n_suc_ranking},
+         {"pw_ranking", pw_ranking},
+         {"cumulative_pw_ranking", cumulative_pw_ranking},
+         {"average_pw_ranking", average_pw_ranking},
+         {"as_up_ranking", as_up_ranking},
+         {"as_lb_ranking", as_lb_ranking},
+         {"as_up_avg_ranking", as_up_avg_ranking},
+         {"t_over_as_up_ranking", t_over_as_up_ranking},
+         {"slack_ranking", slack_ranking},
+         {"suc_over_slack_ranking", suc_over_slack_ranking},
+     };
+
+    std::vector< ALBPSolution> solutions;
+    solutions.reserve(ranking_functions.size() + n_random);
+
+    // Generate named rankings with solutions
+    for (const auto& [name, func] : ranking_functions) {
+        // Start the timer
+        auto start_time = std::chrono::steady_clock::now();
+        std::vector<int> ranking = func(albp);
+        ALBPSolution solution = filler_heuristic(albp, ranking);
+        auto end_time = std::chrono::steady_clock::now();
+        solution.elapsed_ms = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
+        solution.method = name;
+        solutions.push_back( solution);
+    }
+
+    // Generate random rankings with solutions
+    for (int i = 0; i < n_random; ++i) {
+        auto start_time = std::chrono::steady_clock::now();
+        std::string random_name = "random_ranking_" + std::to_string(i + 1);
+        std::vector<int> ranking = random_ranking(albp);
+        ALBPSolution solution = filler_heuristic(albp, ranking);
+        auto end_time = std::chrono::steady_clock::now();
+        solution.elapsed_ms = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
+        solution.method = random_name;
+        solutions.push_back( solution);
+    }
+
+    return solutions;
+}
+
+std::vector<ALBPSolution>  priority_solve_salbp_2(const int S,const int N, const std::vector<int>& task_times, const std::vector<std::vector<int>>& raw_precedence, const int n_random) {
+    ALBP albp = ALBP::type_2(S, N, task_times, raw_precedence);
+
+    std::vector<ALBPSolution> generated_solutions = priority_salbp_2(albp, n_random);
+    return generated_solutions;
+}
+
 std::vector<ALBPSolution>  priority_solve_salbp_1(const int C,const int N, const std::vector<int>& task_times, const std::vector<std::vector<int>>& raw_precedence, const int n_random) {
      ALBP albp = ALBP::type_1(C, N, task_times, raw_precedence);
 

@@ -312,8 +312,8 @@ PYBIND11_MODULE(ILS_ALBP, m) {
 
                   Parameters:
                   -----------
-                  S : int
-                      Number of stations
+                  C : int
+                      cycle time
                   N : int
                       Number of tasks
                   task_times : list of int
@@ -325,6 +325,31 @@ PYBIND11_MODULE(ILS_ALBP, m) {
                   list(ALBPSolution)
                       The solved ALBP solution
                   )pbdoc");
+  m.def("priority_solve_salbp2", &priority_solve_salbp_2,
+                          "Solve SALBP-2 using priority methods",
+                          py::arg("S"),
+                          py::arg("N"),
+                          py::arg("task_times"),
+                          py::arg("raw_precedence"),
+                          py::arg("n_random"),
+                          R"pbdoc(
+                                                  Solve SALBP2 using different priority methods and filler (ravelo) heuristic
+
+                                          Parameters:
+                                          -----------
+                                          S : int
+                                              Number of stations
+                                          N : int
+                                              Number of tasks
+                                          task_times : list of int
+                                              Task processing times
+                                          raw_precedence : list of list of int
+                                              Precedence relationships
+                                          Returns:
+                                          --------
+                                          list(ALBPSolution)
+                                              The solved ALBP solution
+                                          )pbdoc");
 }
 
 
