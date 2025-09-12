@@ -72,6 +72,7 @@ PYBIND11_MODULE(ILS_ALBP, m) {
             .def_readwrite("n_ranking_violations", &ALBPSolution::n_ranking_violations,
                            "Number of violations from ranking")
             .def_readwrite("method", &ALBPSolution::method)
+            .def_readwrite("elapsed_ms", &ALBPSolution::elapsed_ms)
 
             // Read-only property for n_tasks (since it's private with getter)
             .def_property_readonly("n_tasks", &ALBPSolution::get_n_tasks,
