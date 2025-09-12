@@ -108,6 +108,8 @@ PYBIND11_MODULE(ILS_ALBP, m) {
                 d["station_assignments"] = sol.station_assignments;
                 d["ranking"] = sol.ranking;
                 d["task_ranking"] = sol.task_ranking;
+                d["solution_time"]= sol.elapsed_ms;
+                d["method"] = sol.method;
                 return d;
             }, "Convert solution to dictionary");
 
