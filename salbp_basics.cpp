@@ -161,7 +161,6 @@ ALBPSolution station_oriented_assignment(const ALBP& albp,const std::vector<int>
     int task_index = 0;
     int station = 0;
     while (!ranking.empty()) {
-        std::cout <<ranking.size()<< task_index << std::endl;
         const int current_task = ranking[task_index];
         if (check_assignability(albp, solution.task_assignment, current_task) && solution.loads[station] + albp.task_time[current_task] <= albp.C)  { //assign task to first available station
             solution.task_assignment[current_task] = station;
@@ -665,7 +664,6 @@ std::vector< ALBPSolution> generate_priority_ranking_solutions(const ALBP &albp,
 
     // Generate named rankings with solutions
     for (const auto& [name, func] : ranking_functions) {
-        std::cout << name << std::endl;
         // Start the timer
         auto start_time = std::chrono::steady_clock::now();
         std::vector<int> ranking = func(albp);
