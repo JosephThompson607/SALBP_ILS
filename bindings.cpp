@@ -10,6 +10,7 @@
 #include "mhh.h"
 #include "vdls.h"
 #include "salbp_basics.h"
+#include <pybind11/chrono.h>
 namespace py = pybind11;
 
 PYBIND11_MODULE(ILS_ALBP, m) {
