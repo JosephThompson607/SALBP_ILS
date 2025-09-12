@@ -111,6 +111,7 @@ PYBIND11_MODULE(ILS_ALBP, m) {
                 d["n_ranking_violations"] = sol.n_ranking_violations;
                 d["task_assignment"] = sol.task_assignment;
                 d["station_assignments"] = sol.station_assignments;
+                d["cycle_time"] = sol.cycle_time;
                 d["ranking"] = sol.ranking;
                 d["task_ranking"] = sol.task_ranking;
                 d["solution_time"]= sol.elapsed_ms.count();
