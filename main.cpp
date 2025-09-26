@@ -184,7 +184,7 @@ int priority_methods_salbp_2_test() {
     };
     //std::vector<int> test_assignments = {0,1,2,3,4};
 
-    std::vector<ALBPSolution> results =  priority_solve_salbp_2(S, N, task_times, precedence);
+    std::vector<ALBPSolution> results =  priority_solve_salbp_2(S, N, task_times, precedence, 2);
     for (int i = 0; i < results.size(); ++i) {
         ALBPSolution result = results[i];
         std::cout << "Here is the result" << std::endl;

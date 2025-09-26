@@ -116,6 +116,7 @@ PYBIND11_MODULE(ILS_ALBP, m) {
                 d["task_ranking"] = sol.task_ranking;
                 d["solution_time"]= sol.elapsed_ms.count();
                 d["method"] = sol.method;
+                d["loads"] = sol.loads;
                 return d;
             }, "Convert solution to dictionary");
 
@@ -333,24 +334,27 @@ PYBIND11_MODULE(ILS_ALBP, m) {
                           py::arg("task_times"),
                           py::arg("raw_precedence"),
                           py::arg("n_random"),
+                          py::arg("move_target")=true,
                           R"pbdoc(
                                                   Solve SALBP2 using different priority methods and filler (ravelo) heuristic
 
-                                          Parameters:
-                                          -----------
-                                          S : int
-                                              Number of stations
-                                          N : int
-                                              Number of tasks
-                                          task_times : list of int
-                                              Task processing times
-                                          raw_precedence : list of list of int
-                                              Precedence relationships
-                                          Returns:
-                                          --------
-                                          list(ALBPSolution)
-                                              The solved ALBP solution
-                                          )pbdoc");
+                                                    Parameters:
+                                                    -----------
+                                                    S : int
+                                                      Number of stations
+                                                    N : int
+                                                      Number of tasks
+                                                    task_times : list of int
+                                                      Task processing times
+                                                    raw_precedence : list of list of int
+                                                      Precedence relationshions
+                                                    move_target : bool
+                                                        recalculate the target for the filler heuristic
+                                                    Returns:
+                                                    --------
+                                                    list(ALBPSolution)
+                                                      The solved ALBP solution
+                                                    )pbdoc");
 }
 
 

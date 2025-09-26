@@ -192,18 +192,20 @@ ALBPSolution station_oriented_assignment(const ALBP& albp,const std::vector<int>
     return solution;
 
 }
-ALBPSolution filler_heuristic(const ALBP& albp,const std::vector<int>& original_ranking) {
+ALBPSolution filler_heuristic(const ALBP& albp,const std::vector<int>& original_ranking, bool move_target) {
     ALBPSolution solution(albp.N) ;
     solution.ranking = original_ranking;
     std::vector<int> ranking = original_ranking;
     //std::vector<int> station_time(albp.N, 0);//Using N upper bound for station times
     solution.loads.resize(albp.S, 0);
-    int target =  calc_salbp_2_lb_1(albp.task_time, albp.S);
+    int task_times = std::accumulate(albp.task_time.begin(), albp.task_time.end(), 0);
+    int target = (task_times + albp.S -1)/ ( albp.S);
+
     int max_time = 0;
     int task_index = 0;
     int station = 0;
-
     while (!ranking.empty()) {
+        //std::cout << "station "<< station << "total task Time" << task_times <<" The target " << target << std::endl;
         const int current_task = ranking[task_index];
         if (check_assignability(albp, solution.task_assignment, current_task) && solution.loads[station] <= target)  { //assign task to first available station
             solution.task_assignment[current_task] = station;
@@ -217,8 +219,20 @@ ALBPSolution filler_heuristic(const ALBP& albp,const std::vector<int>& original_
         }
 
         if (task_index >= ranking.size()-1) {
-            station += 1;
+            task_times -= solution.loads[station];
             task_index = 0;
+            station += 1;
+            if (station < albp.S) {
+                if (move_target){//New target depends on the remaining tasks and stations (w/ceiling trick)
+                    target = (task_times + albp.S-1 -station )/ ( albp.S -station);
+                }
+
+            }
+            else {
+                throw std::runtime_error("ran out of stations for filler heuristic");
+            }
+
+
 
         }
         else {
@@ -737,7 +751,7 @@ std::vector< ALBPSolution> generate_priority_ranking_solutions(const ALBP &albp,
     return solutions;
 }
 
-std::vector< ALBPSolution> priority_salbp_2(const ALBP &albp, const int n_random) {
+std::vector< ALBPSolution> priority_salbp_2(const ALBP &albp, const int n_random, bool move_target) {
 
     // Define ranking functions with their names
     std::vector<std::pair<std::string, std::function<std::vector<int>(const ALBP&)>>> ranking_functions = {
@@ -767,7 +781,7 @@ std::vector< ALBPSolution> priority_salbp_2(const ALBP &albp, const int n_random
         // Start the timer
         auto start_time = std::chrono::steady_clock::now();
         std::vector<int> ranking = func(albp);
-        ALBPSolution solution = filler_heuristic(albp, ranking);
+        ALBPSolution solution = filler_heuristic(albp, ranking, move_target);
         auto end_time = std::chrono::steady_clock::now();
         solution.elapsed_ms = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
         solution.method = name;
@@ -779,7 +793,7 @@ std::vector< ALBPSolution> priority_salbp_2(const ALBP &albp, const int n_random
         auto start_time = std::chrono::steady_clock::now();
         std::string random_name = "random_ranking_" + std::to_string(i + 1);
         std::vector<int> ranking = random_ranking(albp);
-        ALBPSolution solution = filler_heuristic(albp, ranking);
+        ALBPSolution solution = filler_heuristic(albp, ranking, move_target);
         auto end_time = std::chrono::steady_clock::now();
         solution.elapsed_ms = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
         solution.method = random_name;
@@ -789,10 +803,10 @@ std::vector< ALBPSolution> priority_salbp_2(const ALBP &albp, const int n_random
     return solutions;
 }
 
-std::vector<ALBPSolution>  priority_solve_salbp_2(const int S,const int N, const std::vector<int>& task_times, const std::vector<std::vector<int>>& raw_precedence, const int n_random) {
+std::vector<ALBPSolution>  priority_solve_salbp_2(const int S,const int N, const std::vector<int>& task_times, const std::vector<std::vector<int>>& raw_precedence, const int n_random, const bool move_target) {
     ALBP albp = ALBP::type_2(S, N, task_times, raw_precedence);
 
-    std::vector<ALBPSolution> generated_solutions = priority_salbp_2(albp, n_random);
+    std::vector<ALBPSolution> generated_solutions = priority_salbp_2(albp, n_random, move_target);
     return generated_solutions;
 }
 

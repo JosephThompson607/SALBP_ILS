@@ -113,7 +113,7 @@ ALBPSolution mhh_solve_salbp1(const int C,const int N, const std::vector<int>& t
     return best_result;
 }
 
-    void MHH::gen_load( int depth, int remaining_time,const int start, int n_eligible, float cost) {
+void MHH::gen_load( int depth, int remaining_time,const int start, int n_eligible, float cost) {
 
         int full_load = 1;
         for(int i=start;i<n_eligible;i++) {

@@ -200,7 +200,7 @@ try:
             print(f"Error solving 1 with priority methods: {e}")
             print(f"Here are the function types:C {type(C)}, N {type(N)}, task_times{type(task_times_list)} (task_times[0] {type(task_times_list[0])}, raw_precedence{type(precedence_list)}")
             return None
-    def priority_type2_call(S, task_times_list, precedence_list):
+    def priority_type2_call(S, task_times_list, precedence_list, move_target=False):
         N = len(task_times_list)
 
         try:
@@ -209,7 +209,8 @@ try:
                 N=N,
                 task_times=task_times_list,
                 raw_precedence=precedence_list,
-                n_random = 3
+                n_random = 3,
+                move_target= move_target
 
 
             )
@@ -233,14 +234,16 @@ try:
     results = ils_call(cycle_time=C, task_times_list= t_times, precedence_list=precs,show_verbose=False, max_iterations=1000)
     end = time.time()- start
     print(f"✅ Created ALBPSolution using ils with {results.n_stations} stations in {end} seconds")
+    print("here are the station loads", results.loads)
     start  = time.time()
     results = priority_type1_call(C, task_times_list= t_times, precedence_list=precs)
     end = time.time()- start
     print(f"✅ Created ALBPSolution using priority with in {end} seconds")
     for result in results:
         print(f"    here is the method {result.method} here are the number of stations {result.n_stations}")
+        print("here are the station loads", result.loads)
     start  = time.time()
-    results = priority_type2_call(4, task_times_list= t_times, precedence_list=precs)
+    results = priority_type2_call(20, task_times_list= t_times, precedence_list=precs, move_target=True)
     end = time.time()- start
     print(f"✅ Created SALBP2 solutions using priority with in {end} seconds")
     for result in results:
@@ -249,10 +252,12 @@ try:
     results = mhh_call(cycle_time=C, task_times_list= t_times, precedence_list=precs)
     end = time.time()- start
     print(f"✅ Created ALBPSolution using mhh with {results.n_stations} stations in {end} seconds")
+    print("here are the station loads", results.loads)
     start  = time.time()
     results = vdls_call(cycle_time=C, task_times_list= t_times, precedence_list=precs)
     end = time.time()- start
     print(f"✅ Created ALBPSolution using vdls with {results.n_stations} stations in {end} seconds")
+    print("here are the station loads", results.loads)
     start  = time.time()
     S = 4
     my_lb = ILS_ALBP.calc_salbp_2_lbs(t_times, S)
@@ -260,7 +265,8 @@ try:
     results = vdls_type2_call(S=S, task_times_list= t_times, precedence_list=precs)
     end = time.time()- start
     print(f"✅ Created ALBPSolution using vdls with {results.cycle_time} cycle time in {end} seconds. The lower bound is {my_lb}, upperbound is {my_ub}")
-
+    print("here are the station loads", results.loads)
+    print("Testing results to dict", results.to_dict())
 
 
 
