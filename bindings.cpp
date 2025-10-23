@@ -183,11 +183,11 @@ PYBIND11_MODULE(ILS_ALBP, m) {
                                                   py::arg("N"),
                                                   py::arg("task_times"),
                                                   py::arg("raw_precedence"),
-                                                  py::arg("reverse") = true,
-                                                  py::arg("alpha_iter") = 2,
+                                                  py::arg("reverse") = false,
+                                                  py::arg("alpha_iter") = 4,
                                                   py::arg("beta_iter") = -1,
-                                                  py::arg("alpha_size") = 0.01,
-                                                  py::arg("beta_size") = 0.01,
+                                                  py::arg("alpha_size") = 0.005,
+                                                  py::arg("beta_size") = 0.005,
                                                   R"pbdoc(
                                                   Solve SALBP1 using Hoffman heuristic
 
