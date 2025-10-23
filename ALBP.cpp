@@ -50,45 +50,74 @@ std::vector<std::vector<int>> all_predecessors(const std::vector<int>& t_close_m
     return all_pred;
 }
 
-ALBP::ALBP(int C_, int S_, int N_, const std::vector<int>& task_times_, const std::vector<std::vector<int>>& raw_precedence) {
+void ALBP::add_relation(int u, int v, bool reverse) {
+    if (reverse) std::swap(u, v);
+
+    if (u < 1 || u > N || v < 1 || v > N) {
+        std::cerr << "Invalid precedence pair (" << u << ", " << v
+                  << "). Assuming 1-indexed.\n";
+        return;
+    }
+
+    precedence_relations.push_back({u, v});
+    prec_mat[(u - 1) * N + (v - 1)] = 1;
+    dir_suc[u - 1].push_back(v - 1);
+    dir_pred[v - 1].push_back(u - 1);
+}
+
+void ALBP::initialize_precedence(int C_, int S_, int N_,
+                                 const std::vector<int>& task_times_,
+                                 bool reverse) {
     if (task_times_.size() != static_cast<size_t>(N_)) {
         throw std::invalid_argument("task_times size does not match N");
     }
     C = C_;
     N = N_;
-    S= S_; //Not used for SALBP_1
+    S = S_;
     task_time = task_times_;
     name = "constructed_from_data";
 
-    // Initialize empty vectors for size
-    prec_mat.resize(N * N, 0);
-    dir_suc.resize(N);
-    dir_pred.resize(N);
-    suc.resize(N);
-    pred.resize(N);
+    prec_mat.assign(N * N, 0);
+    dir_suc.assign(N, {});
+    dir_pred.assign(N, {});
+    suc.assign(N, {});
+    pred.assign(N, {});
+}
+
+ALBP::ALBP(const int C_, const int S_, const int N_,
+           const std::vector<int>& task_times_,
+           const std::vector<std::vector<int>>& raw_precedence,
+           bool reverse) {
+    initialize_precedence(C_, S_, N_, task_times_, reverse);
+
     for (const auto& pair : raw_precedence) {
-        const int u = pair[0];
-        const int v = pair[1];
-        if (u < 1 || u > N || v < 1 || v > N) {
-            std::cerr << "Invalid precedence pair. Assuming 1 indexed based pairs: (" << u << ", " << v << ")\n";
-            continue;
-        }
-        precedence_relations.push_back({u, v});
-        prec_mat[(u - 1) * N + (v - 1)] = 1;
-        dir_suc[u - 1].push_back(v-1);
-        dir_pred[v-1].push_back(u-1);
+        if (pair.size() < 2) continue;
+        add_relation(pair[0], pair[1], reverse);
     }
+
+    calc_trans_closure();
+}
+ALBP::ALBP(int C_, int S_, int N_,
+           const std::vector<int>& task_times_,
+           const std::vector<PrecedenceRelation>& raw_precedence,
+           bool reverse) {
+    initialize_precedence(C_, S_, N_, task_times_, reverse);
+
+    for (const auto& rel : raw_precedence) {
+        add_relation(rel.parent, rel.child, reverse);
+    }
+
     calc_trans_closure();
 }
 
-ALBP ALBP::type_2(int S_, int N_, const std::vector<int>& task_times_, const std::vector<std::vector<int>>& raw_precedence) {
+ALBP ALBP::type_2(int S_, int N_, const std::vector<int>& task_times_, const std::vector<std::vector<int>>& raw_precedence, const bool reverse) {
     int C_ub = std::accumulate(task_times_.begin(), task_times_.end(), 0);
-   return ALBP(C_ub, S_, N_, task_times_, raw_precedence);
+   return ALBP(C_ub, S_, N_, task_times_, raw_precedence, reverse );
 }
 
-ALBP ALBP::type_1(int C_, int N_, const std::vector<int>& task_times_, const std::vector<std::vector<int>>& raw_precedence) {
+ALBP ALBP::type_1(int C_, int N_, const std::vector<int>& task_times_, const std::vector<std::vector<int>>& raw_precedence, const bool reverse) {
     int S_ub = N_;
-    return ALBP(C_, S_ub, N_, task_times_, raw_precedence);
+    return ALBP(C_, S_ub, N_, task_times_, raw_precedence, reverse);
 }
 
 
@@ -134,6 +163,7 @@ void ALBP::calc_trans_closure() {
     suc = all_successors(t_close_mat, N);
     pred = all_predecessors(t_close_mat, N);
 }
+
 
 // Load from .alb file; returns true on success
 bool ALBP::loadFromFile(const std::string& filename) {
@@ -217,6 +247,13 @@ bool ALBP::loadFromFile(const std::string& filename) {
     // Calculate transitive closure
     calc_trans_closure();
     return true;
+}
+
+ALBP ALBP::reverse() const {
+    ALBP new_salbp = ALBP (C, S, N, task_time, precedence_relations, true);
+
+
+    return new_salbp;
 }
 
 

@@ -10,6 +10,7 @@
 #include <filesystem>
 #include <numeric>
 #include <algorithm>
+
 #include <climits>
 #include <random>
 #include <ctime>
@@ -31,6 +32,11 @@
 
 }
 
+void ALBPSolution::reverse()  {
+     std::reverse(task_assignment.begin(), task_assignment.end());
+     std::reverse(station_assignments.begin(), station_assignments.end());
+     std::reverse(loads.begin(), loads.end());
+ }
 
 
 

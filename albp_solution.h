@@ -50,6 +50,7 @@ public:
     void update_suc_earliest(const ALBP &albp, int i);
     void update_window(const ALBP &albp, int i);
     void find_windows(const ALBP &albp);
+    void reverse();
     void ranking_to_task_ranking();
 
 };

@@ -24,6 +24,7 @@ ALBPSolution VDLS::solve_type_1(  ) {
         if (best_.station_assignments.empty()) {
                 std::cout<<"no initial solution, calculating new solution"<<std::endl;
                 best_= hoff_solve_salbp1(albp_); //Get initial SALBP-1 solution
+                std::cout<<"best hoff solution"<< best_.n_stations<<std::endl;
         }
         int n_stations = best_.n_stations;
         const int salbp_1_lb = calc_lb_1(albp_.task_time, albp_.C); //TODO: add in other lower bounds

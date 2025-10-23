@@ -24,15 +24,16 @@ PYBIND11_MODULE(ILS_ALBP, m) {
             .def(py::init<const std::string &>()) // from filename
                 // Bind static factory methods as static methods
             .def_static("type_1", &ALBP::type_1,
-                py::arg("C"), py::arg("N"), py::arg("task_times"), py::arg("raw_precedence"),
+                py::arg("C"), py::arg("N"), py::arg("task_times"), py::arg("raw_precedence"),py::arg("reverse"),
                 "Factory constructor for type_1")
 
             .def_static("type_2", &ALBP::type_2,
-                py::arg("S"), py::arg("N"), py::arg("task_times"), py::arg("raw_precedence"),
+                py::arg("S"), py::arg("N"), py::arg("task_times"), py::arg("raw_precedence"),py::arg("reverse"),
                 "Factory constructor for type_2")
 
             .def("print", &ALBP::print)
             .def("loadFromFile", &ALBP::loadFromFile)
+            .def("reverse", &ALBP::reverse)
             .def_readwrite("name", &ALBP::name)
             .def_readwrite("C", &ALBP::C)
             .def_readwrite("N", &ALBP::N)
@@ -85,6 +86,8 @@ PYBIND11_MODULE(ILS_ALBP, m) {
             // Public methods
             .def("print", &ALBPSolution::print,
                  "Print the solution")
+            .def("reverse", &ALBPSolution::reverse,
+                "Reverse the solution")
             .def("task_to_station", &ALBPSolution::task_to_station,
                  "Convert task assignment to station assignment")
             .def("station_to_task", &ALBPSolution::station_to_task,
@@ -165,31 +168,56 @@ PYBIND11_MODULE(ILS_ALBP, m) {
           )pbdoc");
 
     m.def("hoff_solve_salbp1",
-          [](int C, int N, const std::vector<int> &task_times, const std::vector<std::vector<int> > &raw_precedence) {
-              return hoff_solve_salbp1(C, N, task_times, raw_precedence);
-          }, py::arg("C"),
-          py::arg("N"),
-          py::arg("task_times"),
-          py::arg("raw_precedence"),
-          R"pbdoc(
-          Solve SALBP1 using Hoffman heuristic
+      [](int C, int N,
+         const std::vector<int> &task_times,
+         const std::vector<std::vector<int>> &raw_precedence,
+         bool reverse,
+         int alpha_iter,
+         int beta_iter,
+         float alpha_size,
+         float beta_size) {
+          return hoff_solve_salbp1(C, N, task_times, raw_precedence,
+                                   alpha_iter, beta_iter, alpha_size, beta_size, reverse);
+                                                  },
+                                                  py::arg("C"),
+                                                  py::arg("N"),
+                                                  py::arg("task_times"),
+                                                  py::arg("raw_precedence"),
+                                                  py::arg("reverse") = true,
+                                                  py::arg("alpha_iter") = 2,
+                                                  py::arg("beta_iter") = -1,
+                                                  py::arg("alpha_size") = 0.01,
+                                                  py::arg("beta_size") = 0.01,
+                                                  R"pbdoc(
+                                                  Solve SALBP1 using Hoffman heuristic
 
-          Parameters:
-          -----------
-          C : int
-              Cycle time
-          N : int
-              Number of tasks
-          task_times : list of int
-              Task processing times
-          raw_precedence : list of list of int
-              Precedence relationships
-          Returns:
-          --------
-          ALBPSolution
-              The solved ALBP solution
-          )pbdoc"
-    );
+                                                  Parameters:
+                                                  -----------
+                                                  C : int
+                                                      Cycle time
+                                                  N : int
+                                                      Number of tasks
+                                                  task_times : list of int
+                                                      Task processing times
+                                                  raw_precedence : list of list of int
+                                                      Precedence relationships
+                                                  reverse : bool, optional
+                                                      Whether to solve the reverse problem (default: True)
+                                                  alpha_iter : int, optional
+                                                      Alpha iteration parameter (default: 2)
+                                                  beta_iter : int, optional
+                                                      Beta iteration parameter (default: N/2)
+                                                  alpha_size : float, optional
+                                                      Alpha size parameter (default: 0.01)
+                                                  beta_size : float, optional
+                                                      Beta size parameter (default: 0.01)
+
+                                                  Returns:
+                                                  --------
+                                                  ALBPSolution
+                                                      The solved ALBP solution
+                                                  )pbdoc"
+                                            );
 
     // Second overload using lambda
     m.def("hoff_solve_salbp1",

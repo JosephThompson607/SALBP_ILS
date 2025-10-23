@@ -27,8 +27,8 @@ private:
 
     std::vector<int>  pw_{};
 };
-ALBPSolution hoff_solve_salbp1(int C, int N, const std::vector<int>& task_times, const std::vector<std::vector<int>>& raw_precedence);
-ALBPSolution hoff_solve_salbp1(const ALBP &albp);
-ALBPSolution hoff_solve_salbp1(int C, int N, const std::vector<int>& task_times, const std::vector<std::vector<int>>& raw_precedence);
-ALBPSolution hoff_solve_salbp1(const ALBP &albp);
+ALBPSolution hoff_solve_salbp1(int C, int N, const std::vector<int>& task_times, const std::vector<std::vector<int>>& raw_precedence, int alpha_iter=4, int beta_iter=-1, float alpha_size=0.005, float beta_size=0.005, bool reverse=true);
+ALBPSolution hoff_solve_salbp1(const ALBP &albp, int alpha_iter=4, int beta_iter=-1, float alpha_size=0.005, float beta_size=0.005, bool reverse=true);
+// ALBPSolution hoff_solve_salbp1(int C, int N, const std::vector<int>& task_times, const std::vector<std::vector<int>>& raw_precedence);
+// ALBPSolution hoff_solve_salbp1(const ALBP &albp);
 #endif //MHH_H

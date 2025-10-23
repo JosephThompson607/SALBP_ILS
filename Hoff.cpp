@@ -34,8 +34,8 @@ Hoff::Hoff(const ALBP& albp, const float alpha, const float beta, const int max_
 
 
     ALBPSolution Hoff::solve() {
-        ALBPSolution mhh_sol = ALBPSolution(albp_.N);
-        mhh_sol.n_stations = 0;
+        ALBPSolution hoff_sol = ALBPSolution(albp_.N);
+        hoff_sol.n_stations = 0;
         int total_assigned = 0;
         while (total_assigned < albp_.N) {
             s_task_assign_.clear();
@@ -51,34 +51,37 @@ Hoff::Hoff(const ALBP& albp, const float alpha, const float beta, const int max_
             gen_load(0, albp_.C, 0, n_eligible, albp_.C );
 
             for (const int i : best_s_task_assign_) {
-                mhh_sol.task_assignment[i] = mhh_sol.n_stations;
+                hoff_sol.task_assignment[i] = hoff_sol.n_stations;
                 n_prec_[i] = -1;
                 for (const int j : albp_.dir_suc[i]) {
                     n_prec_[j] --;
                 }
             }
             total_assigned +=  best_s_task_assign_.size();
-            mhh_sol.n_stations++;
+            hoff_sol.n_stations++;
             }
 
-        mhh_sol.task_to_station();
-        mhh_sol.station_to_ranking();
-        mhh_sol.station_to_load(albp_);
-        mhh_sol.find_windows(albp_);
-        mhh_sol.cycle_time = *std::max_element(mhh_sol.loads.begin(), mhh_sol.loads.end());
-        return mhh_sol;
+        hoff_sol.task_to_station();
+        hoff_sol.station_to_ranking();
+        hoff_sol.station_to_load(albp_);
+        hoff_sol.find_windows(albp_);
+        hoff_sol.cycle_time = *std::max_element(hoff_sol.loads.begin(), hoff_sol.loads.end());
+        return hoff_sol;
     }
 
 
-ALBPSolution hoff_solve(const ALBP &albp) {
+ALBPSolution hoff_solve(const ALBP &albp, int alpha_iter=4, int beta_iter =-1, float alpha_size = 0.005, float beta_size=0.005, bool reverse=true) {
+    if (beta_iter < 0) {
+        beta_iter = albp.N;
+    }
+    std::cout << "alpha_iter = " << alpha_iter << " beta_iter " << beta_iter << "alpha_size  "<< alpha_size<< " beta_size  "<< beta_size <<  " reverse "<<reverse<< std::endl;
     auto mhh= Hoff(albp);
     ALBPSolution best_result =mhh.solve();
     best_result.method = "mhh";
-
-    for(int i = 0; i <=4; i++) {
-        float alpha = 0.005 * i;
-        for (int j = 0; j < albp.N; j++) {
-            float beta = 0.005 * j;
+    for(int i = 0; i <=alpha_iter; i++) {
+        float alpha = alpha_size * i;
+        for (int j = 0; j < beta_iter; j++) {
+            float beta = beta_size * j;
             auto mhh1= Hoff(albp, alpha, beta);
 
             if (ALBPSolution result =mhh1.solve(); result.n_stations < best_result.n_stations){
@@ -87,17 +90,42 @@ ALBPSolution hoff_solve(const ALBP &albp) {
             }
         }
     }
+    //Reverse pass
+    if (reverse) {
+        ALBP rev_albp = albp.reverse();
+        for(int i = 0; i <=alpha_iter; i++) {
+            float alpha = alpha_size * i;
+            for (int j = 0; j < beta_iter; j++) {
+                float beta = beta_size* j;
+                auto mhh1= Hoff(rev_albp, alpha, beta);
+
+                if (ALBPSolution result =mhh1.solve(); result.n_stations < best_result.n_stations){
+                    std::cout << "best stations: " << best_result.n_stations << " new: "<<result.n_stations << std::endl;
+                    best_result = result;
+                    best_result.reverse();
+                    best_result.method = "reversed_hoff";
+                }
+            }
+        }
+    }
+
 
     return best_result;
 }
-ALBPSolution hoff_solve_salbp1(const ALBP &albp) {
-    ALBPSolution best_result = hoff_solve(albp);
+ALBPSolution hoff_solve_salbp1(const ALBP &albp, int alpha_iter, int beta_iter, float alpha_size, float beta_size, bool reverse) {
+    if (alpha_iter < 0) {
+        alpha_iter = albp.N;
+    }
+    ALBPSolution best_result = hoff_solve(albp, alpha_iter, beta_iter, alpha_size, beta_size, reverse);
     return best_result;
 }
 
-ALBPSolution hoff_solve_salbp1(const int C,const int N, const std::vector<int>& task_times, const std::vector<std::vector<int>>& raw_precedence) {
+ALBPSolution hoff_solve_salbp1(const int C,const int N, const std::vector<int>& task_times, const std::vector<std::vector<int>>& raw_precedence, int alpha_iter, int beta_iter, float alpha_size, float beta_size, bool reverse) {
+    if (alpha_iter < 0) {
+        alpha_iter = N;
+    }
     ALBP albp = ALBP::type_1(C, N, task_times, raw_precedence);
-    ALBPSolution best_result = hoff_solve(albp);
+    ALBPSolution best_result =hoff_solve(albp, alpha_iter, beta_iter, alpha_size, beta_size, reverse);
     return best_result;
 }
 
