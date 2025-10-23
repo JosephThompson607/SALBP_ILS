@@ -74,7 +74,6 @@ ALBPSolution hoff_solve(const ALBP &albp, int alpha_iter=4, int beta_iter =-1, f
     if (beta_iter < 0) {
         beta_iter = albp.N;
     }
-    std::cout << "alpha_iter = " << alpha_iter << " beta_iter " << beta_iter << "alpha_size  "<< alpha_size<< " beta_size  "<< beta_size <<  " reverse "<<reverse<< std::endl;
     auto mhh= Hoff(albp);
     ALBPSolution best_result =mhh.solve();
     best_result.method = "mhh";

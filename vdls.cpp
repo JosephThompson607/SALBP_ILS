@@ -22,7 +22,6 @@ void VDLS::add_init_solution(std::vector<int>init_solution) {
 }
 ALBPSolution VDLS::solve_type_1(  ) {
         if (best_.station_assignments.empty()) {
-                std::cout<<"no initial solution, calculating new solution"<<std::endl;
                 best_= hoff_solve_salbp1(albp_); //Get initial SALBP-1 solution
                 std::cout<<"best hoff solution"<< best_.n_stations<<std::endl;
         }
