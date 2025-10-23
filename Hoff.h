@@ -9,9 +9,9 @@
 #include "albp_solution.h"
 #include "ALBP.h"
 
-class MHH {
+class Hoff {
     public:
-        explicit MHH(const ALBP& albp, float alpha=0.0f, float beta=0.0f, int max_attempts = 5000);
+        explicit Hoff(const ALBP& albp, float alpha=0.0f, float beta=0.0f, int max_attempts = 5000);
         ALBPSolution solve( );
 
 private:
@@ -27,8 +27,8 @@ private:
 
     std::vector<int>  pw_{};
 };
-ALBPSolution mhh_solve_salbp1(int C, int N, const std::vector<int>& task_times, const std::vector<std::vector<int>>& raw_precedence);
-ALBPSolution mhh_solve_salbp1(const ALBP &albp);
+ALBPSolution hoff_solve_salbp1(int C, int N, const std::vector<int>& task_times, const std::vector<std::vector<int>>& raw_precedence);
+ALBPSolution hoff_solve_salbp1(const ALBP &albp);
 ALBPSolution hoff_solve_salbp1(int C, int N, const std::vector<int>& task_times, const std::vector<std::vector<int>>& raw_precedence);
 ALBPSolution hoff_solve_salbp1(const ALBP &albp);
 #endif //MHH_H

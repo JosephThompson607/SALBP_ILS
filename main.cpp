@@ -1,7 +1,7 @@
 #include "ALBP.h"
 #include "albp_solution.h"
 #include "ils.h"
-#include "mhh.h"
+#include "Hoff.h"
 #include "vdls.h"
 #include <iostream>
 #include <filesystem>
@@ -75,7 +75,7 @@ int mhh_test() {
     std::vector<int> test_assignments = {0,1,2,3,4};
     ALBP albp = ALBP::type_1(C, N, task_times, precedence);
 
-    ALBPSolution result =  mhh_solve_salbp1(C, N, task_times, precedence);
+    ALBPSolution result =  hoff_solve_salbp1(C, N, task_times, precedence);
      std::cout << "Here is the result" << std::endl;
     result.print();
     // std::cout << "Name: " << albp.name << std::endl;

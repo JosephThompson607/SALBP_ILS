@@ -8,7 +8,7 @@
 #include <random>
 #include <optional>
 #include <algorithm>
-#include "mhh.h"
+#include "Hoff.h"
 #include "salbp_basics.h"
 
 bool VDLS::time_exceeded() const {
@@ -23,7 +23,7 @@ void VDLS::add_init_solution(std::vector<int>init_solution) {
 ALBPSolution VDLS::solve_type_1(  ) {
         if (best_.station_assignments.empty()) {
                 std::cout<<"no initial solution, calculating new solution"<<std::endl;
-                best_= mhh_solve_salbp1(albp_); //Get initial SALBP-1 solution
+                best_= hoff_solve_salbp1(albp_); //Get initial SALBP-1 solution
         }
         int n_stations = best_.n_stations;
         const int salbp_1_lb = calc_lb_1(albp_.task_time, albp_.C); //TODO: add in other lower bounds

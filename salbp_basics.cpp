@@ -3,7 +3,7 @@
 //
 #include "albp_solution.h"
 #include "ALBP.h"
-#include "mhh.h"
+#include "Hoff.h"
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -645,7 +645,7 @@ std::vector<ALBPSolution> generate_solutions( const ALBP &albp, const int n_rand
         solutions.push_back(solution);
     }
     //Add in hoffman solution
-    solutions.push_back( mhh_solve_salbp1(albp));
+    solutions.push_back( hoff_solve_salbp1(albp));
     return solutions;
 }
 
@@ -731,7 +731,6 @@ std::vector< ALBPSolution> generate_priority_ranking_solutions(const ALBP &albp,
         auto end_time = std::chrono::steady_clock::now();
         solution.elapsed_ms = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
         solution.method = name;
-        solution.task_to_station();
         solution.station_to_load(albp);
         solutions.push_back( solution);
     }
@@ -745,6 +744,8 @@ std::vector< ALBPSolution> generate_priority_ranking_solutions(const ALBP &albp,
         auto end_time = std::chrono::steady_clock::now();
         solution.elapsed_ms = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
         solution.method = random_name;
+
+        solution.station_to_load(albp);
         solutions.push_back( solution);
     }
 

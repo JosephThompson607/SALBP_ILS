@@ -3,12 +3,12 @@
 //
 #include "albp_solution.h"
 #include "ALBP.h"
-#include "mhh.h"
+#include "Hoff.h"
 #include <iostream>
 #include <cfloat>
 #include <algorithm>
 #include "salbp_basics.h"
-MHH::MHH(const ALBP& albp, const float alpha, const float beta, const int max_attempts):
+Hoff::Hoff(const ALBP& albp, const float alpha, const float beta, const int max_attempts):
     albp_(albp),
 
 
@@ -33,7 +33,7 @@ MHH::MHH(const ALBP& albp, const float alpha, const float beta, const int max_at
 
 
 
-    ALBPSolution MHH::solve() {
+    ALBPSolution Hoff::solve() {
         ALBPSolution mhh_sol = ALBPSolution(albp_.N);
         mhh_sol.n_stations = 0;
         int total_assigned = 0;
@@ -69,21 +69,9 @@ MHH::MHH(const ALBP& albp, const float alpha, const float beta, const int max_at
         return mhh_sol;
     }
 
-    ALBPSolution hoff_solve_salbp1(const ALBP &albp) {
-        auto mhh= MHH(albp);
-        ALBPSolution result =mhh.solve();
-        return result;
-}
 
-    ALBPSolution hoff_solve_salbp1(const int C,const int N, const std::vector<int>& task_times, const std::vector<std::vector<int>>& raw_precedence) {
-        ALBP albp = ALBP::type_1(C, N, task_times, raw_precedence);
-        auto mhh= MHH(albp);
-        ALBPSolution result =mhh.solve();
-        return result;
-    }
-
-ALBPSolution mhh_solve(const ALBP &albp) {
-    auto mhh= MHH(albp);
+ALBPSolution hoff_solve(const ALBP &albp) {
+    auto mhh= Hoff(albp);
     ALBPSolution best_result =mhh.solve();
     best_result.method = "mhh";
 
@@ -91,7 +79,7 @@ ALBPSolution mhh_solve(const ALBP &albp) {
         float alpha = 0.005 * i;
         for (int j = 0; j < albp.N; j++) {
             float beta = 0.005 * j;
-            auto mhh1= MHH(albp, alpha, beta);
+            auto mhh1= Hoff(albp, alpha, beta);
 
             if (ALBPSolution result =mhh1.solve(); result.n_stations < best_result.n_stations){
                 std::cout << "best stations: " << best_result.n_stations << " new: "<<result.n_stations << std::endl;
@@ -102,18 +90,18 @@ ALBPSolution mhh_solve(const ALBP &albp) {
 
     return best_result;
 }
-ALBPSolution mhh_solve_salbp1(const ALBP &albp) {
-    ALBPSolution best_result = mhh_solve(albp);
+ALBPSolution hoff_solve_salbp1(const ALBP &albp) {
+    ALBPSolution best_result = hoff_solve(albp);
     return best_result;
 }
 
-ALBPSolution mhh_solve_salbp1(const int C,const int N, const std::vector<int>& task_times, const std::vector<std::vector<int>>& raw_precedence) {
+ALBPSolution hoff_solve_salbp1(const int C,const int N, const std::vector<int>& task_times, const std::vector<std::vector<int>>& raw_precedence) {
     ALBP albp = ALBP::type_1(C, N, task_times, raw_precedence);
-    ALBPSolution best_result = mhh_solve(albp);
+    ALBPSolution best_result = hoff_solve(albp);
     return best_result;
 }
 
-void MHH::gen_load( int depth, int remaining_time,const int start, int n_eligible, float cost) {
+void Hoff::gen_load( int depth, int remaining_time,const int start, int n_eligible, float cost) {
 
         int full_load = 1;
         for(int i=start;i<n_eligible;i++) {

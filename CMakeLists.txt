@@ -12,7 +12,7 @@ set(COMMON_SOURCES
         ALBP.cpp
         albp_solution.cpp
         ils.cpp
-        mhh.cpp
+        Hoff.cpp
         vdls.cpp
         salbp_basics.cpp
 
