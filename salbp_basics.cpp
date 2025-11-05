@@ -15,6 +15,8 @@
 #include <stdexcept>  // For std::runtime_error
 #include "salbp_basics.h"
 
+#include <map>
+
 
 int calc_lb_1(const std::vector<int>& task_time, const int C) {
     int lb_1 = std::accumulate(task_time.begin(), task_time.end(), 0);
@@ -35,6 +37,180 @@ int calc_lb_2(const std::vector<int>& task_time, const int C) {
     }
     return red_count + (blue_count+1)/2;
 }
+
+int calc_lb_3(const std::vector<int>& task_time, const int C) {
+    int bigs = 0; //tasks over C/2
+    int two_thirds = 0;
+    int meds = 0; // tasks under or equal to C/2
+    int one_thirds = 0;
+    for (const auto& task : task_time) {
+        if (static_cast<double>(task) > static_cast<double>(C)*2/3) {
+            ++bigs;
+        }
+        else if (static_cast<double>(task) == static_cast<double>(C)*2/3) {
+            ++two_thirds;
+        }
+        else if (static_cast<double>(task) > static_cast<double>(C)*1/3) {
+            ++meds;
+        }
+        else if (static_cast<double>(task) == static_cast<double>(C)*1/3) {
+            ++one_thirds;
+        }
+    }
+    int lb_3 = 0;
+    float weights = bigs + 2.0/3.0 * two_thirds + 1.0/2.0 * meds + 1.0/3.0 * one_thirds;
+    lb_3 = std::ceil( weights );
+    return lb_3;
+}
+
+int insert_first_station(int task_time, std::vector<int> station_loads, const int C) {
+    for (int & station_load : station_loads) {
+        if (station_load + task_time <=C) {
+            station_load = station_load + task_time;
+            return 0;
+        }
+    }
+    return 1;
+}
+std::vector<int> calc_earliest_station_dir(const ALBP& albp) {
+    std::vector<int> earliest_station(albp.N, 0);
+    for (int i=0; i < albp.task_time.size(); i++) {
+        earliest_station[i] = albp.task_time[i];
+        for (int j: albp.dir_pred[i]) {
+            earliest_station[i] += albp.task_time[j];
+        }
+        earliest_station[i] = (earliest_station[i] + albp.C -1) / albp.C;
+    }
+    return earliest_station;
+}
+
+std::vector<float> get_heads(const ALBP& albp) {
+    std::vector<float> heads(albp.N, 0);
+    for (int i=0; i < albp.task_time.size(); i++) {
+        float lb_1 = 0;
+        std::vector<int>pred_task_times(albp.pred[i].size());
+        for (int j: albp.pred[i]) {
+            lb_1+=1.0*albp.task_time[j]/albp.C;
+            pred_task_times[j]+=albp.task_time[j];
+        }
+        float lb_2 = calc_lb_2(pred_task_times, albp.C)- 0.5;
+        float lb_3 = calc_lb_3(pred_task_times, albp.C) - 0.33333333;
+        heads[i] = std::max({lb_1,lb_2, lb_3});
+    }
+    return heads;
+}
+
+std::vector<float> get_tails(const ALBP& albp) {
+    std::vector<float> tails(albp.N, 0);
+    for (int i=0; i < albp.task_time.size(); i++) {
+        float lb_1 = 0;
+        std::vector<int>suc_task_times(albp.suc[i].size());
+        for (int j: albp.suc[i]) {
+            lb_1+=1.0*albp.task_time[j]/albp.C;
+            suc_task_times[j]+=albp.task_time[j];
+        }
+        float lb_2 = calc_lb_2(suc_task_times, albp.C)- 0.5;
+        float lb_3 = calc_lb_3(suc_task_times, albp.C) - 0.33333333;
+        tails[i] = std::max({lb_1,lb_2, lb_3});
+    }
+    return tails;
+}
+int calc_lb_6(const std::vector<int> & task_times, const int C){
+
+    std::vector<int> sorted = task_times;
+    std::vector <int> station_loads;
+    station_loads.reserve(task_times.size());
+    std::sort(sorted.begin(), sorted.end());
+
+    // Partition based on the ranges
+    std::vector<int> large;  // C/2 to C (descending)
+    std::vector<int> mid;  // C/3 to C/2 (ascending)
+    std::vector<int> small;  // 0 to C/3 (ascending)
+
+
+    int total_mid_time = 0;
+    std::vector<int> q_high_sums;
+    int q_high_sum_current_index = 0;
+    std::map<int, std::pair<int, int>> large_times;  // key -> {sum, count}
+
+    for (int val : sorted) {
+
+            if (val > 1.0*C/2) {
+                large.push_back(val);
+
+                if (!large_times.empty() && large_times.rbegin()->first == val) {
+                    large_times[val].first += val;   // Add to sum
+                    large_times[val].second += 1;     // Increment count
+                } else {
+                    if (large_times.empty()) {
+                        large_times[val] = {val, 1};  // sum = val, count = 1
+                    } else {
+                        int previous_largest = large_times.rbegin()->first;
+
+                        auto [prev_sum, prev_count] = large_times[previous_largest];
+                        large_times[val] = {val + prev_sum, prev_count + 1};
+                    }
+                }
+            } else if (val > 1.0*C/3) {
+                mid.push_back(val);
+                total_mid_time += val;
+            } else {
+                small.push_back(val);
+            }
+        }
+
+
+    // Reverse large for descending order
+    std::reverse(large.begin(), large.end());
+    int d1 = 0;
+    for (int val : large) {
+        station_loads.push_back(val);
+        d1 ++;
+    }
+    int unassigned_mid = 0;
+    for (int val : mid) {
+        unassigned_mid+= insert_first_station(val, station_loads, C);
+    }
+    int d2 =( unassigned_mid + 2 -1 )/2;
+    int d3 = 0;
+    std::reverse(small.begin(), small.end());
+
+    int q_bottom = 0;
+    for (int val : small) {
+        q_bottom += val;
+        int q_top = total_mid_time;
+        int large_size = 0;
+        // Try to get q_top from large_times if possible
+        if (!large_times.empty()) {
+            auto it = large_times.upper_bound(C - val);
+            if (it != large_times.begin()) {
+                --it;
+                q_top += it->second.first;
+                large_size = it->second.second;
+            }
+        }
+
+        float q_sums = 1.0*(q_bottom + q_top )/ C - large_size - d2;
+        if (q_sums > d3) {
+            d3 = std::ceil( q_sums);
+        }
+    }
+    return d1+d2+d3;
+
+}
+int calc_salbp_1_bin_lbs(std::vector<int> const &task_times, int C){
+    int lb_1 = calc_lb_1(task_times, C);
+    int lb_6 = calc_lb_6(task_times, C);
+    int lb = std::max(lb_1, lb_6);
+    return lb;
+}
+int calc_salbp_1_lbs(const ALBP& albp) {
+    int lb_1 = calc_lb_1(albp.task_time, albp.C);
+    int lb_6 = calc_lb_6(albp.task_time, albp.C);
+    return std::max(lb_1, lb_6);
+}
+
+
 
 int calc_salbp_2_lb_1(const std::vector<int>& task_time, const int S) {
     return (std::accumulate(task_time.begin(), task_time.end(), 0)+ S-1)/ S;
@@ -375,6 +551,18 @@ std::vector<int>  get_positional_weight(const ALBP &albp) {
     return weights;
 }
 
+std::vector<int>  get_reverse_positional_weight(const ALBP &albp) {
+    std::vector<int> weights(albp.N);
+    for (int i = 0; i < albp.N; ++i) {
+        weights[i] += albp.task_time[i]; // Own weight
+        //Iterates through the transitive closure matrix and adds to weights
+        for (const auto &pred : albp.pred[i]) {
+            weights[i] += albp.task_time[pred];
+        }
+    }
+    return weights;
+}
+
 
 std::vector<int>  get_alloc_station_ub(const ALBP &albp) {
     std::vector<int> weights(albp.N);
@@ -422,6 +610,26 @@ std::vector<int>  pw_ranking(const ALBP&albp) {
     }
     return ranking;
 }
+std::vector<int>  rpw_ranking(const ALBP&albp) {
+    std::vector<int> ranking(albp.N);
+
+    //Gets the positional weight for each task
+    std::vector<int> indices(albp.N);
+    std::iota( indices.begin(), indices.end(), 0 );
+    std::vector<int> weights = get_reverse_positional_weight(albp);
+
+    //sorts
+
+    // Sort indices based on corresponding weights
+    std::sort(indices.begin(),indices.end(), [&](const int a, const int b) {
+        return weights[a] > weights[b];  // Ascending order
+    });
+    for (int rank = 0; rank < indices.size(); ++rank) {
+        ranking[indices[rank]] = rank;
+    }
+    return ranking;
+}
+
 
 std::vector<int> cumulative_pw_ranking(const ALBP&albp){
     //Gets the positional weight for each task
@@ -630,7 +838,12 @@ std::vector<std::vector<int> > generate_rankings(const ALBP &albp, const int n_r
 
     return rankings;
 }
-
+void sort_by_ranking(std::vector<int>& items, const std::vector<int>& ranking) {
+    std::sort(items.begin(), items.end(),
+        [&ranking](int a, int b) {
+            return ranking[a] < ranking[b];
+        });
+}
 
 std::vector<ALBPSolution> generate_solutions( const ALBP &albp, const int n_random) {
     // First generates a list of rankings for the tasks. It will be a vector of vectors, one for each ranking of size N

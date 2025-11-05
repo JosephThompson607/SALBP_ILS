@@ -13,6 +13,7 @@ set(COMMON_SOURCES
         albp_solution.cpp
         ils.cpp
         Hoff.cpp
+        MultiHoff.cpp
         vdls.cpp
         salbp_basics.cpp
 

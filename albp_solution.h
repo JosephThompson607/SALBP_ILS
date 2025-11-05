@@ -24,6 +24,7 @@ public:
     int cycle_time{};//For SALBP-2
     int n_violations{}; //Number of violations
     int n_ranking_violations{}; // number of violations from ranking
+    bool optimal = false;
     // int num_cycles; //Number of cycles
     // std::vector<int> cycle_times; //Cycle times
     std::string method = "unspecified";
@@ -39,6 +40,7 @@ public:
     //utility functions
     void print() const;
     void task_to_station();
+    void task_to_station_and_load(const ALBP &albp);
     void station_to_task();
     void station_to_ranking();
     void station_to_load(const ALBP &albp);

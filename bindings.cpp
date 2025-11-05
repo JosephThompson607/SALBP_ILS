@@ -10,6 +10,7 @@
 #include "Hoff.h"
 #include "vdls.h"
 #include "salbp_basics.h"
+#include "MultiHoff.h"
 #include <pybind11/chrono.h>
 namespace py = pybind11;
 
@@ -22,14 +23,16 @@ PYBIND11_MODULE(ILS_ALBP, m) {
     py::class_<ALBP>(m, "ALBP")
             .def(py::init<>()) // default
             .def(py::init<const std::string &>()) // from filename
-                // Bind static factory methods as static methods
+            // Bind static factory methods as static methods
             .def_static("type_1", &ALBP::type_1,
-                py::arg("C"), py::arg("N"), py::arg("task_times"), py::arg("raw_precedence"),py::arg("reverse"),
-                "Factory constructor for type_1")
+                        py::arg("C"), py::arg("N"), py::arg("task_times"), py::arg("raw_precedence"),
+                        py::arg("reverse"),
+                        "Factory constructor for type_1")
 
             .def_static("type_2", &ALBP::type_2,
-                py::arg("S"), py::arg("N"), py::arg("task_times"), py::arg("raw_precedence"),py::arg("reverse"),
-                "Factory constructor for type_2")
+                        py::arg("S"), py::arg("N"), py::arg("task_times"), py::arg("raw_precedence"),
+                        py::arg("reverse"),
+                        "Factory constructor for type_2")
 
             .def("print", &ALBP::print)
             .def("loadFromFile", &ALBP::loadFromFile)
@@ -65,10 +68,10 @@ PYBIND11_MODULE(ILS_ALBP, m) {
                            "Ranking for each task")
             .def_readwrite("n_stations", &ALBPSolution::n_stations,
                            "Number of stations")
-            .def_readwrite("cycle_time", &ALBPSolution::cycle_time ,
-                            "Cycle time")
+            .def_readwrite("cycle_time", &ALBPSolution::cycle_time,
+                           "Cycle time")
             .def_readwrite("loads", &ALBPSolution::loads,
-                            "loads of the stations")
+                           "loads of the stations")
             .def_readwrite("n_violations", &ALBPSolution::n_violations,
                            "Number of violations")
             .def_readwrite("n_ranking_violations", &ALBPSolution::n_ranking_violations,
@@ -79,15 +82,15 @@ PYBIND11_MODULE(ILS_ALBP, m) {
             // Read-only property for n_tasks (since it's private with getter)
             .def_property_readonly("n_tasks", &ALBPSolution::get_n_tasks,
                                    "Number of tasks (read-only)")
-    .def_property_readonly("elapsed_ms", [](const ALBPSolution& self) -> long {
-                                return self.elapsed_ms.count();  // Convert chrono to milliseconds as long
-                                }, "Elapsed time in milliseconds")
+            .def_property_readonly("elapsed_ms", [](const ALBPSolution &self) -> long {
+                return self.elapsed_ms.count(); // Convert chrono to milliseconds as long
+            }, "Elapsed time in milliseconds")
 
             // Public methods
             .def("print", &ALBPSolution::print,
                  "Print the solution")
             .def("reverse", &ALBPSolution::reverse,
-                "Reverse the solution")
+                 "Reverse the solution")
             .def("task_to_station", &ALBPSolution::task_to_station,
                  "Convert task assignment to station assignment")
             .def("station_to_task", &ALBPSolution::station_to_task,
@@ -117,18 +120,21 @@ PYBIND11_MODULE(ILS_ALBP, m) {
                 d["cycle_time"] = sol.cycle_time;
                 d["ranking"] = sol.ranking;
                 d["task_ranking"] = sol.task_ranking;
-                d["solution_time"]= sol.elapsed_ms.count();
+                d["solution_time"] = sol.elapsed_ms.count();
                 d["method"] = sol.method;
                 d["loads"] = sol.loads;
                 return d;
             }, "Convert solution to dictionary");
-
-    m.def("calc_salbp_2_lbs", &calc_salbp_2_lbs,"Calculates several lower bounds for salbp_2 and returns their maximum",
-        py::arg("task_time"),
-        py::arg("n_stations"));
-    m.def("calc_salbp_2_ub", &calc_salbp_2_ub,"Calculates upper bound for salbp_2",
-        py::arg("task_time"),
-        py::arg("n_stations"));
+    m.def("calc_salbp_1_lb6", &calc_lb_6, "calculates lb6 for salbp-1",
+          py::arg("task_time"),
+          py::arg("n_stations"));
+    m.def("calc_salbp_2_lbs", &calc_salbp_2_lbs,
+          "Calculates several lower bounds for salbp_2 and returns their maximum",
+          py::arg("task_time"),
+          py::arg("n_stations"));
+    m.def("calc_salbp_2_ub", &calc_salbp_2_ub, "Calculates upper bound for salbp_2",
+          py::arg("task_time"),
+          py::arg("n_stations"));
     // Binding main solver function
     m.def("ils_solve_SALBP1", &ils_solve_SALBP1,
           "Solve SALBP1 using Iterated Local Search",
@@ -168,27 +174,27 @@ PYBIND11_MODULE(ILS_ALBP, m) {
           )pbdoc");
 
     m.def("hoff_solve_salbp1",
-      [](int C, int N,
-         const std::vector<int> &task_times,
-         const std::vector<std::vector<int>> &raw_precedence,
-         bool reverse,
-         int alpha_iter,
-         int beta_iter,
-         float alpha_size,
-         float beta_size) {
-          return hoff_solve_salbp1(C, N, task_times, raw_precedence,
-                                   alpha_iter, beta_iter, alpha_size, beta_size, reverse);
-                                                  },
-                                                  py::arg("C"),
-                                                  py::arg("N"),
-                                                  py::arg("task_times"),
-                                                  py::arg("raw_precedence"),
-                                                  py::arg("reverse") = false,
-                                                  py::arg("alpha_iter") = 4,
-                                                  py::arg("beta_iter") = -1,
-                                                  py::arg("alpha_size") = 0.005,
-                                                  py::arg("beta_size") = 0.005,
-                                                  R"pbdoc(
+          [](int C, int N,
+             const std::vector<int> &task_times,
+             const std::vector<std::vector<int> > &raw_precedence,
+             bool reverse,
+             int alpha_iter,
+             int beta_iter,
+             float alpha_size,
+             float beta_size) {
+              return hoff_solve_salbp1(C, N, task_times, raw_precedence,
+                                       alpha_iter, beta_iter, alpha_size, beta_size, reverse);
+          },
+          py::arg("C"),
+          py::arg("N"),
+          py::arg("task_times"),
+          py::arg("raw_precedence"),
+          py::arg("reverse") = false,
+          py::arg("alpha_iter") = 4,
+          py::arg("beta_iter") = -1,
+          py::arg("alpha_size") = 0.005,
+          py::arg("beta_size") = 0.005,
+          R"pbdoc(
                                                   Solve SALBP1 using Hoffman heuristic
 
                                                   Parameters:
@@ -217,7 +223,7 @@ PYBIND11_MODULE(ILS_ALBP, m) {
                                                   ALBPSolution
                                                       The solved ALBP solution
                                                   )pbdoc"
-                                            );
+    );
 
     // Second overload using lambda
     m.def("hoff_solve_salbp1",
@@ -245,12 +251,12 @@ PYBIND11_MODULE(ILS_ALBP, m) {
              const std::optional<int> &max_attempts,
              const std::optional<int> &time_limit
   ) {
-              return vdls_solve_salbp1(C, N, task_times, raw_precedence,initial_solution, max_attempts, time_limit);
+              return vdls_solve_salbp1(C, N, task_times, raw_precedence, initial_solution, max_attempts, time_limit);
           }, py::arg("C"),
           py::arg("N"),
           py::arg("task_times"),
           py::arg("raw_precedence"),
-          py::arg("initial_solution")= std::vector<int>(),
+          py::arg("initial_solution") = std::vector<int>(),
           py::arg("max_attempts") = std::nullopt,
           py::arg("time_limit") = std::nullopt,
           R"pbdoc(
@@ -277,7 +283,7 @@ PYBIND11_MODULE(ILS_ALBP, m) {
           [](const ALBP &albp,
              const std::optional<int> &max_attempts,
              const std::optional<int> &time_limit) {
-              return vdls_solve_salbp1(albp,  max_attempts, time_limit);
+              return vdls_solve_salbp1(albp, max_attempts, time_limit);
           },
           py::arg("albp"),
           py::arg("max_attempts") = std::nullopt,
@@ -303,12 +309,12 @@ PYBIND11_MODULE(ILS_ALBP, m) {
              const std::optional<int> &max_attempts,
              const std::optional<int> &time_limit
   ) {
-              return vdls_solve_salbp2(S, N, task_times, raw_precedence,initial_solution, max_attempts, time_limit);
+              return vdls_solve_salbp2(S, N, task_times, raw_precedence, initial_solution, max_attempts, time_limit);
           }, py::arg("S"),
           py::arg("N"),
           py::arg("task_times"),
           py::arg("raw_precedence"),
-          py::arg("initial_solution")= std::vector<int>(),
+          py::arg("initial_solution") = std::vector<int>(),
           py::arg("max_attempts") = std::nullopt,
           py::arg("time_limit") = std::nullopt,
           R"pbdoc(
@@ -331,13 +337,13 @@ PYBIND11_MODULE(ILS_ALBP, m) {
                   )pbdoc"
     );
     m.def("priority_solve_salbp1", &priority_solve_salbp_1,
-      "Solve SALBP-1 using priority methods",
-      py::arg("C"),
-      py::arg("N"),
-      py::arg("task_times"),
-      py::arg("raw_precedence"),
-      py::arg("n_random"),
-      R"pbdoc(
+          "Solve SALBP-1 using priority methods",
+          py::arg("C"),
+          py::arg("N"),
+          py::arg("task_times"),
+          py::arg("raw_precedence"),
+          py::arg("n_random"),
+          R"pbdoc(
                           Solve SALBP1 using different priority methods and station oriented task assignment
 
                   Parameters:
@@ -355,15 +361,15 @@ PYBIND11_MODULE(ILS_ALBP, m) {
                   list(ALBPSolution)
                       The solved ALBP solution
                   )pbdoc");
-  m.def("priority_solve_salbp2", &priority_solve_salbp_2,
-                          "Solve SALBP-2 using priority methods",
-                          py::arg("S"),
-                          py::arg("N"),
-                          py::arg("task_times"),
-                          py::arg("raw_precedence"),
-                          py::arg("n_random"),
-                          py::arg("move_target")=true,
-                          R"pbdoc(
+    m.def("priority_solve_salbp2", &priority_solve_salbp_2,
+          "Solve SALBP-2 using priority methods",
+          py::arg("S"),
+          py::arg("N"),
+          py::arg("task_times"),
+          py::arg("raw_precedence"),
+          py::arg("n_random"),
+          py::arg("move_target") = true,
+          R"pbdoc(
                                                   Solve SALBP2 using different priority methods and filler (ravelo) heuristic
 
                                                     Parameters:
@@ -378,6 +384,33 @@ PYBIND11_MODULE(ILS_ALBP, m) {
                                                       Precedence relationshions
                                                     move_target : bool
                                                         recalculate the target for the filler heuristic
+                                                    Returns:
+                                                    --------
+                                                    list(ALBPSolution)
+                                                      The solved ALBP solution
+                                                    )pbdoc");
+    m.def("mhh_solve_salbp1",
+          [](int C, int N,
+             const std::vector<int> &task_times,
+             const std::vector<std::vector<int> > &raw_precedence) {
+              return mhh_solve_salbp1(C, N, task_times, raw_precedence);
+          },
+            py::arg("C"),
+            py::arg("N"),
+            py::arg("task_times"),
+            py::arg("raw_precedence"),
+          R"pbdoc(
+                                                  Solve SALBP1 using multi-hoffman (Fleszar and Hindi 2003) heuristic
+                                                    Parameters:
+                                                    -----------
+                                                    C : int
+                                                      Cycle time
+                                                    N : int
+                                                      Number of tasks
+                                                    task_times : list of int
+                                                      Task processing times
+                                                    raw_precedence : list of list of int
+                                                      Precedence relationshions
                                                     Returns:
                                                     --------
                                                     list(ALBPSolution)

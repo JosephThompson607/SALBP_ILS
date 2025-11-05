@@ -23,11 +23,14 @@ void VDLS::add_init_solution(std::vector<int>init_solution) {
 ALBPSolution VDLS::solve_type_1(  ) {
         if (best_.station_assignments.empty()) {
                 best_= hoff_solve_salbp1(albp_); //Get initial SALBP-1 solution
-                std::cout<<"best hoff solution"<< best_.n_stations<<std::endl;
+                best_.method = "hoff(vdls start)";
+
         }
         int n_stations = best_.n_stations;
-        const int salbp_1_lb = calc_lb_1(albp_.task_time, albp_.C); //TODO: add in other lower bounds
+        const int salbp_1_lb = calc_salbp_1_lbs(albp_);
+        std::cout<<"best hoff solution "<< best_.n_stations<< " lb: "<< salbp_1_lb<<std::endl;
         while (best_.n_stations > salbp_1_lb && !time_exceeded() ) {
+
                 ALBPSolution candidate = best_;
                 n_stations --;//Try again with one fewer station
                 //Check to see if even possible in allotted cycle time

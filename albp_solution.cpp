@@ -17,6 +17,7 @@
 #include <vector>
 #include <tuple>
 #include <functional>
+#include <map>
 #include <stdexcept>  // For std::runtime_error
 
  void ALBPSolution::print() const {
@@ -50,6 +51,22 @@ void ALBPSolution::task_to_station(){
     }
 }
 
+void ALBPSolution::task_to_station_and_load(const ALBP &albp) {
+     station_assignments.clear();
+     station_assignments.resize(n_stations);
+     loads.clear();
+     loads.resize(n_stations);
+     int max_load = 0;
+     for (int i = 0; i < n_tasks; ++i) {
+         const int station = task_assignment[i];
+         loads[station] += albp.task_time[i];
+         station_assignments[station].push_back(i);
+         if (loads[station] > max_load) {
+             max_load = loads[station];
+         }
+     }
+     cycle_time = max_load;
+ }
 void ALBPSolution::station_to_load(const ALBP &albp) {
     loads.clear();
     loads.resize(n_stations);

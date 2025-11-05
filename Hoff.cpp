@@ -8,29 +8,37 @@
 #include <cfloat>
 #include <algorithm>
 #include "salbp_basics.h"
-Hoff::Hoff(const ALBP& albp, const float alpha, const float beta, const int max_attempts):
+Hoff::Hoff(const ALBP& albp,  int alpha_iter, int beta_iter , float alpha_size, float beta_size, bool reverse, int max_attempts):
     albp_(albp),
-
-
+    alpha_iter_(alpha_iter),
+    beta_iter_(beta_iter),
+    alpha_size_(alpha_size),
+    beta_size_(beta_size),
+    reverse_(reverse),
      n_prec_(albp.N, 0),                    // Size = num_tasks, init to 0
-     alpha_(alpha),                                        // Initialize to 0
-     beta_(beta),
+     alpha_(0),                                        // Initialize to 0
+     beta_(0),
     max_attempts_(max_attempts),
     n_attempts_(0),
     // Initialize to 0
      min_cost_(FLT_MAX)
     {
+    lb_ = calc_salbp_1_bin_lbs(albp.task_time, albp.C);
     s_task_assign_.reserve(albp.N),
     best_s_task_assign_.reserve(albp.N),
-    eligible_tasks_.resize(albp.N,-1);
     pw_ = get_positional_weight(albp_) ;
     //initilize counts of unassigned predecessors
+    reinitialize();
+
+}
+
+    void Hoff::reinitialize() {
+    eligible_tasks_.resize(albp_.N,-1);
     for(int i = 0; i < albp_.N; i++) {
         n_prec_[i] = albp_.dir_pred[i].size();
     }
 
 }
-
 
 
     ALBPSolution Hoff::solve() {
@@ -69,47 +77,55 @@ Hoff::Hoff(const ALBP& albp, const float alpha, const float beta, const int max_
         return hoff_sol;
     }
 
-
-ALBPSolution hoff_solve(const ALBP &albp, int alpha_iter=4, int beta_iter =-1, float alpha_size = 0.005, float beta_size=0.005, bool reverse=true) {
-    if (beta_iter < 0) {
-        beta_iter = albp.N;
-    }
-    auto mhh= Hoff(albp);
-    ALBPSolution best_result =mhh.solve();
-    best_result.method = "mhh";
-    for(int i = 0; i <=alpha_iter; i++) {
-        float alpha = alpha_size * i;
-        for (int j = 0; j < beta_iter; j++) {
-            float beta = beta_size * j;
-            auto mhh1= Hoff(albp, alpha, beta);
-
-            if (ALBPSolution result =mhh1.solve(); result.n_stations < best_result.n_stations){
-                std::cout << "best stations: " << best_result.n_stations << " new: "<<result.n_stations << std::endl;
-                best_result = result;
+ALBPSolution Hoff::multi_solve() {
+    std::cout <<"starting multi solve" << std::endl;
+    ALBPSolution best_result =solve();
+    best_result.method = "hoff";
+    std::cout << "changing alpha and beta current best " << best_result.n_stations << std::endl;
+    for(int i = 0; i <=alpha_iter_; i++) {
+        alpha_ = alpha_size_ * i;
+        for (int j = 0; j < beta_iter_; j++) {
+            beta_ = beta_size_ * j;
+            //Check for optimality
+            if (best_result.n_stations == lb_) {
+                std::cout << "optimal solution !" << std::endl;
+                best_result.optimal = true;
+                return best_result;
             }
-        }
-    }
-    //Reverse pass
-    if (reverse) {
-        ALBP rev_albp = albp.reverse();
-        for(int i = 0; i <=alpha_iter; i++) {
-            float alpha = alpha_size * i;
-            for (int j = 0; j < beta_iter; j++) {
-                float beta = beta_size* j;
-                auto mhh1= Hoff(rev_albp, alpha, beta);
+            //Resets original data and re-solves
+            reinitialize();
+            if (ALBPSolution result =solve(); result.n_stations < best_result.n_stations){
+                //std::cout << "best stations: " << best_result.n_stations << " new: "<<result.n_stations << std::endl;
+                best_result = result;
+                if (best_result.n_stations == lb_) {
 
-                if (ALBPSolution result =mhh1.solve(); result.n_stations < best_result.n_stations){
-                    std::cout << "best stations: " << best_result.n_stations << " new: "<<result.n_stations << std::endl;
-                    best_result = result;
-                    best_result.reverse();
-                    best_result.method = "reversed_hoff";
                 }
             }
         }
     }
-
+    std::cout <<"ending multi solve best result has " << best_result.n_stations <<std::endl;
 
     return best_result;
+}
+
+ALBPSolution hoff_solve(const ALBP &albp, int alpha_iter=4, int beta_iter =-1, float alpha_size = 0.005, float beta_size=0.005, bool reverse=true){
+    if (beta_iter < 0) {
+        beta_iter = albp.N;
+    }
+    auto hoff = Hoff(albp, alpha_iter, beta_iter, alpha_size, beta_size);
+    ALBPSolution current_best =  hoff.multi_solve();
+
+    if (reverse && current_best.optimal == false){
+        ALBP rev_albp = albp.reverse();
+        auto hoff = Hoff(rev_albp, alpha_iter, beta_iter, alpha_size, beta_size);
+        ALBPSolution rev_sol = hoff.solve();
+        if (rev_sol.n_stations < current_best.n_stations){
+
+        current_best = rev_sol;}
+    }
+
+
+    return current_best;
 }
 ALBPSolution hoff_solve_salbp1(const ALBP &albp, int alpha_iter, int beta_iter, float alpha_size, float beta_size, bool reverse) {
     if (alpha_iter < 0) {
@@ -132,6 +148,7 @@ void Hoff::gen_load( int depth, int remaining_time,const int start, int n_eligib
 
         int full_load = 1;
         for(int i=start;i<n_eligible;i++) {
+            if ((n_attempts_ >= max_attempts_) || (remaining_time==0)) return;
             if (int task = eligible_tasks_[i]; albp_.task_time[task] <= remaining_time) {
                 full_load = 0;
                 int n_sub_eligible = n_eligible;
@@ -157,15 +174,9 @@ void Hoff::gen_load( int depth, int remaining_time,const int start, int n_eligib
                 for (const int j : albp_.dir_suc[task]) {
                     n_prec_[j] ++;
                 }
-                if (n_attempts_ >= max_attempts_) return;
+
             }
-
-
-
         }
-
-
     n_attempts_+=full_load;
-
 };
 

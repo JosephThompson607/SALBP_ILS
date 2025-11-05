@@ -2,8 +2,6 @@
 import sys
 import os
 
-
-
 # Add the build directory to Python path
 build_dir = 'cmake-build-python_interface/'
 sys.path.insert(0, build_dir)
@@ -26,34 +24,44 @@ sys.path.insert(0, 'cmake-build-python_interface/')
 try:
     # Try importing
     import ILS_ALBP
-    print("✅ Module imported successfully!")
 
+    print("✅ Module imported successfully!")
+    print("Testing solution manipulation")
     # Test the module
     solution = ILS_ALBP.ALBPSolution(5)
-    solution.n_stations =  4
+    solution.n_stations = 4
     print(f"✅ Created ALBPSolution with {solution.n_tasks} tasks")
-    solution.task_assignment=[1,0,3,2,1]
+    solution.task_assignment = [1, 0, 3, 2, 1]
     solution.task_to_station()
     solution.station_to_ranking()
     actual = solution.station_assignments
-    expected =  [[1], [0, 4], [3], [2]]
-    assert len(actual) == len(expected), f"Length mismatch between station assignments and task assignments: {len(actual)} vs {len(expected)}"
+    expected = [[1], [0, 4], [3], [2]]
+    assert len(actual) == len(
+        expected), f"Length mismatch between station assignments and task assignments: {len(actual)} vs {len(expected)}"
     for i, (actual_sublist, expected_sublist) in enumerate(zip(actual, expected)):
         assert actual_sublist == expected_sublist, f"Mismatch at index between station assignments and task assignments{i}: {actual_sublist} vs {expected_sublist}"
-    assert len(solution.ranking) ==solution.n_tasks,  f"Length mismatch between ranking and n_tasks: {len(solution.ranking)} vs {len(solution.n_tasks)}"
+    assert len(
+        solution.ranking) == solution.n_tasks, f"Length mismatch between ranking and n_tasks: {len(solution.ranking)} vs {len(solution.n_tasks)}"
     correct_ranking = [1, 0, 4, 3, 2]
     for i in range(5):
         assert solution.ranking[i] == correct_ranking[i], "bad ranking"
     #Testing reverse functionality
     solution.reverse()
-    assert solution.task_assignment == [1,2,3,0,1], f"Solution not reversed correctly {solution.task_assignment}"
+    assert solution.task_assignment == [1, 2, 3, 0, 1], f"Solution not reversed correctly {solution.task_assignment}"
     actual = solution.station_assignments
     expected.reverse()
-    assert len(actual) == len(expected), f"Length mismatch between station assignments and task assignments: {len(actual)} vs {len(expected)}"
+    assert len(actual) == len(
+        expected), f"Length mismatch between station assignments and task assignments: {len(actual)} vs {len(expected)}"
     for i, (actual_sublist, expected_sublist) in enumerate(zip(actual, expected)):
         assert actual_sublist == expected_sublist, f"Mismatch at index between station assignments and task assignments{i}: {actual_sublist} vs {expected_sublist}"
 
     print("✅ basic solution manipulation passed!")
+    print("Testing salbp lower bounds")
+    task_times = [8, 8, 7, 6, 5, 5, 3, 4, 3]
+    C = 10
+    lb_6 = ILS_ALBP.calc_salbp_1_lb6(task_times, C)
+    assert lb_6 == 6, f"LB 6 is not acting as expected. We wanted 6, we got {lb_6}"
+    print("✅ lb tests passed!")
 
 
 except ImportError as e:
@@ -61,11 +69,11 @@ except ImportError as e:
 
     # Try to get more details
     import importlib.util
+
     spec = importlib.util.find_spec('ILS_ALBP')
     print(f"Module spec: {spec}")
 
 try:
-
 
     def ils_call(cycle_time, task_times_list, precedence_list,
                  max_iterations=1000, operation_probs=0.5,
@@ -108,7 +116,7 @@ try:
                 task_times=task_times_list,
                 raw_precedence=precedence_list,
                 max_iter=max_iterations,
-                time_limit = 20,
+                time_limit=20,
                 op_probs=operation_probs,
                 verbose=show_verbose,
                 initial_solution=init_sol
@@ -122,9 +130,10 @@ try:
         except Exception as e:
             print(f"Error solving SALBP1: {e}")
             return None
-    def mhh_call(cycle_time, task_times_list, precedence_list,
-      ):
 
+
+    def hoff_call(cycle_time, task_times_list, precedence_list,
+                  ):
 
         N = len(task_times_list)
 
@@ -134,24 +143,47 @@ try:
                 N=N,
                 task_times=task_times_list,
                 raw_precedence=precedence_list,
-                alpha_iter= 2,
-                alpha_size = 0.005,
-                beta_iter = int(N/2),
-                beta_size = 0.005,
+                alpha_iter=2,
+                alpha_size=0.005,
+                beta_iter=int(N / 2),
+                beta_size=0.005,
                 reverse=True
 
             )
 
             return mhh_sol
 
+
         except Exception as e:
             print(f"Error solving SALBP1: {e}")
-            print(f"Here are the function types:C {type(C)}, N {type(N)}, task_times{type(task_times_list)} (task_times[0] {type(task_times_list[0])}, raw_precedence{type(precedence_list)}")
+            print(
+                f"Here are the function types:C {type(C)}, N {type(N)}, task_times{type(task_times_list)} (task_times[0] {type(task_times_list[0])}, raw_precedence{type(precedence_list)}")
             return None
 
-    def vdls_call(cycle_time, task_times_list, precedence_list,
-                     ):
 
+    def mhh_call(cycle_time, task_times_list, precedence_list,):
+
+
+        try:
+            mhh_sol = ILS_ALBP.mhh_solve_salbp1(
+                C=cycle_time,
+                N= len(task_times_list),
+                task_times=task_times_list,
+                raw_precedence=precedence_list,
+            )
+
+            return mhh_sol
+
+
+        except Exception as e:
+            print(f"Error solving SALBP1: {e}")
+            print(
+                f"Here are the function types:C {type(C)}, N {type(N)}, task_times{type(task_times_list)} (task_times[0] {type(task_times_list[0])}, raw_precedence{type(precedence_list)}")
+            return None
+
+
+    def vdls_call(cycle_time, task_times_list, precedence_list,
+                  ):
 
         N = len(task_times_list)
 
@@ -161,7 +193,7 @@ try:
                 N=N,
                 task_times=task_times_list,
                 raw_precedence=precedence_list,
-                time_limit = 20,
+                time_limit=20,
 
             )
 
@@ -169,11 +201,12 @@ try:
 
         except Exception as e:
             print(f"Error solving SALBP1: {e}")
-            print(f"Here are the function types:C {type(C)}, N {type(N)}, task_times{type(task_times_list)} (task_times[0] {type(task_times_list[0])}, raw_precedence{type(precedence_list)}")
+            print(
+                f"Here are the function types:C {type(C)}, N {type(N)}, task_times{type(task_times_list)} (task_times[0] {type(task_times_list[0])}, raw_precedence{type(precedence_list)}")
             return None
 
-    def vdls_type2_call(S, task_times_list, precedence_list):
 
+    def vdls_type2_call(S, task_times_list, precedence_list):
 
         N = len(task_times_list)
 
@@ -183,7 +216,7 @@ try:
                 N=N,
                 task_times=task_times_list,
                 raw_precedence=precedence_list,
-                time_limit = 20,
+                time_limit=20,
 
             )
 
@@ -191,8 +224,11 @@ try:
 
         except Exception as e:
             print(f"Error solving SALBP2: {e}")
-            print(f"Here are the function types:S {type(S)}, N {type(N)}, task_times{type(task_times_list)} (task_times[0] {type(task_times_list[0])}, raw_precedence{type(precedence_list)}")
+            print(
+                f"Here are the function types:S {type(S)}, N {type(N)}, task_times{type(task_times_list)} (task_times[0] {type(task_times_list[0])}, raw_precedence{type(precedence_list)}")
             return None
+
+
     def priority_type1_call(C, task_times_list, precedence_list):
         N = len(task_times_list)
 
@@ -202,8 +238,7 @@ try:
                 N=N,
                 task_times=task_times_list,
                 raw_precedence=precedence_list,
-                n_random = 3
-
+                n_random=3
 
             )
 
@@ -212,8 +247,11 @@ try:
 
         except Exception as e:
             print(f"Error solving 1 with priority methods: {e}")
-            print(f"Here are the function types:C {type(C)}, N {type(N)}, task_times{type(task_times_list)} (task_times[0] {type(task_times_list[0])}, raw_precedence{type(precedence_list)}")
+            print(
+                f"Here are the function types:C {type(C)}, N {type(N)}, task_times{type(task_times_list)} (task_times[0] {type(task_times_list[0])}, raw_precedence{type(precedence_list)}")
             return None
+
+
     def priority_type2_call(S, task_times_list, precedence_list, move_target=False):
         N = len(task_times_list)
 
@@ -223,9 +261,8 @@ try:
                 N=N,
                 task_times=task_times_list,
                 raw_precedence=precedence_list,
-                n_random = 3,
-                move_target= move_target
-
+                n_random=3,
+                move_target=move_target
 
             )
 
@@ -234,61 +271,89 @@ try:
 
         except Exception as e:
             print(f"Error solving 1 with priority methods: {e}")
-            print(f"Here are the function types:C {type(C)}, N {type(N)}, task_times{type(task_times_list)} (task_times[0] {type(task_times_list[0])}, raw_precedence{type(precedence_list)}")
+            print(
+                f"Here are the function types:C {type(C)}, N {type(N)}, task_times{type(task_times_list)} (task_times[0] {type(task_times_list[0])}, raw_precedence{type(precedence_list)}")
             return None
+
 
     def test_reverse(c, task_times_list, precedence_list):
         n = len(task_times_list)
-        salbp = ILS_ALBP.ALBP.type_1(C, n , task_times_list, precedence_list, False)
+        salbp = ILS_ALBP.ALBP.type_1(C, n, task_times_list, precedence_list, False)
         salbp_rev = ILS_ALBP.ALBP.type_1(C, n, task_times_list, precedence_list, True)
         for i in range(n):
             for j in range(n):
-                assert salbp.prec_mat[i*n + j] == salbp_rev.prec_mat[j * n + i], f"precedence matrix is not the transpose, see {i},{j}"
+                assert salbp.prec_mat[i * n + j] == salbp_rev.prec_mat[
+                    j * n + i], f"precedence matrix is not the transpose, see {i},{j}"
 
 
     import time
-    alb_dict =  {'num_tasks': 50, 'cycle_time': 1000, 'task_times': {'1': 141, '2': 137, '3': 51, '4': 439, '5': 125, '6': 330, '7': 255, '8': 62, '9': 33, '10': 490, '11': 58, '12': 91, '13': 115, '14': 211, '15': 392, '16': 158, '17': 537, '18': 66, '19': 345, '20': 563, '21': 211, '22': 466, '23': 215, '24': 228, '25': 568, '26': 477, '27': 88, '28': 41, '29': 482, '30': 92, '31': 136, '32': 174, '33': 523, '34': 125, '35': 52, '36': 26, '37': 516, '38': 533, '39': 123, '40': 617, '41': 503, '42': 263, '43': 528, '44': 106, '45': 172, '46': 110, '47': 39, '48': 108, '49': 76, '50': 323}, 'precedence_relations': [['1', '4'], ['2', '5'], ['2', '8'], ['2', '9'], ['2', '10'], ['3', '6'], ['3', '7'], ['3', '9'], ['3', '11'], ['4', '12'], ['5', '13'], ['6', '14'], ['8', '16'], ['8', '18'], ['8', '28'], ['9', '15'], ['10', '17'], ['12', '20'], ['13', '21'], ['14', '19'], ['15', '22'], ['18', '23'], ['19', '24'], ['20', '28'], ['21', '26'], ['22', '25'], ['22', '27'], ['22', '33'], ['24', '31'], ['25', '32'], ['26', '29'], ['26', '30'], ['26', '33'], ['27', '34'], ['29', '35'], ['30', '36'], ['31', '39'], ['32', '37'], ['33', '38'], ['33', '40'], ['33', '41'], ['33', '44'], ['34', '42'], ['34', '43'], ['35', '48'], ['36', '48'], ['37', '45'], ['38', '46'], ['39', '48'], ['40', '47'], ['41', '49'], ['42', '50']], 'instance': 'instance_n=50_210'}
+
+    alb_dict = {'num_tasks': 50, 'cycle_time': 1000,
+                'task_times': {'1': 141, '2': 137, '3': 51, '4': 439, '5': 125, '6': 330, '7': 255, '8': 62, '9': 33,
+                               '10': 490, '11': 58, '12': 91, '13': 115, '14': 211, '15': 392, '16': 158, '17': 537,
+                               '18': 66, '19': 345, '20': 563, '21': 211, '22': 466, '23': 215, '24': 228, '25': 568,
+                               '26': 477, '27': 88, '28': 41, '29': 482, '30': 92, '31': 136, '32': 174, '33': 523,
+                               '34': 125, '35': 52, '36': 26, '37': 516, '38': 533, '39': 123, '40': 617, '41': 503,
+                               '42': 263, '43': 528, '44': 106, '45': 172, '46': 110, '47': 39, '48': 108, '49': 76,
+                               '50': 323},
+                'precedence_relations': [['1', '4'], ['2', '5'], ['2', '8'], ['2', '9'], ['2', '10'], ['3', '6'],
+                                         ['3', '7'], ['3', '9'], ['3', '11'], ['4', '12'], ['5', '13'], ['6', '14'],
+                                         ['8', '16'], ['8', '18'], ['8', '28'], ['9', '15'], ['10', '17'], ['12', '20'],
+                                         ['13', '21'], ['14', '19'], ['15', '22'], ['18', '23'], ['19', '24'],
+                                         ['20', '28'], ['21', '26'], ['22', '25'], ['22', '27'], ['22', '33'],
+                                         ['24', '31'], ['25', '32'], ['26', '29'], ['26', '30'], ['26', '33'],
+                                         ['27', '34'], ['29', '35'], ['30', '36'], ['31', '39'], ['32', '37'],
+                                         ['33', '38'], ['33', '40'], ['33', '41'], ['33', '44'], ['34', '42'],
+                                         ['34', '43'], ['35', '48'], ['36', '48'], ['37', '45'], ['38', '46'],
+                                         ['39', '48'], ['40', '47'], ['41', '49'], ['42', '50']],
+                'instance': 'instance_n=50_210'}
     C = alb_dict['cycle_time']
     precs = alb_dict['precedence_relations']
     t_times = [val for _, val in alb_dict['task_times'].items()]
-    precs = [[int(child), int(parent)]  for child, parent in alb_dict['precedence_relations']]
+    precs = [[int(child), int(parent)] for child, parent in alb_dict['precedence_relations']]
     test_reverse(C, t_times, precs)
     print(f"✅ Tested reverse function of ALBP")
-    start  = time.time()
-    results = ils_call(cycle_time=C, task_times_list= t_times, precedence_list=precs,show_verbose=False, max_iterations=1000)
-    end = time.time()- start
+    start = time.time()
+    results = ils_call(cycle_time=C, task_times_list=t_times, precedence_list=precs, show_verbose=False,
+                       max_iterations=1000)
+    end = time.time() - start
     print(f"✅ Created ALBPSolution using ils with {results.n_stations} stations in {end} seconds")
     print("here are the station loads", results.loads)
-    start  = time.time()
-    results = priority_type1_call(C, task_times_list= t_times, precedence_list=precs)
-    end = time.time()- start
+    start = time.time()
+    results = priority_type1_call(C, task_times_list=t_times, precedence_list=precs)
+    end = time.time() - start
     print(f"✅ Created ALBPSolution using priority with in {end} seconds")
     for result in results:
         print(f"    here is the method {result.method} here are the number of stations {result.n_stations}")
         print("here are the station loads", result.loads)
-    start  = time.time()
-    results = priority_type2_call(20, task_times_list= t_times, precedence_list=precs, move_target=True)
-    end = time.time()- start
+    start = time.time()
+    results = priority_type2_call(20, task_times_list=t_times, precedence_list=precs, move_target=True)
+    end = time.time() - start
     print(f"✅ Created SALBP2 solutions using priority with in {end} seconds")
     for result in results:
         print(f"    here is the method {result.method} with the cycle time {result.cycle_time}")
-    start  = time.time()
-    results = mhh_call(cycle_time=C, task_times_list= t_times, precedence_list=precs)
-    end = time.time()- start
+    start = time.time()
+    results = hoff_call(cycle_time=C, task_times_list=t_times, precedence_list=precs)
+    end = time.time() - start
+    print(f"✅ Created ALBPSolution using hoff with {results.n_stations} stations in {end} seconds")
+    start = time.time()
+    results = mhh_call(cycle_time=C, task_times_list=t_times, precedence_list=precs)
+    end = time.time() - start
     print(f"✅ Created ALBPSolution using mhh with {results.n_stations} stations in {end} seconds")
     print("here are the station loads", results.loads)
-    start  = time.time()
-    results = vdls_call(cycle_time=C, task_times_list= t_times, precedence_list=precs)
-    end = time.time()- start
+    start = time.time()
+    results = vdls_call(cycle_time=C, task_times_list=t_times, precedence_list=precs)
+    end = time.time() - start
     print(f"✅ Created ALBPSolution using vdls with {results.n_stations} stations in {end} seconds")
     print("here are the station loads", results.loads)
-    start  = time.time()
+    start = time.time()
     S = 4
     my_lb = ILS_ALBP.calc_salbp_2_lbs(t_times, S)
     my_ub = ILS_ALBP.calc_salbp_2_ub(t_times, S)
-    results = vdls_type2_call(S=S, task_times_list= t_times, precedence_list=precs)
-    end = time.time()- start
-    print(f"✅ Created ALBPSolution using vdls with {results.cycle_time} cycle time in {end} seconds. The lower bound is {my_lb}, upperbound is {my_ub}")
+    results = vdls_type2_call(S=S, task_times_list=t_times, precedence_list=precs)
+    end = time.time() - start
+    print(
+        f"✅ Created ALBPSolution using vdls with {results.cycle_time} cycle time in {end} seconds. The lower bound is {my_lb}, upperbound is {my_ub}")
     print("here are the station loads", results.loads)
     print("Testing results to dict", results.to_dict())
 
@@ -298,7 +363,5 @@ try:
 except Exception as e:
     print(f"❌ Error testing module: {e}")
     import traceback
+
     traceback.print_exc()
-
-
-

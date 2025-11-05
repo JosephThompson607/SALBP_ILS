@@ -1,10 +1,11 @@
 #include "ALBP.h"
 #include "albp_solution.h"
 #include "ils.h"
-#include "Hoff.h"
 #include "vdls.h"
 #include <iostream>
 #include <filesystem>
+#include "Hoff.h"
+#include "MultiHoff.h"
 #include "salbp_basics.h"
 
 
@@ -61,21 +62,73 @@ int python_constructor_test() {
     return 0;
 }
 int mhh_test() {
-    int C = 10;
-    int N = 5;
-    std::vector<int> task_times = {1, 2, 3, 4, 5};
+    // int C = 10;
+    // int N = 5;
+    // std::vector<int> task_times = {1, 2, 3, 4, 5};
+    //
+    // // Precedence constraints: each pair is (pred, succ), using 1-based indexing
+    // std::vector<std::vector<int>> precedence = {
+    //     {1, 2},
+    //     {1, 3},
+    //     {2, 4},
+    //     {3, 5}
+    //};
+    // int C = 16;
+    // int N = 17;
+    // std::vector<int> task_times = {6, 3, 3, 11, 11,11,11,3,3,4,4,4,13,4,4,4,6};
 
     // Precedence constraints: each pair is (pred, succ), using 1-based indexing
-    std::vector<std::vector<int>> precedence = {
-        {1, 2},
-        {1, 3},
-        {2, 4},
-        {3, 5}
+    // std::vector<std::vector<int>> precedence = {
+    //     {1, 2},
+    //     {1, 3},
+    //     {1, 10},
+    //     {2, 4},
+    //         {3,5},
+    //     {4,6},
+    //     {5,7},
+    //     {6,8},
+    //     {7,9},
+    //     {8,17},
+    //     {9,17},
+    //     {10,11},
+    //     {10,12},
+    //     {11,13},
+    //     {12,13},
+    //     {13,14},
+    //     {13,15},
+    //     {14,16},
+    //     {15,16},
+    //     {16,17},
+    // };
+    std::vector<int> task_times = {
+        141, 137, 51, 439, 125, 330, 255, 62, 33, 490,
+        58, 91, 115, 211, 392, 158, 537, 66, 345, 563,
+        211, 466, 215, 228, 568, 477, 88, 41, 482, 92,
+        136, 174, 523, 125, 52, 26, 516, 533, 123, 617,
+        503, 263, 528, 106, 172, 110, 39, 108, 76, 323
     };
-    std::vector<int> test_assignments = {0,1,2,3,4};
+    std::vector<std::vector<int>> precedence = {
+        {1,4},{2,5},{2,8},{2,9},{2,10},{3,6},{3,7},{3,9},{3,11},{4,12},{5,13},{6,14},
+        {8,16},{8,18},{8,28},{9,15},{10,17},{12,20},{13,21},{14,19},{15,22},{18,23},
+        {19,24},{20,28},{21,26},{22,25},{22,27},{22,33},{24,31},{25,32},{26,29},{26,30},
+        {26,33},{27,34},{29,35},{30,36},{31,39},{32,37},{33,38},{33,40},{33,41},{33,44},
+        {34,42},{34,43},{35,48},{36,48},{37,45},{38,46},{39,48},{40,47},{41,49},{42,50}
+    };
+    int C =1000;
+    int N = 50;
+    // ALBP albp;
+    // std::string filepath  = "/Users/letshopethisworks2/CLionProjects/SALBP_ILS/n_20_16.alb";
+    // std::cout << "Loading ALBP file: " << filepath << std::endl;
+    //
+    // if (!albp.loadFromFile(filepath)) {
+    //     std::cerr << "Error: Failed to load file '" << filepath << "'" << std::endl;
+    //     return 1;
+    // }
+
+    //std::vector<int> test_assignments = {0,1,2,3,4};
     ALBP albp = ALBP::type_1(C, N, task_times, precedence);
 
-    ALBPSolution result =  hoff_solve_salbp1(C, N, task_times, precedence);
+    ALBPSolution result =  mhh_solve_salbp1(albp);
      std::cout << "Here is the result" << std::endl;
     result.print();
     // std::cout << "Name: " << albp.name << std::endl;
@@ -99,21 +152,38 @@ int mhh_test() {
 }
 
 int vdls_salbp_1_test() {
-    int C = 20;
-    int N = 8;
-    std::vector<int> task_times = {11, 17, 9, 5, 8, 12, 10, 3};
-
-    // Precedence constraints: each pair is (pred, succ), using 1-based indexing
-    std::vector<std::vector<int>> precedence = {
-        {1, 2},
-        {2, 3},
-        {2, 4},
-        {3, 5},
-        {3, 6},
-        {4, 6},
-        {5, 7},
-        {6, 8}
+    // int C = 20;
+    // int N = 8;
+    // std::vector<int> task_times = {11, 17, 9, 5, 8, 12, 10, 3};
+    //
+    // // Precedence constraints: each pair is (pred, succ), using 1-based indexing
+    // std::vector<std::vector<int>> precedence = {
+    //     {1, 2},
+    //     {2, 3},
+    //     {2, 4},
+    //     {3, 5},
+    //     {3, 6},
+    //     {4, 6},
+    //     {5, 7},
+    //     {6, 8}
+    // };
+    std::vector<int> task_times = {
+        141, 137, 51, 439, 125, 330, 255, 62, 33, 490,
+        58, 91, 115, 211, 392, 158, 537, 66, 345, 563,
+        211, 466, 215, 228, 568, 477, 88, 41, 482, 92,
+        136, 174, 523, 125, 52, 26, 516, 533, 123, 617,
+        503, 263, 528, 106, 172, 110, 39, 108, 76, 323
     };
+    std::vector<std::vector<int>> precedence = {
+        {1,4},{2,5},{2,8},{2,9},{2,10},{3,6},{3,7},{3,9},{3,11},{4,12},{5,13},{6,14},
+        {8,16},{8,18},{8,28},{9,15},{10,17},{12,20},{13,21},{14,19},{15,22},{18,23},
+        {19,24},{20,28},{21,26},{22,25},{22,27},{22,33},{24,31},{25,32},{26,29},{26,30},
+        {26,33},{27,34},{29,35},{30,36},{31,39},{32,37},{33,38},{33,40},{33,41},{33,44},
+        {34,42},{34,43},{35,48},{36,48},{37,45},{38,46},{39,48},{40,47},{41,49},{42,50}
+    };
+    int C =1000;
+    int N = 50;
+
     //std::vector<int> test_assignments = {0,1,2,3,4};
     ALBP albp = ALBP::type_1(C, N, task_times, precedence);
     ALBPSolution result =  vdls_solve_salbp1(C, N, task_times, precedence);
@@ -223,24 +293,15 @@ int vdls_salbp_2_test() {
     ALBPSolution result =  vdls_solve_salbp2(S, N, task_times, precedence, {}, 1000, 2000);
     std::cout << "Here is the result" << std::endl;
     result.print();
-    // std::cout << "Name: " << albp.name << std::endl;
-    // std::cout << "Cycle time: " << albp.C << std::endl;
-    // std::cout << "Number of tasks: " << albp.N << std::endl;
-    //
-    // std::cout << "Precedence matrix:" << std::endl;
-    // for (int i = 0; i < N; ++i) {
-    //     for (int j = 0; j < N; ++j) {
-    //         std::cout << albp.prec_mat[i * N + j] << " ";
-    //     }
-    //     std::cout << std::endl;
-    // }
-    //
-    // std::cout << "Precedence relations:" << std::endl;
-    // for (const auto& rel : albp.precedence_relations) {
-    //     std::cout << rel.parent << " -> " << rel.child << std::endl;
-    // }
-    //
+
     return 0;
+}
+
+void lb_6_test() {
+
+    std::vector<int> task_times = {8, 8, 7,6,5,5,4,3,3,};
+    int C = 10;
+    int lb_6 = calc_lb_6(task_times, C);
 }
 
 int main(int argc, char* argv[]) {
@@ -250,7 +311,10 @@ int main(int argc, char* argv[]) {
         std::cerr << "Example: " << argv[0] << " problem.alb" << std::endl;
         std::cerr << "Performing default run to test system" << std::endl;
         //default_run();
-       priority_methods_salbp_2_test();
+       // mhh_test();
+        //lb_6_test();
+       vdls_salbp_1_test();
+       // priority_methods_salbp_2_test();
         return 1;
     }
     bool salbp2 =false;
