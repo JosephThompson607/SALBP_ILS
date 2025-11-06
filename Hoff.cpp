@@ -78,17 +78,14 @@ Hoff::Hoff(const ALBP& albp,  int alpha_iter, int beta_iter , float alpha_size, 
     }
 
 ALBPSolution Hoff::multi_solve() {
-    std::cout <<"starting multi solve" << std::endl;
     ALBPSolution best_result =solve();
     best_result.method = "hoff";
-    std::cout << "changing alpha and beta current best " << best_result.n_stations << std::endl;
     for(int i = 0; i <=alpha_iter_; i++) {
         alpha_ = alpha_size_ * i;
         for (int j = 0; j < beta_iter_; j++) {
             beta_ = beta_size_ * j;
             //Check for optimality
             if (best_result.n_stations == lb_) {
-                std::cout << "optimal solution !" << std::endl;
                 best_result.optimal = true;
                 return best_result;
             }
@@ -103,7 +100,6 @@ ALBPSolution Hoff::multi_solve() {
             }
         }
     }
-    std::cout <<"ending multi solve best result has " << best_result.n_stations <<std::endl;
 
     return best_result;
 }

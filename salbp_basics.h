@@ -18,6 +18,7 @@ ALBPSolution process_init_solution( const ALBP &albp, const std::vector<int> &in
 std::vector<ALBPSolution> generate_priority_ranking_solutions(const ALBP&albp, int n_random);
 std::vector<int> pw_ranking(const ALBP &albp);
 std::vector<int> rpw_ranking(const ALBP &albp);
+std::vector<int> suc_over_slack_ranking(const ALBP&albp);
 void shallow_task_assignment( const ALBP&albp,  ALBPSolution& solution);
 void sort_by_ranking(std::vector<int>& items, const std::vector<int>& ranking);
 void task_oriented_assignment( const ALBP& albp,ALBPSolution& solution);
