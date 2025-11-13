@@ -239,7 +239,6 @@ int MultiHoff::one_packing_search( std::vector<int>&elig, const int station) {
         }
     }
     if (improved){ //Save new solution if we have an improvement
-        std::cout << "saving best solution, n stations " <<ub_ << std::endl;
         if (reverse_) {
             std::reverse(mhh_sol_.task_assignment.begin(), mhh_sol_.task_assignment.end());
         }
@@ -272,20 +271,13 @@ void MultiHoff::reverse_solve_order() {
 
 
 ALBPSolution MultiHoff::solve() {
-    std::cout << "\n Starting forward solve..." << std::endl;
 
     ALBPSolution best_result = solve_one_pass();
-    std::cout << " \n \n Forward solve complete. UB=" << ub_ << " LB=" << lb_ << std::endl;
 
     if (ub_ != lb_) {
-        std::cout << "Starting reverse solve..." << std::endl;
 
         reverse_solve_order();
-        std::cout << "Reverse order setup complete" << std::endl;
-
         ALBPSolution best_backward =solve_one_pass();
-        std::cout << "Reverse solve complete" << std::endl;
-
         if (best_backward.n_stations < best_result.n_stations) {
             best_result = best_backward;
         }

@@ -343,6 +343,7 @@ PYBIND11_MODULE(ILS_ALBP, m) {
           py::arg("task_times"),
           py::arg("raw_precedence"),
           py::arg("n_random"),
+          py::arg("seed")=std::nullopt,
           R"pbdoc(
                           Solve SALBP1 using different priority methods and station oriented task assignment
 
@@ -369,6 +370,7 @@ PYBIND11_MODULE(ILS_ALBP, m) {
           py::arg("raw_precedence"),
           py::arg("n_random"),
           py::arg("move_target") = true,
+          py::arg("seed") = std::nullopt,
           R"pbdoc(
                                                   Solve SALBP2 using different priority methods and filler (ravelo) heuristic
 

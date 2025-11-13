@@ -431,15 +431,14 @@ ALBPSolution filler_heuristic(const ALBP& albp,const std::vector<int>& original_
 }
 
 
-std::vector<int> random_ranking(const ALBP&albp) {
+std::vector<int> random_ranking(const ALBP&albp, std::default_random_engine& rng) {
 
     std::vector<int> ranking(albp.N);
     // Fill with 0 to N-1
     std::iota( ranking.begin(), ranking.end(), 0 );
 
     // Shuffle
-    std::random_device rd;
-    std::default_random_engine rng(rd());
+
     std::shuffle(ranking.begin(), ranking.end(), rng);
     return ranking;
 }
@@ -803,7 +802,7 @@ void shallow_task_assignment( const ALBP&albp,  ALBPSolution& solution) {
     }
 }
 
-std::vector<std::vector<int> > generate_rankings(const ALBP &albp, const int n_random) {
+std::vector<std::vector<int> > generate_rankings(const ALBP &albp, const int n_random, std::optional<unsigned int> seed) {
 
     //Generating task number ranking
     std::vector<std::function<std::vector<int>(const ALBP&)>> ranking_functions = {
@@ -831,8 +830,11 @@ std::vector<std::vector<int> > generate_rankings(const ALBP &albp, const int n_r
     }
 
     // // Generate more rankings
+    std::default_random_engine rng(seed ? *seed : std::random_device{}());
+
+
     for (int i = 0; i < n_random; ++i) {
-        std::vector<int> ranking = random_ranking( albp);
+        std::vector<int> ranking = random_ranking( albp, rng);
         rankings.push_back(ranking);
     }
 
@@ -845,12 +847,13 @@ void sort_by_ranking(std::vector<int>& items, const std::vector<int>& ranking) {
         });
 }
 
-std::vector<ALBPSolution> generate_solutions( const ALBP &albp, const int n_random) {
+std::vector<ALBPSolution> generate_solutions( const ALBP &albp, const int n_random, std::optional<unsigned int> seed = std::nullopt) {
     // First generates a list of rankings for the tasks. It will be a vector of vectors, one for each ranking of size N
     // Then generates a solution for each ranking
     std::vector<ALBPSolution> solutions;
     std::cout << "generating initial solutions" << std::endl;
-    for (const std::vector<std::vector<int>> rankings = generate_rankings(albp, n_random); const auto & ranking : rankings) {
+
+    for (const std::vector<std::vector<int>> rankings = generate_rankings(albp, n_random, seed); const auto & ranking : rankings) {
         ALBPSolution solution(albp.N);
         solution.ranking = ranking;
         solution.ranking_to_task_ranking();
@@ -910,7 +913,7 @@ ALBPSolution generate_approx_solution(const ALBP&albp, const int n_random, const
     best_solution.cycle_time = albp.C;
     return best_solution;
 }
-std::vector< ALBPSolution> generate_priority_ranking_solutions(const ALBP &albp, const int n_random) {
+std::vector< ALBPSolution> generate_priority_ranking_solutions(const ALBP &albp, const int n_random, std::optional<unsigned int> seed) {
 
     // Define ranking functions with their names
     std::vector<std::pair<std::string, std::function<std::vector<int>(const ALBP&)>>> ranking_functions = {
@@ -949,10 +952,11 @@ std::vector< ALBPSolution> generate_priority_ranking_solutions(const ALBP &albp,
     }
 
     // Generate random rankings with solutions
+    std::default_random_engine rng(seed ? *seed : std::random_device{}());
     for (int i = 0; i < n_random; ++i) {
         auto start_time = std::chrono::steady_clock::now();
         std::string random_name = "random_ranking_" + std::to_string(i + 1);
-        std::vector<int> ranking = random_ranking(albp);
+        std::vector<int> ranking = random_ranking(albp, rng);
         ALBPSolution solution = station_oriented_assignment(albp, ranking);
         auto end_time = std::chrono::steady_clock::now();
         solution.elapsed_ms = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
@@ -965,7 +969,7 @@ std::vector< ALBPSolution> generate_priority_ranking_solutions(const ALBP &albp,
     return solutions;
 }
 
-std::vector< ALBPSolution> priority_salbp_2(const ALBP &albp, const int n_random, bool move_target) {
+std::vector< ALBPSolution> priority_salbp_2(const ALBP &albp, const int n_random, bool move_target, std::optional<unsigned int> seed) {
 
     // Define ranking functions with their names
     std::vector<std::pair<std::string, std::function<std::vector<int>(const ALBP&)>>> ranking_functions = {
@@ -1001,12 +1005,13 @@ std::vector< ALBPSolution> priority_salbp_2(const ALBP &albp, const int n_random
         solution.method = name;
         solutions.push_back( solution);
     }
+    std::default_random_engine rng(seed ? *seed : std::random_device{}());
 
     // Generate random rankings with solutions
     for (int i = 0; i < n_random; ++i) {
         auto start_time = std::chrono::steady_clock::now();
         std::string random_name = "random_ranking_" + std::to_string(i + 1);
-        std::vector<int> ranking = random_ranking(albp);
+        std::vector<int> ranking = random_ranking(albp, rng);
         ALBPSolution solution = filler_heuristic(albp, ranking, move_target);
         auto end_time = std::chrono::steady_clock::now();
         solution.elapsed_ms = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
@@ -1017,16 +1022,16 @@ std::vector< ALBPSolution> priority_salbp_2(const ALBP &albp, const int n_random
     return solutions;
 }
 
-std::vector<ALBPSolution>  priority_solve_salbp_2(const int S,const int N, const std::vector<int>& task_times, const std::vector<std::vector<int>>& raw_precedence, const int n_random, const bool move_target) {
+std::vector<ALBPSolution>  priority_solve_salbp_2(const int S,const int N, const std::vector<int>& task_times, const std::vector<std::vector<int>>& raw_precedence, const int n_random, const bool move_target, std::optional<unsigned int> seed) {
     ALBP albp = ALBP::type_2(S, N, task_times, raw_precedence);
 
-    std::vector<ALBPSolution> generated_solutions = priority_salbp_2(albp, n_random, move_target);
+    std::vector<ALBPSolution> generated_solutions = priority_salbp_2(albp, n_random, move_target, seed);
     return generated_solutions;
 }
 
-std::vector<ALBPSolution>  priority_solve_salbp_1(const int C,const int N, const std::vector<int>& task_times, const std::vector<std::vector<int>>& raw_precedence, const int n_random) {
+std::vector<ALBPSolution>  priority_solve_salbp_1(const int C,const int N, const std::vector<int>& task_times, const std::vector<std::vector<int>>& raw_precedence, const int n_random, std::optional<unsigned int> seed) {
      ALBP albp = ALBP::type_1(C, N, task_times, raw_precedence);
 
-     std::vector<ALBPSolution> generated_solutions = generate_priority_ranking_solutions(albp, n_random);
+     std::vector<ALBPSolution> generated_solutions = generate_priority_ranking_solutions(albp, n_random, seed);
      return generated_solutions;
  }

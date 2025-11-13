@@ -238,7 +238,8 @@ try:
                 N=N,
                 task_times=task_times_list,
                 raw_precedence=precedence_list,
-                n_random=3
+                n_random=3,
+                seed = 42
 
             )
 
@@ -262,7 +263,8 @@ try:
                 task_times=task_times_list,
                 raw_precedence=precedence_list,
                 n_random=3,
-                move_target=move_target
+                move_target=move_target,
+                seed = 42
 
             )
 
