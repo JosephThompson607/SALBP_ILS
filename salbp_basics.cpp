@@ -14,7 +14,7 @@
 #include <functional>
 #include <stdexcept>  // For std::runtime_error
 #include "salbp_basics.h"
-
+#include <optional>
 #include <map>
 
 
