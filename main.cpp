@@ -210,24 +210,25 @@ int vdls_salbp_1_test() {
 }
 
 int priority_methods_salbp_1_test() {
-    int C = 20;
-    int N = 8;
-    std::vector<int> task_times = {11, 17, 9, 5, 8, 12, 10, 3};
-
-    // Precedence constraints: each pair is (pred, succ), using 1-based indexing
-    std::vector<std::vector<int>> precedence = {
-        {1, 2},
-        {2, 3},
-        {2, 4},
-        {3, 5},
-        {3, 6},
-        {4, 6},
-        {5, 7},
-        {6, 8}
+    std::vector<int> task_times = {
+        141, 137, 51, 439, 125, 330, 255, 62, 33, 490,
+        58, 91, 115, 211, 392, 158, 537, 66, 345, 563,
+        211, 466, 215, 228, 568, 477, 88, 41, 482, 92,
+        136, 174, 523, 125, 52, 26, 516, 533, 123, 617,
+        503, 263, 528, 106, 172, 110, 39, 108, 76, 323
     };
+    std::vector<std::vector<int>> precedence = {
+        {1,4},{2,5},{2,8},{2,9},{2,10},{3,6},{3,7},{3,9},{3,11},{4,12},{5,13},{6,14},
+        {8,16},{8,18},{8,28},{9,15},{10,17},{12,20},{13,21},{14,19},{15,22},{18,23},
+        {19,24},{20,28},{21,26},{22,25},{22,27},{22,33},{24,31},{25,32},{26,29},{26,30},
+        {26,33},{27,34},{29,35},{30,36},{31,39},{32,37},{33,38},{33,40},{33,41},{33,44},
+        {34,42},{34,43},{35,48},{36,48},{37,45},{38,46},{39,48},{40,47},{41,49},{42,50}
+    };
+    int C =1000;
+    int N = 50;
     //std::vector<int> test_assignments = {0,1,2,3,4};
     ALBP albp = ALBP::type_1(C, N, task_times, precedence);
-    std::vector<ALBPSolution> results =  priority_solve_salbp_1(C, N, task_times, precedence);
+    std::vector<ALBPSolution> results =  priority_solve_salbp_1(C, N, task_times, precedence, 100, 42);
     for (int i = 0; i < results.size(); ++i) {
         ALBPSolution result = results[i];
         std::cout << "Here is the result" << std::endl;
@@ -313,7 +314,8 @@ int main(int argc, char* argv[]) {
         //default_run();
        // mhh_test();
         //lb_6_test();
-       vdls_salbp_1_test();
+       //vdls_salbp_1_test();
+        priority_methods_salbp_1_test();
        // priority_methods_salbp_2_test();
         return 1;
     }

@@ -16,6 +16,7 @@
 #include "salbp_basics.h"
 #include <optional>
 #include <map>
+#include <chrono>
 
 
 int calc_lb_1(const std::vector<int>& task_time, const int C) {
@@ -328,27 +329,50 @@ std::vector<int> sum_columns(const std::vector<int>& matrix,const int n) {
     return column_sums;
 }
 
-ALBPSolution station_oriented_assignment(const ALBP& albp,const std::vector<int>& original_ranking) {
+ALBPSolution station_oriented_assignment(const ALBP& albp,const std::vector<int>& ranking) {
+
     ALBPSolution solution(albp.N) ;
-    solution.ranking = original_ranking;
-    std::vector<int> ranking = original_ranking;
-    //std::vector<int> station_time(albp.N, 0);//Using N upper bound for station times
-    solution.loads.resize(albp.N, 0);
+    solution.ranking = ranking;
+    std::vector<int> assigned(albp.N , 0);
+    //Initi
+    solution.loads.assign(albp.N, 0);
+    solution.station_assignments = {{}};
+    for(int i = 0; i < albp.N; i++) {
+        assigned[i] = albp.dir_pred[i].size();
+
+    }
     int task_index = 0;
+    int assigned_count = 0;
     int station = 0;
-    while (!ranking.empty()) {
+    int left_task = 0; //Saves some of the loop, only moves if the leftmost task of the vector is feasibly assigned
+
+    while (assigned_count < albp.N) {
         const int current_task = ranking[task_index];
-        if (check_assignability(albp, solution.task_assignment, current_task) && solution.loads[station] + albp.task_time[current_task] <= albp.C)  { //assign task to first available station
+        if (assigned[current_task] == 0 && solution.loads[station] + albp.task_time[current_task] <= albp.C)  { //assign task to first available station
             solution.task_assignment[current_task] = station;
             solution.loads[station] += albp.task_time[current_task];
-            ranking.erase(ranking.begin()+task_index); //Potentially slow, will see
-            task_index = 0;
-            continue;
-            }
+            solution.station_assignments[station].push_back(current_task);
+            assigned[current_task] = -1;
+            //Update left of array tracker, if applicable
+            if (task_index == left_task) {
+                left_task = task_index+1;
 
-        if (task_index >= ranking.size()-1) {
+            }
+            task_index = left_task;
+            //Update availability of children
+            for (const int j : albp.dir_suc[current_task]) {
+                assigned[j] --;
+                }
+
+            assigned_count++;
+            continue;
+
+            }
+        //Move on to next station, start at beginning of list
+        if (task_index >= albp.N-1) {
             station += 1;
-            task_index = 0;
+            solution.station_assignments.emplace_back();
+            task_index = left_task;
 
         }
         else {
@@ -357,7 +381,6 @@ ALBPSolution station_oriented_assignment(const ALBP& albp,const std::vector<int>
 
     }
     solution.n_stations = station + 1;
-    solution.task_to_station();
     solution.n_violations = count_violations(albp, solution.task_assignment);//real assignment violations
     solution.n_ranking_violations = count_violations(albp, solution.task_ranking); //ranking violations
 
@@ -366,8 +389,9 @@ ALBPSolution station_oriented_assignment(const ALBP& albp,const std::vector<int>
         throw std::runtime_error("Deep task assignment failed to create feasible solution");
     }
     return solution;
-
 }
+
+
 ALBPSolution filler_heuristic(const ALBP& albp,const std::vector<int>& original_ranking, bool move_target) {
     ALBPSolution solution(albp.N) ;
     solution.ranking = original_ranking;
@@ -913,8 +937,15 @@ ALBPSolution generate_approx_solution(const ALBP&albp, const int n_random, const
     best_solution.cycle_time = albp.C;
     return best_solution;
 }
-std::vector< ALBPSolution> generate_priority_ranking_solutions(const ALBP &albp, const int n_random, std::optional<unsigned int> seed) {
 
+inline double ms_since(const std::chrono::steady_clock::time_point& start) {
+    return std::chrono::duration<double, std::milli>(
+        std::chrono::steady_clock::now() - start
+    ).count();
+}
+
+
+std::vector< ALBPSolution> generate_priority_ranking_solutions(const ALBP &albp, const int n_random, std::optional<unsigned int> seed) {
     // Define ranking functions with their names
     std::vector<std::pair<std::string, std::function<std::vector<int>(const ALBP&)>>> ranking_functions = {
          {"task_number_ranking", task_number_ranking},
@@ -949,6 +980,7 @@ std::vector< ALBPSolution> generate_priority_ranking_solutions(const ALBP &albp,
         solution.method = name;
         solution.station_to_load(albp);
         solutions.push_back( solution);
+
     }
 
     // Generate random rankings with solutions
@@ -965,6 +997,10 @@ std::vector< ALBPSolution> generate_priority_ranking_solutions(const ALBP &albp,
         solution.station_to_load(albp);
         solutions.push_back( solution);
     }
+
+
+
+
 
     return solutions;
 }
