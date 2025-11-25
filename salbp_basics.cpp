@@ -1147,7 +1147,8 @@ std::vector< ALBPSolution> generate_priority_ranking_solutions(const ALBP &albp,
     for (int i = 0; i < n_random; ++i) {
         auto start_time = std::chrono::steady_clock::now();
         std::string random_name = "random_ranking_" + std::to_string(i + 1);
-        ALBPSolution solution = careless_station_oriented_assignment(albp,  rng);
+        std::vector<int> ranking = random_ranking(albp, rng);
+        ALBPSolution solution = station_oriented_assignment(albp,  ranking);
         auto end_time = std::chrono::steady_clock::now();
         solution.elapsed_ms = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
         solution.method = random_name;
