@@ -329,90 +329,6 @@ std::vector<int> sum_columns(const std::vector<int>& matrix,const int n) {
     return column_sums;
 }
 
-// ALBPSolution careless_station_oriented_assignment(const ALBP& albp, const std::vector<int>& ranking) {
-//     ALBPSolution solution(albp.N);
-//     solution.ranking = ranking;
-//
-//     std::vector<int> assigned(albp.N, 0);
-//     solution.loads.assign(albp.N, 0);
-//     solution.station_assignments = {{}};
-//
-//     // Initialize predecessor counts
-//     std::vector<int> ready_tasks;
-//     ready_tasks.reserve(albp.N);
-//     for(int i = 0; i < albp.N; i++) {
-//         assigned[i] = albp.dir_pred[i].size();
-//         if (assigned[i] == 0) {
-//             ready_tasks.push_back(i);
-//         }
-//     }
-//
-//
-//     int assigned_count = 0;
-//     int station = 0;
-//     int ready_idx = 0;  // Index into ready_tasks
-//     std::vector<int> next_station_tasks;
-//     next_station_tasks.reserve(albp.N);
-//     while (assigned_count < albp.N) {
-//         bool assigned_any = false;
-//         // Try to assign all ready tasks to current station
-//         while (!ready_tasks.empty()) {
-//             int current_task = ready_tasks.back();
-//             ready_tasks.pop_back();
-//
-//             if (assigned[current_task] == -1) {
-//                 // Already assigned, skip
-//                 ready_idx++;
-//                 continue;
-//             }
-//
-//             if (solution.loads[station] + albp.task_time[current_task] <= albp.C) {
-//                 // Assign task
-//                 solution.task_assignment[current_task] = station;
-//                 solution.loads[station] += albp.task_time[current_task];
-//                 solution.station_assignments[station].push_back(current_task);
-//                 assigned[current_task] = -1;
-//                 assigned_count++;
-//                 assigned_any = true;
-//
-//                 // Update successors and add newly ready tasks
-//                 for (const int j : albp.dir_suc[current_task]) {
-//                     assigned[j]--;
-//                     if (assigned[j] == 0) {
-//                         ready_tasks.push_back(j);
-//                     }
-//                 }
-//
-//                 ready_idx++;
-//             } else {
-//                 next_station_tasks.push_back(current_task);
-//                 // Can't fit this task, try next one
-//                 ready_idx++;
-//             }
-//         }
-//
-//         // Move to next station if we couldn't assign anything or ran out of ready tasks
-//         if (!assigned_any || ready_idx >= ready_tasks.size()) {
-//             station++;
-//             ready_tasks = next_station_tasks;
-//             next_station_tasks.clear();
-//             next_station_tasks.reserve(albp.N);
-//             solution.station_assignments.emplace_back();
-//             ready_idx = 0;  // Reset to try all ready tasks on new station
-//         }
-//     }
-//
-//     solution.n_stations = station;
-//     solution.n_violations = count_violations(albp, solution.task_assignment);
-//     // Skip ranking violation check since we don't care
-//     solution.n_ranking_violations = 0;
-//
-//     if (solution.n_violations > 0) {
-//         throw std::runtime_error("Careless station assignment failed to create feasible solution");
-//     }
-//
-//     return solution;
-// }
 ALBPSolution careless_station_oriented_assignment(const ALBP& albp, const std::vector<int>& ranking) {
     ALBPSolution solution(albp.N);
     solution.ranking = ranking;
@@ -422,29 +338,27 @@ ALBPSolution careless_station_oriented_assignment(const ALBP& albp, const std::v
     solution.station_assignments = {{}};
 
     // Initialize predecessor counts
-    for(int i = 0; i < albp.N; i++) {
-        assigned[i] = albp.dir_pred[i].size();
-    }
-
-    // Maintain a ready queue of tasks with no unmet predecessors
     std::vector<int> ready_tasks;
     ready_tasks.reserve(albp.N);
     for(int i = 0; i < albp.N; i++) {
-        if (assigned[ranking[i]] == 0) {
-            ready_tasks.push_back(ranking[i]);
+        assigned[i] = albp.dir_pred[i].size();
+        if (assigned[i] == 0) {
+            ready_tasks.push_back(i);
         }
     }
+
 
     int assigned_count = 0;
     int station = 0;
     int ready_idx = 0;  // Index into ready_tasks
-
+    std::vector<int> next_station_tasks;
+    next_station_tasks.reserve(albp.N);
     while (assigned_count < albp.N) {
         bool assigned_any = false;
-
         // Try to assign all ready tasks to current station
-        while (ready_idx < ready_tasks.size()) {
-            const int current_task = ready_tasks[ready_idx];
+        while (!ready_tasks.empty()) {
+            int current_task = ready_tasks.back();
+            ready_tasks.pop_back();
 
             if (assigned[current_task] == -1) {
                 // Already assigned, skip
@@ -471,19 +385,19 @@ ALBPSolution careless_station_oriented_assignment(const ALBP& albp, const std::v
 
                 ready_idx++;
             } else {
+                next_station_tasks.push_back(current_task);
                 // Can't fit this task, try next one
                 ready_idx++;
             }
         }
-
-        // Move to next station if we couldn't assign anything or ran out of ready tasks
-        if (!assigned_any || ready_idx >= ready_tasks.size()) {
-            station++;
-            solution.station_assignments.emplace_back();
-            ready_idx = 0;  // Reset to try all ready tasks on new station
-        }
+        station++;
+        ready_tasks = next_station_tasks;
+        next_station_tasks.clear();
+        next_station_tasks.reserve(albp.N);
+        solution.station_assignments.emplace_back();
+        ready_idx = 0;  // Reset to try all ready tasks on new station
     }
-
+    solution.station_assignments.pop_back(); //There is an extra empty station
     solution.n_stations = station;
     solution.n_violations = count_violations(albp, solution.task_assignment);
     // Skip ranking violation check since we don't care
@@ -495,6 +409,88 @@ ALBPSolution careless_station_oriented_assignment(const ALBP& albp, const std::v
 
     return solution;
 }
+// ALBPSolution careless_station_oriented_assignment(const ALBP& albp, const std::vector<int>& ranking) {
+//     ALBPSolution solution(albp.N);
+//     solution.ranking = ranking;
+//
+//     std::vector<int> assigned(albp.N, 0);
+//     solution.loads.assign(albp.N, 0);
+//     solution.station_assignments = {{}};
+//
+//     // Initialize predecessor counts
+//     for(int i = 0; i < albp.N; i++) {
+//         assigned[i] = albp.dir_pred[i].size();
+//     }
+//
+//     // Maintain a ready queue of tasks with no unmet predecessors
+//     std::vector<int> ready_tasks;
+//     ready_tasks.reserve(albp.N);
+//     for(int i = 0; i < albp.N; i++) {
+//         if (assigned[ranking[i]] == 0) {
+//             ready_tasks.push_back(ranking[i]);
+//         }
+//     }
+//
+//     int assigned_count = 0;
+//     int station = 0;
+//     int ready_idx = 0;  // Index into ready_tasks
+//
+//     while (assigned_count < albp.N) {
+//         bool assigned_any = false;
+//
+//         // Try to assign all ready tasks to current station
+//         while (ready_idx < ready_tasks.size()) {
+//             const int current_task = ready_tasks[ready_idx];
+//
+//             if (assigned[current_task] == -1) {
+//                 // Already assigned, skip
+//                 ready_idx++;
+//                 continue;
+//             }
+//
+//             if (solution.loads[station] + albp.task_time[current_task] <= albp.C) {
+//                 // Assign task
+//                 solution.task_assignment[current_task] = station;
+//                 solution.loads[station] += albp.task_time[current_task];
+//                 solution.station_assignments[station].push_back(current_task);
+//                 assigned[current_task] = -1;
+//                 assigned_count++;
+//                 assigned_any = true;
+//
+//                 // Update successors and add newly ready tasks
+//                 for (const int j : albp.dir_suc[current_task]) {
+//                     assigned[j]--;
+//                     if (assigned[j] == 0) {
+//                         ready_tasks.push_back(j);
+//                     }
+//                 }
+//
+//                 ready_idx++;
+//             } else {
+//                 // Can't fit this task, try next one
+//                 ready_idx++;
+//             }
+//         }
+//
+//         // Move to next station if we couldn't assign anything or ran out of ready tasks
+//         if (!assigned_any || ready_idx >= ready_tasks.size()) {
+//             station++;
+//             solution.station_assignments.emplace_back();
+//             ready_idx = 0;  // Reset to try all ready tasks on new station
+//         }
+//     }
+//
+//     solution.n_stations = station;
+//     solution.n_violations = count_violations(albp, solution.task_assignment);
+//     // Skip ranking violation check since we don't care
+//     solution.n_ranking_violations = 0;
+//
+//     if (solution.n_violations > 0) {
+//         throw std::runtime_error("Careless station assignment failed to create feasible solution");
+//     }
+//
+//     return solution;
+// }
 ALBPSolution station_oriented_assignment(const ALBP& albp,const std::vector<int>& ranking) {
 
     ALBPSolution solution(albp.N) ;
