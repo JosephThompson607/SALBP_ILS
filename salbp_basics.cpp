@@ -329,9 +329,9 @@ std::vector<int> sum_columns(const std::vector<int>& matrix,const int n) {
     return column_sums;
 }
 
-ALBPSolution careless_station_oriented_assignment(const ALBP& albp, const std::vector<int>& ranking) {
+ALBPSolution careless_station_oriented_assignment(const ALBP& albp, std::default_random_engine& rng) {
     ALBPSolution solution(albp.N);
-    solution.ranking = ranking;
+
 
     std::vector<int> assigned(albp.N, 0);
     solution.loads.assign(albp.N, 0);
@@ -354,17 +354,15 @@ ALBPSolution careless_station_oriented_assignment(const ALBP& albp, const std::v
     std::vector<int> next_station_tasks;
     next_station_tasks.reserve(albp.N);
     while (assigned_count < albp.N) {
-        bool assigned_any = false;
+
         // Try to assign all ready tasks to current station
         while (!ready_tasks.empty()) {
-            int current_task = ready_tasks.back();
+            std::uniform_int_distribution<size_t> dist(0, ready_tasks.size() - 1);
+            size_t idx = dist(rng);
+            int current_task = ready_tasks[idx];
+            ready_tasks[idx] = ready_tasks.back();
             ready_tasks.pop_back();
 
-            if (assigned[current_task] == -1) {
-                // Already assigned, skip
-                ready_idx++;
-                continue;
-            }
 
             if (solution.loads[station] + albp.task_time[current_task] <= albp.C) {
                 // Assign task
@@ -373,7 +371,6 @@ ALBPSolution careless_station_oriented_assignment(const ALBP& albp, const std::v
                 solution.station_assignments[station].push_back(current_task);
                 assigned[current_task] = -1;
                 assigned_count++;
-                assigned_any = true;
 
                 // Update successors and add newly ready tasks
                 for (const int j : albp.dir_suc[current_task]) {
@@ -1150,8 +1147,7 @@ std::vector< ALBPSolution> generate_priority_ranking_solutions(const ALBP &albp,
     for (int i = 0; i < n_random; ++i) {
         auto start_time = std::chrono::steady_clock::now();
         std::string random_name = "random_ranking_" + std::to_string(i + 1);
-        std::vector<int> ranking = random_ranking(albp, rng);
-        ALBPSolution solution = careless_station_oriented_assignment(albp, ranking);
+        ALBPSolution solution = careless_station_oriented_assignment(albp,  rng);
         auto end_time = std::chrono::steady_clock::now();
         solution.elapsed_ms = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
         solution.method = random_name;
