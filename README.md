@@ -1,5 +1,5 @@
 # SALBP1_heuristics
-This project contains a few heuristics for the type-1 simple assemble line balancing problem. Note that these implementations are my own, but are based on the work in the references section.
+This project contains a few heuristics for the type-1 simple assemble line balancing problem.
 ## Building
 mkdir build && cd build
 cmake ..
