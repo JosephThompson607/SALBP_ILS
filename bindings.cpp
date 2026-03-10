@@ -14,7 +14,7 @@
 #include <pybind11/chrono.h>
 namespace py = pybind11;
 
-PYBIND11_MODULE(ILS_ALBP, m) {
+PYBIND11_MODULE(SALBP1_heuristics, m) {
     py::class_<PrecedenceRelation>(m, "PrecedenceRelation")
             .def(py::init<>())
             .def_readwrite("parent", &PrecedenceRelation::parent)

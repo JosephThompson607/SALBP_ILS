@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.27)
-project(ILS_ALBP)
+project(SALBP1_heuristics)
 
 # Build option
 option(BUILD_PYTHON_MODULE "Build Python module" ON)
@@ -38,7 +38,7 @@ include(FetchContent)
     )
 
     # Create Python modulea
-    pybind11_add_module(ILS_ALBP ${PYTHON_SOURCES})
+    pybind11_add_module(SALBP1_heuristics ${PYTHON_SOURCES})
 
     message(STATUS "Building Python module")
 endif()
@@ -53,7 +53,7 @@ if(BUILD_EXECUTABLE)
     )
 
     # Create executable
-    add_executable(ILS_ALBP_exe ${EXECUTABLE_SOURCES})
+    add_executable(SALBP1_heuristics_exe ${EXECUTABLE_SOURCES})
 
     message(STATUS "Building standalone executable")
 endif()

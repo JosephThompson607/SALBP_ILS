@@ -6,7 +6,7 @@ sys.path.insert(0, 'cmake-build-python_interface/')
 
 # Try importing with more detailed error info
 try:
-    import ILS_ALBP
+    import SALBP1_heuristics
     print("✅ Success!")
 except Exception as e:
     print(f"❌ Exception type: {type(e).__name__}")

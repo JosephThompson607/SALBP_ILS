@@ -1,4 +1,4 @@
-# ILS_ALBP — Build & CLI Reference
+# SALBP1_heuristics — Build & CLI Reference
 ## Building
 mkdir build && cd build
 cmake ..

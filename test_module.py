@@ -23,12 +23,12 @@ if os.path.exists(build_dir):
 sys.path.insert(0, 'cmake-build-python_interface/')
 try:
     # Try importing
-    import ILS_ALBP
+    import SALBP1_heuristics
 
     print("✅ Module imported successfully!")
     print("Testing solution manipulation")
     # Test the module
-    solution = ILS_ALBP.ALBPSolution(5)
+    solution = SALBP1_heuristics.ALBPSolution(5)
     solution.n_stations = 4
     print(f"✅ Created ALBPSolution with {solution.n_tasks} tasks")
     solution.task_assignment = [1, 0, 3, 2, 1]
@@ -59,7 +59,7 @@ try:
     print("Testing salbp lower bounds")
     task_times = [8, 8, 7, 6, 5, 5, 3, 4, 3]
     C = 10
-    lb_6 = ILS_ALBP.calc_salbp_1_lb6(task_times, C)
+    lb_6 = SALBP1_heuristics.calc_salbp_1_lb6(task_times, C)
     assert lb_6 == 6, f"LB 6 is not acting as expected. We wanted 6, we got {lb_6}"
     print("✅ lb tests passed!")
 
@@ -70,7 +70,7 @@ except ImportError as e:
     # Try to get more details
     import importlib.util
 
-    spec = importlib.util.find_spec('ILS_ALBP')
+    spec = importlib.util.find_spec('SALBP1_heuristics')
     print(f"Module spec: {spec}")
 
 try:
@@ -110,7 +110,7 @@ try:
         N = len(task_times_list)
 
         try:
-            solution = ILS_ALBP.ils_solve_SALBP1(
+            solution = SALBP1_heuristics.ils_solve_SALBP1(
                 C=cycle_time,
                 N=N,
                 task_times=task_times_list,
@@ -138,7 +138,7 @@ try:
         N = len(task_times_list)
 
         try:
-            mhh_sol = ILS_ALBP.hoff_solve_salbp1(
+            mhh_sol = SALBP1_heuristics.hoff_solve_salbp1(
                 C=cycle_time,
                 N=N,
                 task_times=task_times_list,
@@ -165,7 +165,7 @@ try:
 
 
         try:
-            mhh_sol = ILS_ALBP.mhh_solve_salbp1(
+            mhh_sol = SALBP1_heuristics.mhh_solve_salbp1(
                 C=cycle_time,
                 N= len(task_times_list),
                 task_times=task_times_list,
@@ -188,7 +188,7 @@ try:
         N = len(task_times_list)
 
         try:
-            vdls_sol = ILS_ALBP.vdls_solve_salbp1(
+            vdls_sol = SALBP1_heuristics.vdls_solve_salbp1(
                 C=cycle_time,
                 N=N,
                 task_times=task_times_list,
@@ -211,7 +211,7 @@ try:
         N = len(task_times_list)
 
         try:
-            vdls_sol = ILS_ALBP.vdls_solve_salbp2(
+            vdls_sol = SALBP1_heuristics.vdls_solve_salbp2(
                 S=S,
                 N=N,
                 task_times=task_times_list,
@@ -233,7 +233,7 @@ try:
         N = len(task_times_list)
 
         try:
-            priority_sols = ILS_ALBP.priority_solve_salbp1(
+            priority_sols = SALBP1_heuristics.priority_solve_salbp1(
                 C=C,
                 N=N,
                 task_times=task_times_list,
@@ -257,7 +257,7 @@ try:
         N = len(task_times_list)
 
         try:
-            priority_sols = ILS_ALBP.priority_solve_salbp2(
+            priority_sols = SALBP1_heuristics.priority_solve_salbp2(
                 S=S,
                 N=N,
                 task_times=task_times_list,
@@ -280,8 +280,8 @@ try:
 
     def test_reverse(c, task_times_list, precedence_list):
         n = len(task_times_list)
-        salbp = ILS_ALBP.ALBP.type_1(C, n, task_times_list, precedence_list, False)
-        salbp_rev = ILS_ALBP.ALBP.type_1(C, n, task_times_list, precedence_list, True)
+        salbp = SALBP1_heuristics.ALBP.type_1(C, n, task_times_list, precedence_list, False)
+        salbp_rev = SALBP1_heuristics.ALBP.type_1(C, n, task_times_list, precedence_list, True)
         for i in range(n):
             for j in range(n):
                 assert salbp.prec_mat[i * n + j] == salbp_rev.prec_mat[
@@ -350,8 +350,8 @@ try:
     print("here are the station loads", results.loads)
     start = time.time()
     S = 4
-    my_lb = ILS_ALBP.calc_salbp_2_lbs(t_times, S)
-    my_ub = ILS_ALBP.calc_salbp_2_ub(t_times, S)
+    my_lb = SALBP1_heuristics.calc_salbp_2_lbs(t_times, S)
+    my_ub = SALBP1_heuristics.calc_salbp_2_ub(t_times, S)
     results = vdls_type2_call(S=S, task_times_list=t_times, precedence_list=precs)
     end = time.time() - start
     print(
