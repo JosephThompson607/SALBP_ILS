@@ -1,3 +1,5 @@
+#include <assert.h>
+
 #include "ALBP.h"
 #include "albp_solution.h"
 #include "ils.h"
@@ -322,8 +324,12 @@ int main(int argc, char* argv[]) {
     bool salbp2 =false;
     std::optional<int> time_limit = std::nullopt;
     std::optional<int> max_attempts = std::nullopt;
+    std::optional<int> seed = std::nullopt;
+    int priority_n_random = 100;
+
+    std::string heuristic = "priority";
     int n_stations;
-    for (int i = 1; i < argc; ++i) {
+    for (int i = 2; i < argc; ++i) {
         std::string arg = argv[i];
 
         if (arg == "--n_stations" && i + 1 < argc) {
@@ -332,9 +338,17 @@ int main(int argc, char* argv[]) {
 
         } else if (arg == "--time_limit" && i + 1 < argc) {
             time_limit = std::stoi(argv[++i]);
+        } else if (arg == "--priority_n_random" && i + 1 < argc) {
+            priority_n_random = std::stoi(argv[++i]);
         } else if (arg == "--max_attempts") {
             max_attempts = std::stoi(argv[++i]);
-        } else {
+        } else if (arg == "--random_seed") {
+            seed = std::stoi(argv[++i]);
+        }
+        else if (arg == "--heuristic" && i + 1 < argc) {
+                heuristic = argv[++i];
+            }
+        else {
             std::cerr << "Unknown argument: " << arg << "\n";
         }
     }
@@ -386,9 +400,41 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    else{ ALBPSolution result =vdls_solve_salbp1(problem);
-        std::cout << "Here is the result" << std::endl;
-        result.print();
+    else{
+        std::cout<< "Solving SALBP-1 with " << heuristic << std::endl;
+            if (heuristic == "priority"){
+                assert( priority_n_random >= 0 && "Only postive integer number of random solutions expected");
+                std::vector<ALBPSolution> results =  generate_priority_ranking_solutions(problem, priority_n_random, seed);
+                for (int i = 0; i < results.size(); ++i) {
+                    std::cout << "Solution number " << i << " :" <<std::endl;
+                    results[i].print();
+                }
+            }
+            else if (heuristic == "MHH"){
+                ALBPSolution result = mhh_solve_salbp1(problem);
+                std::cout << "Here is the result" << std::endl;
+                result.print();
+
+            }  else if (heuristic == "hoffman"){
+                ALBPSolution result = hoff_solve_salbp1(problem);
+                std::cout << "Here is the result" << std::endl;
+                result.print();
+
+            }else if (heuristic == "VDLS") {
+                ALBPSolution result =vdls_solve_salbp1(problem, max_attempts, time_limit);
+                std::cout << "Here is the result" << std::endl;
+                result.print();
+            }
+            else if (heuristic == "ILS") {
+                int n_iter =   max_attempts.value_or(50000);
+                int tl =   time_limit.value_or(10);
+                ALBPSolution result = iterated_local_search(problem, n_iter, tl, 0.5 );
+                std::cout << "Here is the result" << std::endl;
+                result.print();
+            }
+            else {
+                std::cerr << "Heuristic was not recognized"<< std::endl;
+            }
         return 0;}
 
 
