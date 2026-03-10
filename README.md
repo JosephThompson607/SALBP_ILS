@@ -1,4 +1,4 @@
-# SALBP1_heuristics — Build & CLI Reference
+# SALBP1_heuristics
 ## Building
 mkdir build && cd build
 cmake ..
