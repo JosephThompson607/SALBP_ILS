@@ -1,4 +1,4 @@
-# SALBP1_heuristics
+# SALBP heuristics
 This project contains a few heuristics for the type-1 simple assemble line balancing problem.
 ## Building
 mkdir build && cd build
