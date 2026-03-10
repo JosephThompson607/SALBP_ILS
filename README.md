@@ -12,7 +12,7 @@ cmake --build .
 
 ## Basic Usage
 ./build/ILS_ALBP_exe <path_to_file.alb> [options]
-Running with no arguments triggers a default internal test run.
+Running with no arguments triggers a default test run.
 
 ## Options
 <pre>
