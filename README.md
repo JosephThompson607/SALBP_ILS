@@ -15,6 +15,7 @@ cmake --build .
 Running with no arguments triggers a default internal test run.
 
 ## Options
+<pre>
 - --heuristic <name>        Solver to use (default: priority)
 Choices: priority, MHH, hoffman, VDLS, ILS
 - --n_stations <int>        Number of stations — switches to SALBP-2 mode (VDLS only)
@@ -22,7 +23,7 @@ Choices: priority, MHH, hoffman, VDLS, ILS
 - --max_attempts <int>      Max solver iterations
 - --random_seed <int>       Random seed for reproducibility
 - --priority_n_random <int> Number of random solutions for priority heuristic (default: 100)
-
+</pre>
 ## Examples
 
 SALBP-1 with default priority heuristic:
