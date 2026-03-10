@@ -4,7 +4,7 @@ project(SALBP1_heuristics)
 # Build option
 option(BUILD_PYTHON_MODULE "Build Python module" ON)
 option(BUILD_EXECUTABLE "Build standalone executable" ON)
-
+include_directories(heuristics/)
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O0")
@@ -13,11 +13,11 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0")
 set(COMMON_SOURCES
         ALBP.cpp
         albp_solution.cpp
-        ils.cpp
-        Hoff.cpp
-        MultiHoff.cpp
-        vdls.cpp
-        salbp_basics.cpp
+        heuristics/ils.cpp
+        heuristics/Hoff.cpp
+        heuristics/MultiHoff.cpp
+        heuristics/vdls.cpp
+        heuristics/salbp_basics.cpp
 
 )
 
@@ -48,8 +48,6 @@ if(BUILD_EXECUTABLE)
     set(EXECUTABLE_SOURCES
             ${COMMON_SOURCES}
             main.cpp
-            salbp_basics.cpp
-            salbp_basics.h
     )
 
     # Create executable

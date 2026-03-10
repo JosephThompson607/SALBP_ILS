@@ -6,8 +6,8 @@
 #define MHH_H
 
 
-#include "albp_solution.h"
-#include "ALBP.h"
+#include "../albp_solution.h"
+#include "../ALBP.h"
 
 class Hoff {
     public:

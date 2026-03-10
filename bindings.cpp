@@ -5,12 +5,12 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include "ALBP.h"
-#include "ils.h"
+#include "heuristics/ils.h"
 #include "albp_solution.h"
-#include "Hoff.h"
-#include "vdls.h"
-#include "salbp_basics.h"
-#include "MultiHoff.h"
+#include "heuristics/Hoff.h"
+#include "heuristics/vdls.h"
+#include "heuristics/salbp_basics.h"
+#include "heuristics/MultiHoff.h"
 #include <pybind11/chrono.h>
 namespace py = pybind11;
 

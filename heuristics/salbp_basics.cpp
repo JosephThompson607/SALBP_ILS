@@ -1,8 +1,8 @@
 //
 // Created by Joseph Thompson on 2025-09-11.
 //
-#include "albp_solution.h"
-#include "ALBP.h"
+#include "../albp_solution.h"
+#include "../ALBP.h"
 #include "Hoff.h"
 #include <iostream>
 #include <fstream>

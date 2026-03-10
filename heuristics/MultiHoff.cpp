@@ -1,8 +1,8 @@
 //
 // Created by Joseph Thompson on 2025-06-12.
 //
-#include "albp_solution.h"
-#include "ALBP.h"
+#include "../albp_solution.h"
+#include "../ALBP.h"
 #include "MultiHoff.h"
 #include <iostream>
 #include <cfloat>

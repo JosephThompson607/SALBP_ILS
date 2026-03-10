@@ -6,8 +6,8 @@
 #define MULTIHOFF_H
 
 
-#include "albp_solution.h"
-#include "ALBP.h"
+#include "../albp_solution.h"
+#include "../ALBP.h"
 #include <deque>
 #include <map>
 

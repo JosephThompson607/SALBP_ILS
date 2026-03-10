@@ -10,8 +10,8 @@
 #include <algorithm>
 #include <iostream>
 #include <random>
-#include "albp_solution.h"
-#include "ALBP.h"
+#include "../albp_solution.h"
+#include "../ALBP.h"
 #include "salbp_basics.h"
 #include <optional>
 
