@@ -29,24 +29,25 @@ struct ALBP{
 
     ALBP() = default;
     explicit ALBP(const std::string& filename) { loadFromFile(filename); }
-    static ALBP type_1(int C, int N, const std::vector<int>& task_times, const std::vector<std::vector<int>>& raw_precedence, bool reverse=false);
-    static ALBP type_2(int S, int N, const std::vector<int>& task_times_, const std::vector<std::vector<int>>& raw_precedence, bool reverse=false);
+    static ALBP type_1(int C, int N, const std::vector<int>& task_times, const std::vector<std::vector<int>>& raw_precedence, bool reverse=false, bool light=false, bool is_topological=false);
+    static ALBP type_2(int S, int N, const std::vector<int>& task_times_, const std::vector<std::vector<int>>& raw_precedence, bool reverse=false, bool light=false, bool is_topological=false);
     [[nodiscard]] ALBP reverse() const;
     void print(bool print_prec_mat);
 
     void calc_trans_closure();
+    void calc_fast_trans_closure(bool is_topological=false);
 
     bool loadFromFile(const std::string& filename);
     private:
         ALBP(int C_, int S_, int N_,
             const std::vector<int>& task_times_,
             const std::vector<std::vector<int>>& raw_precedence,
-            bool reverse);
+            bool reverse, bool light, bool is_topological);
 
         ALBP(int C_, int S_, int N_,
              const std::vector<int>& task_times_,
              const std::vector<PrecedenceRelation>& raw_precedence,
-             bool reverse);
+             bool reverse, bool light, bool is_topological);
         void initialize_precedence(int C_, int S_, int N_,
                            const std::vector<int>& task_times_,
                            bool reverse);
@@ -54,5 +55,8 @@ struct ALBP{
         void add_relation(int u, int v, bool reverse);
 
 };
+ std::vector<int>fast_transitive_closure(const std::vector<std::vector<int>>& dir_preds, const std::vector<std::vector<int>>& dir_sucs, const std::vector<int>& prec_mat,  bool alreadyTopo = true);
 
+
+std::vector<int>get_topo_sort(const std::vector<std::vector<int>>& dir_preds, const std::vector<std::vector<int>>& dir_sucs);
 #endif // ALBP_H

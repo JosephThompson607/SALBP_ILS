@@ -9,7 +9,7 @@
 #include "Hoff.h"
 #include "MultiHoff.h"
 #include "salbp_basics.h"
-
+#include <chrono>
 
 int default_run() {
     ALBP problem;
@@ -267,6 +267,133 @@ int priority_methods_salbp_2_test() {
     return 0;
 }
 
+int topo_sort_test() {
+    std::vector<int> task_times = {
+        141, 137, 51, 439, 125, 330, 255, 62, 33, 490,
+        58, 91, 115, 211, 392, 158, 537, 66, 345, 563,
+        211, 466, 215, 228, 568, 477, 88, 41, 482, 92,
+        136, 174, 523, 125, 52, 26, 516, 533, 123, 617,
+        503, 263, 528, 106, 172, 110, 39, 108, 76, 323
+    };
+    std::vector<std::vector<int>> precedence = {
+        {1,4},{2,5},{2,8},{2,9},{2,10},{3,6},{3,7},{3,9},{3,11},{4,12},{5,13},{6,14},
+        {8,16},{8,18},{8,28},{9,15},{10,17},{12,20},{13,21},{14,19},{15,22},{18,23},
+        {19,24},{20,28},{21,26},{22,25},{22,27},{22,33},{24,31},{25,32},{26,29},{26,30},
+        {26,33},{27,34},{29,35},{30,36},{31,39},{32,37},{33,38},{33,40},{33,41},{33,44},
+        {34,42},{34,43},{35,48},{36,48},{37,45},{38,46},{39,48},{40,47},{41,49},{42,50}
+    };
+     int C =1000;
+     int N = 50;
+     // int C = 10;
+     // int N = 10;
+    //  std::vector<int> task_times = {1, 2, 3, 4, 5, 7,4, 3,2,1};
+    //
+    //  // Precedence constraints: each pair is (pred, succ), using 1-based indexing
+    //  std::vector<std::vector<int>> precedence = {
+    //      {1, 2},
+    //      {1, 3},
+    //      {2, 4},
+    //      {3, 5},
+    //         {1,9},
+    //         {8,9},
+    //         {7,8},
+    //      {3,6},
+    //      {3,7},
+    //     {4, 10},
+    //     {5, 10},
+    //     {6, 10},
+    //     {2, 7},
+    //     {4, 9},
+    // };
+    // int C = 10;
+    // int N = 15;
+    // std::vector<int> task_times = {3, 5, 2, 7, 4, 6, 3, 8, 2, 5, 4, 6, 3, 7, 2};
+    //
+    // std::vector<std::vector<int>> precedence = {
+    //     // roots: 1, 2
+    //     {1, 3}, {1, 4},
+    //     {2, 4}, {2, 5},
+    //     // layer 2 -> 3
+    //     {3, 6}, {3, 7},
+    //     {4, 7}, {4, 8},
+    //     {5, 8}, {5, 9},
+    //     // layer 3 -> 4
+    //     {6, 10}, {6, 11},
+    //     {7, 11}, {7, 12},
+    //     {8, 12}, {8, 13},
+    //     {9, 13},
+    //     // layer 4 -> sink
+    //     {10, 14}, {11, 14},
+    //     {12, 15}, {13, 15},
+    //     {14, 15}
+    // };
+    //
+    // int C = 10;
+    // int N = 14;
+    // std::vector<int> task_times = {3, 5, 2, 7, 4, 6, 3, 8, 2, 5, 1,3, 2,3};
+    //
+    // std::vector<std::vector<int>> precedence = {
+    //     // roots: 1, 2
+    //     {1, 3}, {1, 4},
+    //     {2, 4}, {2, 5},
+    //     // layer 2 -> 3
+    //     {3, 6}, {3, 7},
+    //     {4, 7}, {4, 8},
+    //     {5, 8}, {5, 9},
+    //     // // layer 3 -> 4
+    //     {6, 10}, {6, 11},
+    //      {7, 11}, {7, 12},
+    //     {8, 12}, {8, 13},
+    //     {9, 13},
+    //     // // layer 4 -> sink
+    //      {10, 14}, {11, 14},
+    //     // {12, 15}, {13, 15},
+    //     // {14, 15}
+    // };
+
+    ALBP albp = ALBP::type_1(C, N, task_times, precedence, false, true);
+    //std::vector<int> test_assignments = {0,1,2,3,4};
+    auto start = std::chrono::high_resolution_clock::now();
+    albp.calc_trans_closure();
+    auto end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double, std::milli> elapsed = end - start;
+    std::cout << "calc_trans_closure: " << elapsed.count() << " ms\n";
+    auto original_mat = albp.t_close_mat;
+    start = std::chrono::high_resolution_clock::now();
+    albp.calc_fast_trans_closure();
+    end = std::chrono::high_resolution_clock::now();
+    elapsed = end - start;
+    std::cout << "calc_fast_trans_closure: " << elapsed.count() << " ms\n";
+    auto fast_mat = albp.t_close_mat;
+    if (original_mat == fast_mat) {
+        std::cout << "Results match!\n";
+    } else {
+        if (original_mat == fast_mat) {
+            std::cout << "Results match!\n";
+        } else {
+            std::cout << "Results differ!\n";
+            for (int i = 0; i < albp.N; ++i) {
+                std::cout << "row " << i + 1<< " orig: ";
+                for (int j = 0; j < albp.N; ++j)
+                    std::cout << original_mat[i * N + j] << " ";
+
+                std::cout << "\nrow " << i + 1<< " fast: ";
+                for (int j = 0; j < albp.N; ++j)
+                    std::cout << fast_mat[i * N + j] << " ";
+
+                std::cout << "\n\n";
+            }
+        }
+    }
+    std::vector<int> results = get_topo_sort(albp.dir_pred, albp.dir_suc);
+    for (int i = 0; i < results.size(); ++i) {
+        std::cout << "Here is the result" <<    results[i] << std::endl;
+    }
+
+    return 0;
+}
+
+
 
 int vdls_salbp_2_test() {
     int S = 10;
@@ -317,7 +444,8 @@ int main(int argc, char* argv[]) {
        // mhh_test();
         //lb_6_test();
        //vdls_salbp_1_test();
-        priority_methods_salbp_1_test();
+        topo_sort_test();
+        //priority_methods_salbp_1_test();
        // priority_methods_salbp_2_test();
         return 1;
     }

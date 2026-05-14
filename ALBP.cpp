@@ -7,6 +7,7 @@
 #include <vector>
 #include <filesystem>
 #include <numeric>
+#include <unordered_set>
 
 
 //function that returns a matrix that is the transitiive closure of the precedence matrix
@@ -23,6 +24,36 @@ std::vector<int> transitive_closure(const std::vector<int>& prec_mat, int N) {
     }
     return t_close_mat;
 }
+//improved transitive closure
+std::vector<int> fast_transitive_closure(const std::vector<std::vector<int>>& dir_preds, const std::vector<std::vector<int>>& dir_sucs, const std::vector<int>& prec_mat, const bool alreadyTopo) {
+    int N = dir_preds.size();
+    std::vector<std::unordered_set<int>> suc(N);
+    for (int i = 0; i < N; ++i)
+        suc[i] = std::unordered_set<int>(dir_sucs[i].begin(), dir_sucs[i].end());
+    std::vector<int> top_sort(N);
+    std::iota(top_sort.begin(), top_sort.end(), 0);
+    if (!alreadyTopo) {
+        top_sort = get_topo_sort(dir_preds, dir_sucs); //unessessary if albp is already formatted with a topo order
+
+    }
+    std::vector<int> t_close_mat = prec_mat;
+    for (int k = N - 1; k >= 0; --k) {
+        const int node = top_sort[k];
+        std::unordered_set<int> current_successors = suc[node];
+        for (const auto& dir_suc : current_successors) {
+            for (const auto suc_2 : suc[dir_suc]) {
+                suc[node].insert(suc_2);
+                t_close_mat[node * N + suc_2] = 1;
+
+            }
+        }
+    }
+
+
+    return t_close_mat;
+}
+
+
 
 
 std::vector<std::vector<int>> all_successors(const std::vector<int>& t_close_mat, const int N) {
@@ -84,40 +115,47 @@ void ALBP::initialize_precedence(int C_, int S_, int N_,
     pred.assign(N, {});
 }
 
+
+
+
+
 ALBP::ALBP(const int C_, const int S_, const int N_,
            const std::vector<int>& task_times_,
            const std::vector<std::vector<int>>& raw_precedence,
-           bool reverse) {
+           bool reverse, bool light, bool is_topological) {
     initialize_precedence(C_, S_, N_, task_times_, reverse);
 
     for (const auto& pair : raw_precedence) {
         if (pair.size() < 2) continue;
         add_relation(pair[0], pair[1], reverse);
     }
-
-    calc_trans_closure();
+    if (!light) { // Can bypass calculating transitive closure if desired (will break some heuristics)
+        calc_fast_trans_closure(is_topological);
+    }
 }
+
 ALBP::ALBP(int C_, int S_, int N_,
            const std::vector<int>& task_times_,
            const std::vector<PrecedenceRelation>& raw_precedence,
-           bool reverse) {
+           bool reverse, bool light, bool is_topological) {
     initialize_precedence(C_, S_, N_, task_times_, reverse);
 
     for (const auto& rel : raw_precedence) {
         add_relation(rel.parent, rel.child, reverse);
     }
-
-    calc_trans_closure();
+    if (!light) {
+        calc_fast_trans_closure(is_topological);
+    }
 }
 
-ALBP ALBP::type_2(int S_, int N_, const std::vector<int>& task_times_, const std::vector<std::vector<int>>& raw_precedence, const bool reverse) {
+ALBP ALBP::type_2(int S_, int N_, const std::vector<int>& task_times_, const std::vector<std::vector<int>>& raw_precedence, const bool reverse, bool light, bool is_topological) {
     int C_ub = std::accumulate(task_times_.begin(), task_times_.end(), 0);
-   return ALBP(C_ub, S_, N_, task_times_, raw_precedence, reverse );
+   return ALBP(C_ub, S_, N_, task_times_, raw_precedence, reverse , light, is_topological);
 }
 
-ALBP ALBP::type_1(int C_, int N_, const std::vector<int>& task_times_, const std::vector<std::vector<int>>& raw_precedence, const bool reverse) {
+ALBP ALBP::type_1(int C_, int N_, const std::vector<int>& task_times_, const std::vector<std::vector<int>>& raw_precedence, const bool reverse, bool light, bool is_topological) {
     int S_ub = N_;
-    return ALBP(C_, S_ub, N_, task_times_, raw_precedence, reverse);
+    return ALBP(C_, S_ub, N_, task_times_, raw_precedence, reverse, light, is_topological);
 }
 
 
@@ -163,7 +201,11 @@ void ALBP::calc_trans_closure() {
     suc = all_successors(t_close_mat, N);
     pred = all_predecessors(t_close_mat, N);
 }
-
+void ALBP::calc_fast_trans_closure(bool is_topological) {
+    t_close_mat = fast_transitive_closure(dir_pred, dir_suc, prec_mat, is_topological);
+    suc = all_successors(t_close_mat, N);
+    pred = all_predecessors(t_close_mat, N);
+}
 
 // Load from .alb file; returns true on success
 bool ALBP::loadFromFile(const std::string& filename) {
@@ -250,10 +292,56 @@ bool ALBP::loadFromFile(const std::string& filename) {
 }
 
 ALBP ALBP::reverse() const {
-    ALBP new_salbp = ALBP (C, S, N, task_time, precedence_relations, true);
+    ALBP new_salbp = ALBP (C, S, N, task_time, precedence_relations, true, false, false);
 
 
     return new_salbp;
 }
+
+
+struct PredCount {
+    std::vector<int> no_pred;
+    std::vector<int> pred_counts;
+};
+
+PredCount get_pred_counts(const std::vector<std::vector<int>>& dir_preds) {
+    std::vector<int> no_pred;
+    std::vector<int> pred_counts(dir_preds.size(), 0);
+    no_pred.reserve(dir_preds.size());
+
+    for (int i=0; i < dir_preds.size(); i++) {
+
+        if (dir_preds[i].size() == 0) {
+            no_pred.push_back(i);
+        }
+        else {
+            pred_counts[i] = dir_preds[i].size();
+        }
+
+
+    }
+    return PredCount{no_pred, pred_counts};
+}
+
+std::vector<int>get_topo_sort(const std::vector<std::vector<int>>& dir_preds, const std::vector<std::vector<int>>& dir_sucs) {
+    std::vector<int> topo_sort;
+    topo_sort.reserve(dir_preds.size());
+    PredCount preds = get_pred_counts(dir_preds);
+    while (!preds.no_pred.empty()) {
+        int task = preds.no_pred.back();
+        preds.no_pred.pop_back();
+        topo_sort.push_back(task);
+        for (const int suc: dir_sucs[task]) {
+            preds.pred_counts[suc]--;
+            if (preds.pred_counts[suc] == 0) {
+                preds.no_pred.push_back(suc);
+            }
+        }
+    }
+    return topo_sort;
+
+}
+
+
 
 

@@ -27,11 +27,15 @@ PYBIND11_MODULE(SALBP1_heuristics, m) {
             .def_static("type_1", &ALBP::type_1,
                         py::arg("C"), py::arg("N"), py::arg("task_times"), py::arg("raw_precedence"),
                         py::arg("reverse"),
-                        "Factory constructor for type_1")
+                        py::arg("light"),
+                        py::arg("is_topo"),
+                        "Factory constructor for type_1, ")
 
             .def_static("type_2", &ALBP::type_2,
                         py::arg("S"), py::arg("N"), py::arg("task_times"), py::arg("raw_precedence"),
                         py::arg("reverse"),
+                        py::arg("light"),
+                        py::arg("is_topo"),
                         "Factory constructor for type_2")
 
             .def("print", &ALBP::print)
