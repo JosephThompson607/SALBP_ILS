@@ -17,6 +17,7 @@
 #include <optional>
 #include <map>
 #include <chrono>
+#include <unordered_set>
 
 
 int calc_lb_1(const std::vector<int>& task_time, const int C) {
@@ -27,12 +28,12 @@ int calc_lb_1(const std::vector<int>& task_time, const int C) {
 
 int calc_lb_2(const std::vector<int>& task_time, const int C) {
     int red_count = 0; //tasks over C/2
-    int blue_count = 0; // tasks under or equal to C/2
+    int blue_count = 0; // tasks  equal to C/2
     for (const auto& task : task_time) {
         if (static_cast<double>(task) > static_cast<double>(C)/2) {
             ++red_count;
         }
-        else {
+        else  if (static_cast<double>(task) == static_cast<double>(C)/2){
             ++blue_count;
         }
     }
@@ -87,19 +88,62 @@ std::vector<int> calc_earliest_station_dir(const ALBP& albp) {
     return earliest_station;
 }
 
-std::vector<float> get_heads(const ALBP& albp) {
+
+
+// //Also returns heads, tails, and successors
+// std::vector<int> fast_tails(const std::vector<std::vector<int>>& dir_preds, const std::vector<std::vector<int>>& dir_sucs, const bool alreadyTopo) {
+//     int N = dir_preds.size();
+//     std::vector<std::unordered_set<int>> suc(N);
+//     std::vector<std::unordered_set<int>> pred(N);
+//     for (int i = 0; i < N; ++i)
+//         suc[i] = std::unordered_set<int>(dir_sucs[i].begin(), dir_sucs[i].end());
+//
+//     std::vector<int> top_sort(N);
+//     std::iota(top_sort.begin(), top_sort.end(), 0);
+//     std::vector<int> tails(N);
+//     if (!alreadyTopo) {
+//         top_sort = get_topo_sort(dir_preds, dir_sucs); //unessessary if albp is already formatted with a topo order
+//     }
+//     for (int k = N - 1; k >= 0; --k) {
+//         const int node = top_sort[k];
+//         std::unordered_set<int> current_successors = suc[node];
+//         for (const auto& dir_suc : current_successors) {
+//
+//         }
+//     }
+//
+//
+//     return tails;
+// }
+
+
+std::vector<float> get_heads(const ALBP& albp,const bool alreadyTopo) {
     std::vector<float> heads(albp.N, 0);
-    for (int i=0; i < albp.task_time.size(); i++) {
+    std::vector<int> top_sort(albp.N);
+    std::iota(top_sort.begin(), top_sort.end(), 0);
+    if (!alreadyTopo) {
+        top_sort = get_topo_sort(albp.dir_pred, albp.dir_suc); //unessessary if albp is already formatted with a topo order
+    }
+    for (int k=0; k < albp.task_time.size(); k++) {
+        const int i = top_sort[k];
+        std::vector<int>suc_task_times;
+        suc_task_times.reserve(albp.pred[i].size());
         float lb_1 = 0;
-        std::vector<int>pred_task_times(albp.pred[i].size());
+        float lb_heads = 0.0;
+        //This method uses the transitive closure succesors, which may be overkill TODO: refactor for dir_suc
         for (int j: albp.pred[i]) {
             lb_1+=1.0*albp.task_time[j]/albp.C;
-            pred_task_times[j]+=albp.task_time[j];
+            suc_task_times.push_back(albp.task_time[j]);
+            lb_heads = std::max({lb_heads,  albp.task_time[j]/albp.C + heads[j]});
+
+
         }
-        float lb_2 = calc_lb_2(pred_task_times, albp.C)- 0.5;
-        float lb_3 = calc_lb_3(pred_task_times, albp.C) - 0.33333333;
-        heads[i] = std::max({lb_1,lb_2, lb_3});
-        if (albp.task_time[i] + heads[i] > ceil(heads[i]) ){
+        float lb_2 = calc_lb_2(suc_task_times, albp.C)- 0.5;
+        float lb_3 = calc_lb_3(suc_task_times, albp.C) - 0.33333333;
+
+        heads[i] = std::max({lb_1,lb_2, lb_3, lb_heads});
+
+        if (albp.task_time[i]/albp.C + heads[i] > ceil(heads[i]) ){
             heads[i] = ceil(heads[i]);
 
         }
@@ -107,29 +151,40 @@ std::vector<float> get_heads(const ALBP& albp) {
     return heads;
 }
 
-std::vector<float> get_tails(const ALBP& albp) {
+
+std::vector<float> get_tails(const ALBP& albp,const bool alreadyTopo) {
     std::vector<float> tails(albp.N, 0);
-    for (int i=0; i < albp.task_time.size(); i++) {
+    std::vector<int> top_sort(albp.N);
+    std::iota(top_sort.begin(), top_sort.end(), 0);
+    if (!alreadyTopo) {
+        top_sort = get_topo_sort(albp.dir_pred, albp.dir_suc); //unessessary if albp is already formatted with a topo order
+    }
+    for (int k = albp.N - 1; k >= 0; --k) {
+        const int i = top_sort[k];
+        std::vector<int>suc_task_times;
+        suc_task_times.reserve(albp.suc[i].size());
         float lb_1 = 0;
-        std::vector<int>suc_task_times(albp.suc[i].size());
+        float lb_tails = 0.0;
+        //This method uses the transitive closure succesors, which may be overkill TODO: refactor for dir_suc
         for (int j: albp.suc[i]) {
             lb_1+=1.0*albp.task_time[j]/albp.C;
-            suc_task_times[j]+=albp.task_time[j];
+            suc_task_times.push_back(albp.task_time[j]);
+            lb_tails = std::max({lb_tails,  albp.task_time[j]/albp.C + tails[j]});
+
+
         }
         float lb_2 = calc_lb_2(suc_task_times, albp.C)- 0.5;
         float lb_3 = calc_lb_3(suc_task_times, albp.C) - 0.33333333;
 
-        tails[i] = std::max({lb_1,lb_2, lb_3});
+        tails[i] = std::max({lb_1,lb_2, lb_3, lb_tails});
 
-        if (albp.task_time[i] + tails[i] > ceil(tails[i]) ){
+        if (albp.task_time[i]/albp.C + tails[i] > ceil(tails[i]) ){
             tails[i] = ceil(tails[i]);
 
         }
     }
     return tails;
 }
-
-
 
 
 

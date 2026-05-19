@@ -393,6 +393,69 @@ int topo_sort_test() {
     return 0;
 }
 
+int tails_test() {
+    std::vector<int> task_times = {
+        141, 137, 51, 439, 125, 330, 255, 62, 33, 490,
+        58, 91, 115, 211, 392, 158, 537, 66, 345, 563,
+        211, 466, 215, 228, 568, 477, 88, 41, 482, 92,
+        136, 174, 523, 125, 52, 26, 516, 533, 123, 617,
+        503, 263, 528, 106, 172, 110, 39, 108, 76, 323
+    };
+    std::vector<std::vector<int>> precedence = {
+        {1,4},{2,5},{2,8},{2,9},{2,10},{3,6},{3,7},{3,9},{3,11},{4,12},{5,13},{6,14},
+        {8,16},{8,18},{8,28},{9,15},{10,17},{12,20},{13,21},{14,19},{15,22},{18,23},
+        {19,24},{20,28},{21,26},{22,25},{22,27},{22,33},{24,31},{25,32},{26,29},{26,30},
+        {26,33},{27,34},{29,35},{30,36},{31,39},{32,37},{33,38},{33,40},{33,41},{33,44},
+        {34,42},{34,43},{35,48},{36,48},{37,45},{38,46},{39,48},{40,47},{41,49},{42,50}
+    };
+    int C =1000;
+    int N = 50;
+    // int C = 1000;
+    // int N = 20;
+    // std::vector<int> task_times = {
+    //     132, 120, 514, 190, 209, 457, 163, 491, 503, 138,
+    //     138, 247, 230, 169, 29, 120, 247, 104, 286, 154
+    // };
+    //
+    //
+    // // Precedence constraints: each pair is (pred, succ), using 1-based indexing
+    // std::vector<std::vector<int>> precedence = {
+    //     {1, 9}, {2, 9}, {3, 9},
+    //     {4, 5}, {4, 6}, {4, 7}, {4, 8},
+    //     {5, 9}, {6, 9},
+    //     {7, 10}, {7, 11}, {7, 16},
+    //     {9, 12}, {9, 13}, {9, 14}, {9, 15},
+    //     {10, 17}, {10, 18},
+    //     {11, 18},
+    //     {12, 16},
+    //     {13, 16}, {13, 17},
+    //     {16, 18},
+    //     {17, 19}, {17, 20}
+    // };
+    int lb_1 = calc_lb_1(task_times, 1000);
+    int lb_6 = calc_lb_6(task_times, 1000);
+    //std::vector<int> test_assignments = {0,1,2,3,4};
+    ALBP albp = ALBP::type_1(C, N, task_times, precedence);
+
+    ALBPSolution result =  hoff_solve_salbp1(C, N, task_times, precedence);
+    result.print();
+
+    std::vector<float> tails;
+    tails = get_tails(albp, false);
+    std::cout << "lb_1: " << lb_1 << " lb_6: "<< lb_6<<std::endl;
+    std::cout << "Here is the result" << std::endl;
+    for (int i = 0; i < tails.size(); ++i) {
+        std::cout << tails[i] << std::endl;
+    }
+    std::vector<float> heads = get_heads(albp, false);
+    std::cout << "Here is the result" << std::endl;
+    for (int i = 0; i < heads.size(); ++i) {
+        std::cout << heads[i] << std::endl;
+    }
+
+    return 0;
+}
+
 
 
 int vdls_salbp_2_test() {
@@ -444,7 +507,7 @@ int main(int argc, char* argv[]) {
        // mhh_test();
         //lb_6_test();
        //vdls_salbp_1_test();
-        topo_sort_test();
+        tails_test();
         //priority_methods_salbp_1_test();
        // priority_methods_salbp_2_test();
         return 1;
