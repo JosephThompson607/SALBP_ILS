@@ -26,9 +26,9 @@ PYBIND11_MODULE(SALBP1_heuristics, m) {
             // Bind static factory methods as static methods
             .def_static("type_1", &ALBP::type_1,
                         py::arg("C"), py::arg("N"), py::arg("task_times"), py::arg("raw_precedence"),
-                        py::arg("reverse"),
-                        py::arg("light"),
-                        py::arg("is_topo"),
+                        py::arg("reverse") = false,
+                        py::arg("light")=false,
+                        py::arg("is_topo")=false,
                         "Factory constructor for type_1, ")
 
             .def_static("type_2", &ALBP::type_2,
@@ -228,7 +228,45 @@ PYBIND11_MODULE(SALBP1_heuristics, m) {
                                                       The solved ALBP solution
                                                   )pbdoc"
     );
+    m.def("get_heads", &get_heads,
+          "Get head values for each task",
+          py::arg("albp"),
+          py::arg("already_topo") = false,
+          R"pbdoc(
+      Get heads (earliest start times) for each task
 
+      Parameters:
+      -----------
+      albp : ALBP
+          The assembly line balancing problem instance
+      already_topo : bool, optional
+          Whether tasks are already in topological order (default: False)
+
+      Returns:
+      --------
+      list of float
+          Head value for each task
+      )pbdoc");
+
+    m.def("get_tails", &get_tails,
+          "Get tail values for each task",
+          py::arg("albp"),
+          py::arg("already_topo") = false,
+          R"pbdoc(
+      Get tails (latest completion times from end) for each task
+
+      Parameters:
+      -----------
+      albp : ALBP
+          The assembly line balancing problem instance
+      already_topo : bool, optional
+          Whether tasks are already in topological order (default: False)
+
+      Returns:
+      --------
+      list of float
+          Tail value for each task
+      )pbdoc");
     // Second overload using lambda
     m.def("hoff_solve_salbp1",
           [](const ALBP &albp) {

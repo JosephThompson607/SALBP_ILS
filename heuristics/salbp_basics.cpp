@@ -115,7 +115,10 @@ std::vector<int> calc_earliest_station_dir(const ALBP& albp) {
 //
 //     return tails;
 // }
-
+// std::vector<float> get_heads(int C, int N, const std::vector<int>& task_times, const std::vector<std::vector<int>>& raw_precedence, const bool already_topo) {
+//     ALBP albp = ALBP::type_1(C, N, task_times, raw_precedence);
+//     return get_heads(albp, already_topo);
+// }
 
 std::vector<float> get_heads(const ALBP& albp,const bool alreadyTopo) {
     std::vector<float> heads(albp.N, 0);

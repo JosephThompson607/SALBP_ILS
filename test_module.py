@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import sys
 import os
+import time
 
 # Add the build directory to Python path
 build_dir = 'cmake-build-python_interface/'
@@ -26,6 +27,7 @@ try:
     import SALBP1_heuristics
 
     print("✅ Module imported successfully!")
+    print(dir(SALBP1_heuristics))
     print("Testing solution manipulation")
     # Test the module
     solution = SALBP1_heuristics.ALBPSolution(5)
@@ -178,7 +180,7 @@ try:
         except Exception as e:
             print(f"Error solving SALBP1: {e}")
             print(
-                f"Here are the function types:C {type(C)}, N {type(N)}, task_times{type(task_times_list)} (task_times[0] {type(task_times_list[0])}, raw_precedence{type(precedence_list)}")
+                f"Here are the function types:C {type(C)}, N {type(len(task_times_list))}, task_times{type(task_times_list)} (task_times[0] {type(task_times_list[0])}, raw_precedence{type(precedence_list)}")
             return None
 
 
@@ -287,8 +289,25 @@ try:
                 assert salbp.prec_mat[i * n + j] == salbp_rev.prec_mat[
                     j * n + i], f"precedence matrix is not the transpose, see {i},{j}"
 
+    def heads_and_tails(cycle_time, task_times_list, precedence_list,
+                ):
+        print("Here is what it  got", task_times_list, precedence_list)
+        try:
+            albp = SALBP1_heuristics.ALBP.type_1(cycle_time, len(task_times_list), task_times_list, precedence_list, False, False, False)
+            heads = SALBP1_heuristics.get_heads(albp, False)
+            tails = SALBP1_heuristics.get_tails(albp, False)
+            assert(len(heads)==len(task_times_list)), "number of heads does not match the number of tasks"
+            assert(len(tails)==len(task_times_list)), "number of tails does not match the number of tasks"
+            print(f"✅ Tested heads and tails function of ALBP")
+            print("here are the heads", heads)
+            print("here are the tails", tails)
+            return True
 
-    import time
+
+
+        except Exception as e:
+            print(f"❌Error calculating heads and tails SALBP1: {e}")
+            return None
 
     alb_dict = {'num_tasks': 50, 'cycle_time': 1000,
                 'task_times': {'1': 141, '2': 137, '3': 51, '4': 439, '5': 125, '6': 330, '7': 255, '8': 62, '9': 33,
@@ -311,10 +330,14 @@ try:
                 'instance': 'instance_n=50_210'}
     C = alb_dict['cycle_time']
     precs = alb_dict['precedence_relations']
+    print(precs)
     t_times = [val for _, val in alb_dict['task_times'].items()]
+    print(t_times)
     precs = [[int(child), int(parent)] for child, parent in alb_dict['precedence_relations']]
     test_reverse(C, t_times, precs)
     print(f"✅ Tested reverse function of ALBP")
+    heads_and_tails(C, t_times, precs)
+
     start = time.time()
     results = ils_call(cycle_time=C, task_times_list=t_times, precedence_list=precs, show_verbose=False,
                        max_iterations=1000)
