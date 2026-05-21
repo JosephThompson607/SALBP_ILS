@@ -141,8 +141,15 @@ std::vector<float> get_heads(const ALBP& albp,const bool alreadyTopo) {
 
 
         }
-        float lb_2 = calc_lb_2(suc_task_times, albp.C)- 0.5;
-        float lb_3 = calc_lb_3(suc_task_times, albp.C) - 0.33333333;
+        float lb_2 = calc_lb_2(suc_task_times, albp.C);
+        float lb_3 = calc_lb_3(suc_task_times, albp.C);
+        if (albp.task_time[i]/albp.C < 2.0/3) {
+            lb_3 -= 1.0/3;
+        }
+        else if (albp.task_time[i]/albp.C < 0.5) {
+            lb_2 -= 1.0/2;
+        }
+
 
         heads[i] = std::max({lb_1,lb_2, lb_3, lb_heads});
 
@@ -176,8 +183,15 @@ std::vector<float> get_tails(const ALBP& albp,const bool alreadyTopo) {
 
 
         }
-        float lb_2 = calc_lb_2(suc_task_times, albp.C)- 0.5;
-        float lb_3 = calc_lb_3(suc_task_times, albp.C) - 0.33333333;
+        float lb_2 = calc_lb_2(suc_task_times, albp.C);
+        float lb_3 = calc_lb_3(suc_task_times, albp.C);
+        if (albp.task_time[i]/albp.C < 2.0/3) {
+            lb_3 -= 1.0/3;
+        }
+        else if (albp.task_time[i]/albp.C < 0.5) {
+            lb_2 -= 1.0/2;
+        }
+
 
         tails[i] = std::max({lb_1,lb_2, lb_3, lb_tails});
 
