@@ -196,6 +196,52 @@ void ALBP::print(bool print_prec_mat = false) {
 }
 
 
+void ALBP::update_prec_and_suc(std::vector<int> new_pred, std::vector<int> new_suc) {
+    // new_pred: nodes whose pred lists need updating (child and its successors)
+    // new_suc:  nodes whose suc lists need updating (parent and its predecessors)
+
+    for (int node : new_pred) {
+        pred[node].clear();
+        for (int i = 0; i < N; ++i) {
+            if (t_close_mat[i * N + node]) {
+                pred[node].push_back(i);
+            }
+        }
+    }
+
+    for (int node : new_suc) {
+        suc[node].clear();
+        for (int j = 0; j < N; ++j) {
+            if (t_close_mat[node * N + j]) {
+                suc[node].push_back(j);
+            }
+        }
+    }
+}
+//Updates transitve closure info if precedence relation is added
+void ALBP::add_precedence_relation(std::vector<int> prec) {
+    //assuming one indexed precedence relation
+    int parent = prec[0]-1;
+    int child = prec[1]-1;
+    add_relation(parent+1, child+1, false);
+    //Get rows that need to be updated for the matrix
+    std::vector<int> upstream = pred[parent];
+    upstream.push_back(parent);
+
+    std::vector<int> downstream = suc[child];
+    downstream.push_back(child);
+
+    for (int a : upstream) {
+        for (int b : downstream) {
+            t_close_mat[a * N + b] = 1;
+        }
+    }
+    update_prec_and_suc(downstream, upstream);
+
+}
+
+
+
 void ALBP::calc_trans_closure() {
     t_close_mat = transitive_closure(prec_mat, N);
     suc = all_successors(t_close_mat, N);

@@ -41,6 +41,16 @@ PYBIND11_MODULE(SALBP1_heuristics, m) {
             .def("print", &ALBP::print)
             .def("loadFromFile", &ALBP::loadFromFile)
             .def("reverse", &ALBP::reverse)
+            .def("add_precedence_relation", &ALBP::add_precedence_relation,
+                        py::arg("prec"),
+                        R"pbdoc(
+                                     Add a precedence relation and update the transitive closure matrix, pred, and suc.
+
+                                     Parameters:
+                                     -----------
+                                     prec : list of int
+                                         Two-element list [parent, child], one-indexed.
+                                     )pbdoc")
             .def_readwrite("name", &ALBP::name)
             .def_readwrite("C", &ALBP::C)
             .def_readwrite("N", &ALBP::N)
@@ -54,6 +64,7 @@ PYBIND11_MODULE(SALBP1_heuristics, m) {
             .def_readwrite("pred", &ALBP::pred)
             .def_readwrite("precedence_relations", &ALBP::precedence_relations)
             .def_readwrite("task_assignment", &ALBP::task_assignment);
+
 
 
     // Bind the ALBPSolution class

@@ -289,6 +289,34 @@ try:
                 assert salbp.prec_mat[i * n + j] == salbp_rev.prec_mat[
                     j * n + i], f"precedence matrix is not the transpose, see {i},{j}"
 
+    def test_add():
+        this_test = [12, 7, 15, 9, 18]
+        N = len(this_test)
+        # Precedence relations [parent, child], one-indexed
+
+        # 1 → 3 → 5
+        # 2 → 4
+        raw_precedence = [
+            [1, 3],
+            [2, 4],
+            [3, 5],
+        ]
+
+        albp = SALBP1_heuristics.ALBP.type_1(
+            C=1000,
+            N=N,
+            task_times=this_test,
+            raw_precedence=raw_precedence,
+        )
+        albp.add_precedence_relation([3, 2])
+        assert albp.t_close_mat[0 + 1] ==1, "1 did not get 2 as a successor in transitive closure"
+        assert albp.t_close_mat[0 + 3] ==1, "1 did not get 4 as a successor in transitive closure"
+        assert albp.t_close_mat[2* 5 + 3] ==1, "3 did not get 4 as a successor in transitive closure"
+        assert albp.prec_mat[2* 5 + 1] == 1, "3 did not get 2 as a successor is adjacency matrix"
+        print(f"✅ tested precedence constraint insertion")
+
+
+
     def heads_and_tails(cycle_time, task_times_list, precedence_list,
                 ):
         print("Here is what it  got", task_times_list, precedence_list)
@@ -337,6 +365,7 @@ try:
     test_reverse(C, t_times, precs)
     print(f"✅ Tested reverse function of ALBP")
     heads_and_tails(C, t_times, precs)
+    test_add()
 
     start = time.time()
     results = ils_call(cycle_time=C, task_times_list=t_times, precedence_list=precs, show_verbose=False,
