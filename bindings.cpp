@@ -278,6 +278,24 @@ PYBIND11_MODULE(SALBP1_heuristics, m) {
       list of float
           Tail value for each task
       )pbdoc");
+    m.def("get_topo_sort", &get_topo_sort,
+      py::arg("dir_preds"),
+      py::arg("dir_sucs"),
+      R"pbdoc(
+      Get topological sort of a DAG.
+
+      Parameters:
+      -----------
+      dir_preds : list of list of int
+          Direct predecessors for each node
+      dir_sucs : list of list of int
+          Direct successors for each node
+
+      Returns:
+      --------
+      list of int
+          Nodes in topological order
+      )pbdoc");
     // Second overload using lambda
     m.def("hoff_solve_salbp1",
           [](const ALBP &albp) {

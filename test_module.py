@@ -324,11 +324,14 @@ try:
             albp = SALBP1_heuristics.ALBP.type_1(cycle_time, len(task_times_list), task_times_list, precedence_list, False, False, False)
             heads = SALBP1_heuristics.get_heads(albp, False)
             tails = SALBP1_heuristics.get_tails(albp, False)
+            topo_sort = SALBP1_heuristics.get_topo_sort(albp.dir_pred,albp.dir_suc )
+            assert(len(topo_sort)== len(task_times_list)), "length of topological sort does not match "
             assert(len(heads)==len(task_times_list)), "number of heads does not match the number of tasks"
             assert(len(tails)==len(task_times_list)), "number of tails does not match the number of tasks"
             print(f"✅ Tested heads and tails function of ALBP")
             print("here are the heads", heads)
             print("here are the tails", tails)
+            print("Here is a topo sort", topo_sort)
             return True
 
 
