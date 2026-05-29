@@ -16,6 +16,7 @@ struct ALBP{
     int C; //Cycle time (for SALBP-1)
     int N; //Number of tasks
     int S; //Number of stations (For SALBP-2)
+    int total_time;
     std::vector<int> task_time; //Task times
     std::vector<int> prec_mat; //Precedence matrix
     std::vector<int> t_close_mat;
@@ -25,6 +26,7 @@ struct ALBP{
     std::vector<std::vector<int>> pred;
     std::vector<PrecedenceRelation> precedence_relations; //Precedence relations
     std::vector<int> task_assignment; //Original task assignment (if applicable)
+
 
 
     ALBP() = default;

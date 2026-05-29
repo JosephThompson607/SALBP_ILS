@@ -55,6 +55,7 @@ PYBIND11_MODULE(SALBP1_heuristics, m) {
             .def_readwrite("C", &ALBP::C)
             .def_readwrite("N", &ALBP::N)
             .def_readwrite("S", &ALBP::S)
+            .def_readwrite("total_time", &ALBP::total_time)
             .def_readwrite("task_time", &ALBP::task_time)
             .def_readwrite("prec_mat", &ALBP::prec_mat)
             .def_readwrite("t_close_mat", &ALBP::t_close_mat)

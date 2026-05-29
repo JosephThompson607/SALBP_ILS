@@ -325,6 +325,7 @@ try:
             heads = SALBP1_heuristics.get_heads(albp, False)
             tails = SALBP1_heuristics.get_tails(albp, False)
             topo_sort = SALBP1_heuristics.get_topo_sort(albp.dir_pred,albp.dir_suc )
+            assert (sum(albp.task_time) == albp.total_time), f"task times { sum(albp.task_time)}should equal total time {albp.total_time}"
             assert(len(topo_sort)== len(task_times_list)), "length of topological sort does not match "
             assert(len(heads)==len(task_times_list)), "number of heads does not match the number of tasks"
             assert(len(tails)==len(task_times_list)), "number of tails does not match the number of tasks"

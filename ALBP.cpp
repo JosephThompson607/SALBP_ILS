@@ -124,7 +124,7 @@ ALBP::ALBP(const int C_, const int S_, const int N_,
            const std::vector<std::vector<int>>& raw_precedence,
            bool reverse, bool light, bool is_topological) {
     initialize_precedence(C_, S_, N_, task_times_, reverse);
-
+    total_time = std::accumulate(task_times_.begin(), task_times_.end(), 0);
     for (const auto& pair : raw_precedence) {
         if (pair.size() < 2) continue;
         add_relation(pair[0], pair[1], reverse);
@@ -139,7 +139,7 @@ ALBP::ALBP(int C_, int S_, int N_,
            const std::vector<PrecedenceRelation>& raw_precedence,
            bool reverse, bool light, bool is_topological) {
     initialize_precedence(C_, S_, N_, task_times_, reverse);
-
+    total_time = std::accumulate(task_times_.begin(), task_times_.end(), 0);
     for (const auto& rel : raw_precedence) {
         add_relation(rel.parent, rel.child, reverse);
     }
