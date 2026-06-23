@@ -23,7 +23,9 @@ PYBIND11_MODULE(SALBP1_heuristics, m) {
     py::class_<ALBP>(m, "ALBP")
             .def(py::init<>()) // default
             .def(py::init<const std::string &>()) // from filename
-            // Bind static factory methods as static methods
+            .def("__deepcopy__", [](const ALBP& self, py::dict) { return ALBP(self); })
+
+    // Bind static factory methods as static methods
             .def_static("type_1", &ALBP::type_1,
                         py::arg("C"), py::arg("N"), py::arg("task_times"), py::arg("raw_precedence"),
                         py::arg("reverse") = false,

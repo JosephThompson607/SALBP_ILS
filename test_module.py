@@ -315,7 +315,32 @@ try:
         assert albp.prec_mat[2* 5 + 1] == 1, "3 did not get 2 as a successor is adjacency matrix"
         print(f"✅ tested precedence constraint insertion")
 
+    def test_copy():
+        from copy import deepcopy
+        this_test = [12, 7, 15, 9, 18]
+        N = len(this_test)
+        # Precedence relations [parent, child], one-indexed
 
+        # 1 → 3 → 5
+        # 2 → 4
+        raw_precedence = [
+            [1, 3],
+            [2, 4],
+            [3, 5],
+        ]
+
+        albp = SALBP1_heuristics.ALBP.type_1(
+            C=1000,
+            N=N,
+            task_times=this_test,
+            raw_precedence=raw_precedence,
+        )
+        albp2 = deepcopy(albp)
+        assert len(albp.task_time) == len(albp2.task_time), "Tasks do not line up with copy"
+        albp.add_precedence_relation([3, 2])
+        assert len(albp.precedence_relations) == len(albp2.precedence_relations) + 1, f"new number of precedence relations appear to be correct NvO:{len(albp.precedence_relations)}, v {len(albp2.precedence_relations) }"
+        assert len(albp.dir_suc[2]) > len( albp2.dir_suc[2]), "Wrong number of precedence constraints for copy after adding edge to original"
+        print(f"✅ tested copying")
 
     def heads_and_tails(cycle_time, task_times_list, precedence_list,
                 ):
@@ -370,7 +395,7 @@ try:
     print(f"✅ Tested reverse function of ALBP")
     heads_and_tails(C, t_times, precs)
     test_add()
-
+    test_copy()
     start = time.time()
     results = ils_call(cycle_time=C, task_times_list=t_times, precedence_list=precs, show_verbose=False,
                        max_iterations=1000)
