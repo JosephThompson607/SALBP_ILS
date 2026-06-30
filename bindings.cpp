@@ -418,6 +418,7 @@ PYBIND11_MODULE(SALBP1_heuristics, m) {
           py::arg("raw_precedence"),
           py::arg("n_random"),
           py::arg("seed")=std::nullopt,
+          py::arg("time_limit") = std::nullopt,
           R"pbdoc(
                           Solve SALBP1 using different priority methods and station oriented task assignment
 
@@ -431,6 +432,12 @@ PYBIND11_MODULE(SALBP1_heuristics, m) {
                       Task processing times
                   raw_precedence : list of list of int
                       Precedence relationships
+                  n_random: int
+                     number of random priority solutions
+                  seed: int (optional)
+                        seed for priority solution
+                    time_limit: int (optional)
+                        Time limit in seconds, default 3600
                   Returns:
                   --------
                   list(ALBPSolution)

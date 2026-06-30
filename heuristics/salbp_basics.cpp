@@ -1112,8 +1112,12 @@ inline double ms_since(const std::chrono::steady_clock::time_point& start) {
 }
 
 
-std::vector< ALBPSolution> generate_priority_ranking_solutions(const ALBP &albp, const int n_random, std::optional<unsigned int> seed) {
+std::vector< ALBPSolution> generate_priority_ranking_solutions(const ALBP &albp, const int n_random, std::optional<unsigned int> seed, std::optional<double> time_limit) {
     // Define ranking functions with their names
+    double limit = time_limit.value_or(3600.0);
+
+    auto priority_start = std::chrono::steady_clock::now();
+    auto duration = std::chrono::duration<double>(limit);
     std::vector<std::pair<std::string, std::function<std::vector<int>(const ALBP&)>>> ranking_functions = {
          {"task_number_ranking", task_number_ranking},
          {"inverse_task_number_ranking", inverse_task_number_ranking},
@@ -1138,11 +1142,16 @@ std::vector< ALBPSolution> generate_priority_ranking_solutions(const ALBP &albp,
 
     // Generate named rankings with solutions
     for (const auto& [name, func] : ranking_functions) {
-        // Start the timer
+        //check for time limit
+        double elapsed_total = std::chrono::duration<double>(
+            std::chrono::steady_clock::now() - priority_start).count();
+        if (elapsed_total >= limit) break;
+        // Solve the problem and save the time
         auto start_time = std::chrono::steady_clock::now();
         std::vector<int> ranking = func(albp);
         ALBPSolution solution = station_oriented_assignment(albp, ranking);
         auto end_time = std::chrono::steady_clock::now();
+
         solution.elapsed_ms = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
         solution.method = name;
         solution.station_to_load(albp);
@@ -1153,6 +1162,11 @@ std::vector< ALBPSolution> generate_priority_ranking_solutions(const ALBP &albp,
     // Generate random rankings with solutions
     std::default_random_engine rng(seed ? *seed : std::random_device{}());
     for (int i = 0; i < n_random; ++i) {
+        //Check for time limit
+        double elapsed_total = std::chrono::duration<double>(
+            std::chrono::steady_clock::now() - priority_start).count();
+        if (elapsed_total >= limit) break;
+        //Solve the problem and save the time
         auto start_time = std::chrono::steady_clock::now();
         std::string random_name = "random_ranking_" + std::to_string(i + 1);
         std::vector<int> ranking = random_ranking(albp, rng);
@@ -1160,7 +1174,6 @@ std::vector< ALBPSolution> generate_priority_ranking_solutions(const ALBP &albp,
         auto end_time = std::chrono::steady_clock::now();
         solution.elapsed_ms = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time);
         solution.method = random_name;
-
         solution.station_to_load(albp);
         solutions.push_back( solution);
     }
@@ -1232,9 +1245,9 @@ std::vector<ALBPSolution>  priority_solve_salbp_2(const int S,const int N, const
     return generated_solutions;
 }
 
-std::vector<ALBPSolution>  priority_solve_salbp_1(const int C,const int N, const std::vector<int>& task_times, const std::vector<std::vector<int>>& raw_precedence, const int n_random, std::optional<unsigned int> seed) {
+std::vector<ALBPSolution>  priority_solve_salbp_1(const int C,const int N, const std::vector<int>& task_times, const std::vector<std::vector<int>>& raw_precedence, const int n_random, std::optional<unsigned int> seed, std::optional<double> time_limit) {
      ALBP albp = ALBP::type_1(C, N, task_times, raw_precedence);
 
-     std::vector<ALBPSolution> generated_solutions = generate_priority_ranking_solutions(albp, n_random, seed);
+     std::vector<ALBPSolution> generated_solutions = generate_priority_ranking_solutions(albp, n_random, seed, time_limit);
      return generated_solutions;
  }

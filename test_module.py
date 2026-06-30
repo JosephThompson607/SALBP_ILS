@@ -231,7 +231,7 @@ try:
             return None
 
 
-    def priority_type1_call(C, task_times_list, precedence_list):
+    def priority_type1_call(C, task_times_list, precedence_list, n_random=3, time_limit =1):
         N = len(task_times_list)
 
         try:
@@ -240,8 +240,9 @@ try:
                 N=N,
                 task_times=task_times_list,
                 raw_precedence=precedence_list,
-                n_random=3,
-                seed = 42
+                n_random=n_random,
+                seed = 42,
+                time_limit= time_limit
 
             )
 
@@ -409,6 +410,11 @@ try:
     for result in results:
         print(f"    here is the method {result.method} here are the number of stations {result.n_stations}")
         print("here are the station loads", result.loads)
+    start = time.time()
+    results = priority_type1_call(C, task_times_list=t_times, precedence_list=precs,n_random=1000000, time_limit=0.90)
+    end = time.time() - start
+    print(f"✅ Created  timed ALBPSolution using priority with in {end} seconds and {len(results)} results")
+
     start = time.time()
     results = priority_type2_call(20, task_times_list=t_times, precedence_list=precs, move_target=True)
     end = time.time() - start

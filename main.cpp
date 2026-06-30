@@ -230,7 +230,14 @@ int priority_methods_salbp_1_test() {
     int N = 50;
     //std::vector<int> test_assignments = {0,1,2,3,4};
     ALBP albp = ALBP::type_1(C, N, task_times, precedence);
-    std::vector<ALBPSolution> results =  priority_solve_salbp_1(C, N, task_times, precedence, 100, 42);
+    std::vector<ALBPSolution> results =  priority_solve_salbp_1(C, N, task_times, precedence, 100, 42, 100);
+    for (int i = 0; i < results.size(); ++i) {
+        ALBPSolution result = results[i];
+        std::cout << "Here is the result" << std::endl;
+        result.print();
+    }
+    //testing with time limit
+    results =  priority_solve_salbp_1(C, N, task_times, precedence, 1000000000, 42, 1);
     for (int i = 0; i < results.size(); ++i) {
         ALBPSolution result = results[i];
         std::cout << "Here is the result" << std::endl;
@@ -507,8 +514,8 @@ int main(int argc, char* argv[]) {
        // mhh_test();
         //lb_6_test();
        //vdls_salbp_1_test();
-        tails_test();
-        //priority_methods_salbp_1_test();
+        //tails_test();
+        priority_methods_salbp_1_test();
        // priority_methods_salbp_2_test();
         return 1;
     }
@@ -595,7 +602,7 @@ int main(int argc, char* argv[]) {
         std::cout<< "Solving SALBP-1 with " << heuristic << std::endl;
             if (heuristic == "priority"){
                 assert( priority_n_random >= 0 && "Only postive integer number of random solutions expected");
-                std::vector<ALBPSolution> results =  generate_priority_ranking_solutions(problem, priority_n_random, seed);
+                std::vector<ALBPSolution> results =  generate_priority_ranking_solutions(problem, priority_n_random, seed, time_limit);
                 for (int i = 0; i < results.size(); ++i) {
                     std::cout << "Solution number " << i << " :" <<std::endl;
                     results[i].print();
