@@ -135,7 +135,8 @@ void ALBPSolution::update_window(const ALBP &albp, const int i) {
     update_suc_earliest(albp,i);
 }
  void ALBPSolution::find_all_latest(const ALBP &albp){
-    latest.resize(albp.N,n_stations-1);
+     latest.clear();
+     latest.resize(albp.N, n_stations - 1);
     for (int i =0; i < albp.N; i++){
         find_latest(albp, i);
 

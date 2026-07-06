@@ -19,18 +19,28 @@
 
 class TabuList {
 
+
 public:
-    explicit TabuList( int n, size_t max_size);
-    bool contains(const std::pair<int,int> & move);
+    explicit TabuList( int n, int max_size);
+    int tabu_status(const std::pair<int,int> & move) const;
     void insert(const std::pair<int,int> & move);
     void reset();
+    void set_counter(){iteration_=0;}
+    void increment_counter();
+    int get_counter() const;
+    void print() const;
+    void check_tenure();
+    void step();
 private:
-    [[nodiscard]] size_t index(const std::pair<int,int> & move) const;
+    [[nodiscard]] int index(const std::pair<int,int> & move) const;
     int n_;
-    size_t max_size_;
-    std::vector<bool> is_tabu_;
+    int iteration_;
+    int max_size_;
+    std::vector<int> is_tabu_; //Tabu with tenure
     std::deque<std::pair<int,int>> tabu_list_;
     bool del_move(const std::pair<int, int> &move);
+
+
 };
 
 struct TabuMove {
@@ -77,8 +87,10 @@ class Tabu {
         int try_swap(const ALBPSolution &sol, int task_1, int task_2, int station_1, int station_2) const;
 
         void perform_shift(ALBPSolution &sol, int task, int task_idx, int old_station,int new_station);
-        void perform_swap(ALBPSolution &sol, int task_1, int task_idx_1, int task_2, int task_idx_2, int station_1,int station_2);
+        // void perform_swap(ALBPSolution &sol, int task_1, int task_idx_1, int task_2, int task_idx_2, int station_1,int station_2);
         void elim_station(ALBPSolution &sol);
+
+        void print_move(const TabuMove &move) const;
 
         TabuMove shift(int s, int &best_obj, const ALBPSolution &current);
 

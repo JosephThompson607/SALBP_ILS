@@ -413,7 +413,15 @@ PYBIND11_MODULE(SALBP1_heuristics, m) {
                       The solved ALBP solution
                   )pbdoc"
     );
-    m.def("priority_solve_salbp1", &priority_solve_salbp_1,
+    m.def("priority_solve_salbp1",
+      [](int C, int N,
+         const std::vector<int> &task_times,
+         const std::vector<std::vector<int>> &raw_precedence,
+         int n_random,
+         std::optional<int> seed,
+         std::optional<double> time_limit) {
+          return priority_solve_salbp_1(C, N, task_times, raw_precedence, n_random, seed, time_limit);
+      },
           "Solve SALBP-1 using priority methods",
           py::arg("C"),
           py::arg("N"),

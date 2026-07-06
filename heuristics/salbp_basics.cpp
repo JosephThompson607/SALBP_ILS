@@ -1245,6 +1245,21 @@ std::vector<ALBPSolution>  priority_solve_salbp_2(const int S,const int N, const
     return generated_solutions;
 }
 
+ALBPSolution priority_solve_salbp_1(const ALBP &albp, int n_random, std::optional<unsigned int> seed, std::optional<double> time_limit) {
+
+
+    std::vector<ALBPSolution> generated_solutions = generate_priority_ranking_solutions(albp, n_random, seed, time_limit);
+    ALBPSolution best_solution = generated_solutions[0];
+    for (int j =1; j < generated_solutions.size(); ++j) {
+        if (generated_solutions[j].n_stations < best_solution.n_stations) {
+            best_solution = generated_solutions[j];
+        }
+    }
+    best_solution.find_windows(albp);
+    return best_solution;
+}
+
+
 std::vector<ALBPSolution>  priority_solve_salbp_1(const int C,const int N, const std::vector<int>& task_times, const std::vector<std::vector<int>>& raw_precedence, const int n_random, std::optional<unsigned int> seed, std::optional<double> time_limit) {
      ALBP albp = ALBP::type_1(C, N, task_times, raw_precedence);
 
