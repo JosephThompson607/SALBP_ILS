@@ -20,6 +20,7 @@ TabuList::TabuList(int n, int max_size) {
     n_ = n;
     max_size_ = max_size;
     is_tabu_.resize(n *n , -1);
+    iteration_=0;
 }
 
 
@@ -38,10 +39,9 @@ bool TabuList::del_move(const std::pair<int, int> &move) {
 }
 
 void TabuList::check_tenure() {
-    if (tabu_list_.size() ==0) return;
     std::pair first = tabu_list_.front();
-    while (tabu_status(first) == iteration_ % max_size_) {
-        is_tabu_[index(first)] = -1;
+    while (!tabu_list_.empty()  && tabu_status(tabu_list_.front()) == iteration_) {
+        is_tabu_[index(tabu_list_.front())] = -1;
         tabu_list_.pop_front();
         first = tabu_list_.front();
     }
@@ -301,7 +301,7 @@ TabuMove Tabu::swap(int s, int &local_obj, const ALBPSolution &current) {
         for (int new_station = current.earliest[task]; new_station <= current.latest[task]; new_station++ ) {
             for (int new_task_idx=0; new_task_idx < current.station_assignments[new_station].size(); new_task_idx++){
                 int new_task = current.station_assignments[new_station][new_task_idx];
-                if ((new_station == (s)) || (new_station<s && albp_.prec_mat[task * albp_.N + new_task]==1) || (new_station>s && albp_.prec_mat[new_task * albp_.N + task]==1) ) {
+                if ((new_station == (s)) || (new_station>s && albp_.t_close_mat[task * albp_.N + new_task]==1) || (new_station<s && albp_.t_close_mat[new_task * albp_.N + task]==1) ) {
                     continue;
                 }
                 if(current.earliest[new_task]<= s && current.latest[new_task]>= s) {
