@@ -622,7 +622,7 @@ ALBPSolution filler_heuristic(const ALBP& albp,const std::vector<int>& original_
 }
 
 
-std::vector<int> random_ranking(const ALBP&albp, std::default_random_engine& rng) {
+std::vector<int> random_ranking(const ALBP&albp, std::mt19937& rng) {
 
     std::vector<int> ranking(albp.N);
     // Fill with 0 to N-1
@@ -1021,7 +1021,7 @@ std::vector<std::vector<int> > generate_rankings(const ALBP &albp, const int n_r
     }
 
     // // Generate more rankings
-    std::default_random_engine rng(seed ? *seed : std::random_device{}());
+    std::mt19937 rng(seed ? *seed : std::random_device{}());
 
 
     for (int i = 0; i < n_random; ++i) {
@@ -1160,7 +1160,7 @@ std::vector< ALBPSolution> generate_priority_ranking_solutions(const ALBP &albp,
     }
 
     // Generate random rankings with solutions
-    std::default_random_engine rng(seed ? *seed : std::random_device{}());
+    std::mt19937 rng(seed ? *seed : std::random_device{}());
     for (int i = 0; i < n_random; ++i) {
         //Check for time limit
         double elapsed_total = std::chrono::duration<double>(
@@ -1221,7 +1221,7 @@ std::vector< ALBPSolution> priority_salbp_2(const ALBP &albp, const int n_random
         solution.method = name;
         solutions.push_back( solution);
     }
-    std::default_random_engine rng(seed ? *seed : std::random_device{}());
+    std::mt19937 rng(seed ? *seed : std::random_device{}());
 
     // Generate random rankings with solutions
     for (int i = 0; i < n_random; ++i) {

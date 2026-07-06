@@ -1,456 +1,487 @@
 #!/usr/bin/env python3
-import sys
+"""
+Test script for the SALBP1_heuristics compiled extension.
+
+Organized into three parts:
+    1. Setup            - locate/import the compiled module, solver call wrappers
+    2. Unit tests        - exercise individual ALBP / ALBPSolution behaviors in isolation
+    3. Regression tests  - run each heuristic solver end-to-end on a benchmark instance
+
+Run directly:
+    python test_salbp_heuristics.py
+"""
+import importlib.util
 import os
+import sys
 import time
+from copy import deepcopy
 
-# Add the build directory to Python path
-build_dir = 'cmake-build-python_interface/'
-sys.path.insert(0, build_dir)
-build_dir_2 = 'build/'
-sys.path.insert(0, build_dir_2)
-print(f"Python version: {sys.version}")
-print(f"Python path: {sys.path[:3]}...")  # Show first few paths
-print(f"current interpreter: {sys.executable}")
-print(f"Looking for module in: {build_dir}")
-print(f"Directory exists: {os.path.exists(build_dir)}")
 
-if os.path.exists(build_dir):
-    print(f"Available files:")
-    for f in sorted(os.listdir(build_dir)):
-        if f.endswith('.so') or f.endswith('.pyd'):
-            full_path = os.path.join(build_dir, f)
-            print(f"  {f} (size: {os.path.getsize(full_path)} bytes)")
+# ===========================================================================
+# 1. Setup: locate/import the compiled module, and thin wrappers around
+#    each solver's keyword-argument plumbing.
+# ===========================================================================
 
-sys.path.insert(0, 'cmake-build-python_interface/')
-try:
-    # Try importing
-    import SALBP1_heuristics
+def import_salbp():
+    """Locate and import the compiled SALBP1_heuristics extension.
 
-    print("✅ Module imported successfully!")
-    print(dir(SALBP1_heuristics))
-    print("Testing solution manipulation")
-    # Test the module
-    solution = SALBP1_heuristics.ALBPSolution(5)
+    Returns the module, or None if it couldn't be imported (details are
+    printed either way).
+    """
+    for build_dir in ("cmake-build-python_interface/", "build/"):
+        if build_dir not in sys.path:
+            sys.path.insert(0, build_dir)
+
+    print(f"Python version: {sys.version}")
+    print(f"Python path: {sys.path[:3]}...")
+    print(f"current interpreter: {sys.executable}")
+
+    build_dir = "cmake-build-python_interface/"
+    print(f"Looking for module in: {build_dir}")
+    print(f"Directory exists: {os.path.exists(build_dir)}")
+    if os.path.exists(build_dir):
+        print("Available files:")
+        for f in sorted(os.listdir(build_dir)):
+            if f.endswith(".so") or f.endswith(".pyd"):
+                full_path = os.path.join(build_dir, f)
+                print(f"  {f} (size: {os.path.getsize(full_path)} bytes)")
+
+    try:
+        import SALBP1_heuristics
+        print("✅ Module imported successfully!")
+        print(dir(SALBP1_heuristics))
+        return SALBP1_heuristics
+    except ImportError as e:
+        print(f"❌ Import failed: {e}")
+        spec = importlib.util.find_spec("SALBP1_heuristics")
+        print(f"Module spec: {spec}")
+        return None
+
+
+def ils_call(salbp, cycle_time, task_times_list, precedence_list,
+             max_iterations=1000, operation_probs=0.5, show_verbose=False, init_sol=None):
+    """Solve SALBP-1 with Iterated Local Search. Returns None on error."""
+    if init_sol is None:
+        init_sol = []
+    try:
+        solution = salbp.ils_solve_SALBP1(
+            C=cycle_time,
+            N=len(task_times_list),
+            task_times=task_times_list,
+            raw_precedence=precedence_list,
+            max_iter=max_iterations,
+            time_limit=20,
+            op_probs=operation_probs,
+            verbose=show_verbose,
+            initial_solution=init_sol,
+        )
+        if show_verbose:
+            print(f"Successfully solved SALBP1 with {len(task_times_list)} tasks and cycle time {cycle_time}")
+        return solution
+    except Exception as e:
+        print(f"Error solving SALBP1 (ils): {e}")
+        return None
+
+
+def hoff_call(salbp, cycle_time, task_times_list, precedence_list):
+    """Solve SALBP-1 with the Hoffmann heuristic. Returns None on error."""
+    try:
+        return salbp.hoff_solve_salbp1(
+            C=cycle_time,
+            N=len(task_times_list),
+            task_times=task_times_list,
+            raw_precedence=precedence_list,
+            alpha_iter=2,
+            alpha_size=0.005,
+            beta_iter=int(len(task_times_list) / 2),
+            beta_size=0.005,
+            reverse=True,
+        )
+    except Exception as e:
+        print(f"Error solving SALBP1 (hoff): {e}")
+        return None
+
+
+def mhh_call(salbp, cycle_time, task_times_list, precedence_list):
+    """Solve SALBP-1 with MHH. Returns None on error."""
+    try:
+        return salbp.mhh_solve_salbp1(
+            C=cycle_time,
+            N=len(task_times_list),
+            task_times=task_times_list,
+            raw_precedence=precedence_list,
+        )
+    except Exception as e:
+        print(f"Error solving SALBP1 (mhh): {e}")
+        return None
+
+
+def vdls_call(salbp, cycle_time, task_times_list, precedence_list):
+    """Solve SALBP-1 with VDLS. Returns None on error."""
+    try:
+        return salbp.vdls_solve_salbp1(
+            C=cycle_time,
+            N=len(task_times_list),
+            task_times=task_times_list,
+            raw_precedence=precedence_list,
+            time_limit=20,
+        )
+    except Exception as e:
+        print(f"Error solving SALBP1 (vdls): {e}")
+        return None
+
+
+def vdls_type2_call(salbp, S, task_times_list, precedence_list):
+    """Solve SALBP-2 with VDLS. Returns None on error."""
+    try:
+        return salbp.vdls_solve_salbp2(
+            S=S,
+            N=len(task_times_list),
+            task_times=task_times_list,
+            raw_precedence=precedence_list,
+            time_limit=20,
+        )
+    except Exception as e:
+        print(f"Error solving SALBP2 (vdls): {e}")
+        return None
+
+
+def priority_type1_call(salbp, C, task_times_list, precedence_list, n_random=3, time_limit=1):
+    """Solve SALBP-1 with priority-rule heuristics. Returns None on error."""
+    try:
+        return salbp.priority_solve_salbp1(
+            C=C,
+            N=len(task_times_list),
+            task_times=task_times_list,
+            raw_precedence=precedence_list,
+            n_random=n_random,
+            seed=42,
+            time_limit=time_limit,
+        )
+    except Exception as e:
+        print(f"Error solving SALBP1 (priority): {e}")
+        return None
+
+
+def priority_type2_call(salbp, S, task_times_list, precedence_list, move_target=False):
+    """Solve SALBP-2 with priority-rule heuristics. Returns None on error."""
+    try:
+        return salbp.priority_solve_salbp2(
+            S=S,
+            N=len(task_times_list),
+            task_times=task_times_list,
+            raw_precedence=precedence_list,
+            n_random=3,
+            move_target=move_target,
+            seed=42,
+        )
+    except Exception as e:
+        print(f"Error solving SALBP2 (priority): {e}")
+        return None
+
+
+def tabu_call(salbp, cycle_time, task_times_list, precedence_list, time_limit=1.0):
+    """Solve SALBP-1 with Tabu search. Returns None on error."""
+    try:
+        return salbp.tabu_solve_salbp1(
+            C=cycle_time,
+            N=len(task_times_list),
+            task_times=task_times_list,
+            raw_precedence=precedence_list,
+            time_limit=time_limit,
+        )
+    except Exception as e:
+        print(f"Error solving SALBP1 (tabu): {e}")
+        return None
+
+
+# ===========================================================================
+# 2. Unit tests: individual ALBP / ALBPSolution behaviors, in isolation.
+# ===========================================================================
+
+def test_solution_manipulation(salbp):
+    """ALBPSolution: task_to_station, station_to_ranking, reverse."""
+    solution = salbp.ALBPSolution(5)
     solution.n_stations = 4
     print(f"✅ Created ALBPSolution with {solution.n_tasks} tasks")
+
+    print("Testing solution manipulation")
     solution.task_assignment = [1, 0, 3, 2, 1]
     solution.task_to_station()
     solution.station_to_ranking()
+
     actual = solution.station_assignments
     expected = [[1], [0, 4], [3], [2]]
-    assert len(actual) == len(
-        expected), f"Length mismatch between station assignments and task assignments: {len(actual)} vs {len(expected)}"
+    assert len(actual) == len(expected), (
+        f"Length mismatch between station assignments and task assignments: {len(actual)} vs {len(expected)}"
+    )
     for i, (actual_sublist, expected_sublist) in enumerate(zip(actual, expected)):
-        assert actual_sublist == expected_sublist, f"Mismatch at index between station assignments and task assignments{i}: {actual_sublist} vs {expected_sublist}"
-    assert len(
-        solution.ranking) == solution.n_tasks, f"Length mismatch between ranking and n_tasks: {len(solution.ranking)} vs {len(solution.n_tasks)}"
+        assert actual_sublist == expected_sublist, (
+            f"Mismatch at index {i} between station assignments and task assignments: {actual_sublist} vs {expected_sublist}"
+        )
+
+    assert len(solution.ranking) == solution.n_tasks, (
+        f"Length mismatch between ranking and n_tasks: {len(solution.ranking)} vs {solution.n_tasks}"
+    )
     correct_ranking = [1, 0, 4, 3, 2]
     for i in range(5):
         assert solution.ranking[i] == correct_ranking[i], "bad ranking"
-    #Testing reverse functionality
+
+    # Reverse functionality
     solution.reverse()
     assert solution.task_assignment == [1, 2, 3, 0, 1], f"Solution not reversed correctly {solution.task_assignment}"
     actual = solution.station_assignments
     expected.reverse()
-    assert len(actual) == len(
-        expected), f"Length mismatch between station assignments and task assignments: {len(actual)} vs {len(expected)}"
+    assert len(actual) == len(expected), (
+        f"Length mismatch between station assignments and task assignments: {len(actual)} vs {len(expected)}"
+    )
     for i, (actual_sublist, expected_sublist) in enumerate(zip(actual, expected)):
-        assert actual_sublist == expected_sublist, f"Mismatch at index between station assignments and task assignments{i}: {actual_sublist} vs {expected_sublist}"
+        assert actual_sublist == expected_sublist, (
+            f"Mismatch at index {i} between station assignments and task assignments: {actual_sublist} vs {expected_sublist}"
+        )
 
     print("✅ basic solution manipulation passed!")
+
+
+def test_lower_bounds(salbp):
+    """calc_salbp_1_lb6 sanity check."""
     print("Testing salbp lower bounds")
     task_times = [8, 8, 7, 6, 5, 5, 3, 4, 3]
     C = 10
-    lb_6 = SALBP1_heuristics.calc_salbp_1_lb6(task_times, C)
+    lb_6 = salbp.calc_salbp_1_lb6(task_times, C)
     assert lb_6 == 6, f"LB 6 is not acting as expected. We wanted 6, we got {lb_6}"
     print("✅ lb tests passed!")
 
 
-except ImportError as e:
-    print(f"❌ Import failed: {e}")
-
-    # Try to get more details
-    import importlib.util
-
-    spec = importlib.util.find_spec('SALBP1_heuristics')
-    print(f"Module spec: {spec}")
-
-try:
-
-    def ils_call(cycle_time, task_times_list, precedence_list,
-                 max_iterations=1000, operation_probs=0.5,
-                 show_verbose=False, init_sol=None):
-        """
-        Uses ils to generate a SALBP solution
-
-        Parameters:
-        -----------
-        cycle_time : int
-            Maximum time allowed per workstation
-        task_times_list : list of int
-            Processing time for each task
-        precedence_list : list of list of int
-            Precedence constraints as [predecessor, successor] pairs
-        max_iterations : int, optional
-            Maximum iterations for the algorithm (default: 1000)
-        operation_probs : float, optional
-            Operation probabilities parameter (default: 0.5)
-        show_verbose : bool, optional
-            Whether to show verbose output (default: False)
-        init_sol : list of int, optional
-            Initial solution if available (default: None)
-
-        Returns:
-        --------
-        ALBPSolution or None
-            The solution object if successful, None if error occurs
-        """
-
-        if init_sol is None:
-            init_sol = []
-
-        N = len(task_times_list)
-
-        try:
-            solution = SALBP1_heuristics.ils_solve_SALBP1(
-                C=cycle_time,
-                N=N,
-                task_times=task_times_list,
-                raw_precedence=precedence_list,
-                max_iter=max_iterations,
-                time_limit=20,
-                op_probs=operation_probs,
-                verbose=show_verbose,
-                initial_solution=init_sol
+def test_reverse_precedence_matrix(salbp, C, task_times_list, precedence_list):
+    """The 'reverse' flag on ALBP.type_1 should produce the transpose of the precedence matrix."""
+    n = len(task_times_list)
+    albp = salbp.ALBP.type_1(C, n, task_times_list, precedence_list, False)
+    albp_rev = salbp.ALBP.type_1(C, n, task_times_list, precedence_list, True)
+    for i in range(n):
+        for j in range(n):
+            assert albp.prec_mat[i * n + j] == albp_rev.prec_mat[j * n + i], (
+                f"precedence matrix is not the transpose, see {i},{j}"
             )
-
-            if show_verbose:
-                print(f"Successfully solved SALBP1 with {N} tasks and cycle time {cycle_time}")
-
-            return solution
-
-        except Exception as e:
-            print(f"Error solving SALBP1: {e}")
-            return None
+    print("✅ Tested reverse function of ALBP")
 
 
-    def hoff_call(cycle_time, task_times_list, precedence_list,
-                  ):
+def test_add_precedence_relation(salbp):
+    """Adding a precedence relation should update both the adjacency matrix
+    and the transitive closure matrix."""
+    task_times = [12, 7, 15, 9, 18]
+    N = len(task_times)
+    # Precedence relations [parent, child], one-indexed: 1 -> 3 -> 5, 2 -> 4
+    raw_precedence = [[1, 3], [2, 4], [3, 5]]
 
-        N = len(task_times_list)
+    albp = salbp.ALBP.type_1(C=1000, N=N, task_times=task_times, raw_precedence=raw_precedence)
+    albp.add_precedence_relation([3, 2])
 
-        try:
-            mhh_sol = SALBP1_heuristics.hoff_solve_salbp1(
-                C=cycle_time,
-                N=N,
-                task_times=task_times_list,
-                raw_precedence=precedence_list,
-                alpha_iter=2,
-                alpha_size=0.005,
-                beta_iter=int(N / 2),
-                beta_size=0.005,
-                reverse=True
-
-            )
-
-            return mhh_sol
+    assert albp.t_close_mat[0 + 1] == 1, "1 did not get 2 as a successor in transitive closure"
+    assert albp.t_close_mat[0 + 3] == 1, "1 did not get 4 as a successor in transitive closure"
+    assert albp.t_close_mat[2 * 5 + 3] == 1, "3 did not get 4 as a successor in transitive closure"
+    assert albp.prec_mat[2 * 5 + 1] == 1, "3 did not get 2 as a successor is adjacency matrix"
+    print("✅ tested precedence constraint insertion")
 
 
-        except Exception as e:
-            print(f"Error solving SALBP1: {e}")
-            print(
-                f"Here are the function types:C {type(C)}, N {type(N)}, task_times{type(task_times_list)} (task_times[0] {type(task_times_list[0])}, raw_precedence{type(precedence_list)}")
-            return None
+def test_deepcopy(salbp):
+    """deepcopy of an ALBP should be independent of the original."""
+    task_times = [12, 7, 15, 9, 18]
+    N = len(task_times)
+    raw_precedence = [[1, 3], [2, 4], [3, 5]]
+
+    albp = salbp.ALBP.type_1(C=1000, N=N, task_times=task_times, raw_precedence=raw_precedence)
+    albp2 = deepcopy(albp)
+    assert len(albp.task_time) == len(albp2.task_time), "Tasks do not line up with copy"
+
+    albp.add_precedence_relation([3, 2])
+    assert len(albp.precedence_relations) == len(albp2.precedence_relations) + 1, (
+        f"new number of precedence relations appear to be incorrect: "
+        f"{len(albp.precedence_relations)} vs {len(albp2.precedence_relations)}"
+    )
+    assert len(albp.dir_suc[2]) > len(albp2.dir_suc[2]), (
+        "Wrong number of precedence constraints for copy after adding edge to original"
+    )
+    print("✅ tested copying")
 
 
-    def mhh_call(cycle_time, task_times_list, precedence_list,):
+def test_heads_and_tails(salbp, cycle_time, task_times_list, precedence_list):
+    """get_heads / get_tails / get_topo_sort sanity checks."""
+    albp = salbp.ALBP.type_1(cycle_time, len(task_times_list), task_times_list, precedence_list, False, False, False)
+    heads = salbp.get_heads(albp, False)
+    tails = salbp.get_tails(albp, False)
+    topo_sort = salbp.get_topo_sort(albp.dir_pred, albp.dir_suc)
+
+    assert sum(albp.task_time) == albp.total_time, (
+        f"task times {sum(albp.task_time)} should equal total time {albp.total_time}"
+    )
+    assert len(topo_sort) == len(task_times_list), "length of topological sort does not match"
+    assert len(heads) == len(task_times_list), "number of heads does not match the number of tasks"
+    assert len(tails) == len(task_times_list), "number of tails does not match the number of tasks"
+    print("✅ Tested heads and tails function of ALBP")
 
 
-        try:
-            mhh_sol = SALBP1_heuristics.mhh_solve_salbp1(
-                C=cycle_time,
-                N= len(task_times_list),
-                task_times=task_times_list,
-                raw_precedence=precedence_list,
-            )
+# ===========================================================================
+# 3. Regression tests: run each solver end-to-end on the benchmark instance.
+# ===========================================================================
 
-            return mhh_sol
-
-
-        except Exception as e:
-            print(f"Error solving SALBP1: {e}")
-            print(
-                f"Here are the function types:C {type(C)}, N {type(len(task_times_list))}, task_times{type(task_times_list)} (task_times[0] {type(task_times_list[0])}, raw_precedence{type(precedence_list)}")
-            return None
-
-
-    def vdls_call(cycle_time, task_times_list, precedence_list,
-                  ):
-
-        N = len(task_times_list)
-
-        try:
-            vdls_sol = SALBP1_heuristics.vdls_solve_salbp1(
-                C=cycle_time,
-                N=N,
-                task_times=task_times_list,
-                raw_precedence=precedence_list,
-                time_limit=20,
-
-            )
-
-            return vdls_sol
-
-        except Exception as e:
-            print(f"Error solving SALBP1: {e}")
-            print(
-                f"Here are the function types:C {type(C)}, N {type(N)}, task_times{type(task_times_list)} (task_times[0] {type(task_times_list[0])}, raw_precedence{type(precedence_list)}")
-            return None
-
-
-    def vdls_type2_call(S, task_times_list, precedence_list):
-
-        N = len(task_times_list)
-
-        try:
-            vdls_sol = SALBP1_heuristics.vdls_solve_salbp2(
-                S=S,
-                N=N,
-                task_times=task_times_list,
-                raw_precedence=precedence_list,
-                time_limit=20,
-
-            )
-
-            return vdls_sol
-
-        except Exception as e:
-            print(f"Error solving SALBP2: {e}")
-            print(
-                f"Here are the function types:S {type(S)}, N {type(N)}, task_times{type(task_times_list)} (task_times[0] {type(task_times_list[0])}, raw_precedence{type(precedence_list)}")
-            return None
-
-
-    def priority_type1_call(C, task_times_list, precedence_list, n_random=3, time_limit =1):
-        N = len(task_times_list)
-
-        try:
-            priority_sols = SALBP1_heuristics.priority_solve_salbp1(
-                C=C,
-                N=N,
-                task_times=task_times_list,
-                raw_precedence=precedence_list,
-                n_random=n_random,
-                seed = 42,
-                time_limit= time_limit
-
-            )
-
-            print("Here are the priority solutions", priority_sols)
-            return priority_sols
-
-        except Exception as e:
-            print(f"Error solving 1 with priority methods: {e}")
-            print(
-                f"Here are the function types:C {type(C)}, N {type(N)}, task_times{type(task_times_list)} (task_times[0] {type(task_times_list[0])}, raw_precedence{type(precedence_list)}")
-            return None
-
-
-    def priority_type2_call(S, task_times_list, precedence_list, move_target=False):
-        N = len(task_times_list)
-
-        try:
-            priority_sols = SALBP1_heuristics.priority_solve_salbp2(
-                S=S,
-                N=N,
-                task_times=task_times_list,
-                raw_precedence=precedence_list,
-                n_random=3,
-                move_target=move_target,
-                seed = 42
-
-            )
-
-            print("Here are the priority solutions", priority_sols)
-            return priority_sols
-
-        except Exception as e:
-            print(f"Error solving 1 with priority methods: {e}")
-            print(
-                f"Here are the function types:C {type(C)}, N {type(N)}, task_times{type(task_times_list)} (task_times[0] {type(task_times_list[0])}, raw_precedence{type(precedence_list)}")
-            return None
-
-
-    def test_reverse(c, task_times_list, precedence_list):
-        n = len(task_times_list)
-        salbp = SALBP1_heuristics.ALBP.type_1(C, n, task_times_list, precedence_list, False)
-        salbp_rev = SALBP1_heuristics.ALBP.type_1(C, n, task_times_list, precedence_list, True)
-        for i in range(n):
-            for j in range(n):
-                assert salbp.prec_mat[i * n + j] == salbp_rev.prec_mat[
-                    j * n + i], f"precedence matrix is not the transpose, see {i},{j}"
-
-    def test_add():
-        this_test = [12, 7, 15, 9, 18]
-        N = len(this_test)
-        # Precedence relations [parent, child], one-indexed
-
-        # 1 → 3 → 5
-        # 2 → 4
-        raw_precedence = [
-            [1, 3],
-            [2, 4],
-            [3, 5],
-        ]
-
-        albp = SALBP1_heuristics.ALBP.type_1(
-            C=1000,
-            N=N,
-            task_times=this_test,
-            raw_precedence=raw_precedence,
-        )
-        albp.add_precedence_relation([3, 2])
-        assert albp.t_close_mat[0 + 1] ==1, "1 did not get 2 as a successor in transitive closure"
-        assert albp.t_close_mat[0 + 3] ==1, "1 did not get 4 as a successor in transitive closure"
-        assert albp.t_close_mat[2* 5 + 3] ==1, "3 did not get 4 as a successor in transitive closure"
-        assert albp.prec_mat[2* 5 + 1] == 1, "3 did not get 2 as a successor is adjacency matrix"
-        print(f"✅ tested precedence constraint insertion")
-
-    def test_copy():
-        from copy import deepcopy
-        this_test = [12, 7, 15, 9, 18]
-        N = len(this_test)
-        # Precedence relations [parent, child], one-indexed
-
-        # 1 → 3 → 5
-        # 2 → 4
-        raw_precedence = [
-            [1, 3],
-            [2, 4],
-            [3, 5],
-        ]
-
-        albp = SALBP1_heuristics.ALBP.type_1(
-            C=1000,
-            N=N,
-            task_times=this_test,
-            raw_precedence=raw_precedence,
-        )
-        albp2 = deepcopy(albp)
-        assert len(albp.task_time) == len(albp2.task_time), "Tasks do not line up with copy"
-        albp.add_precedence_relation([3, 2])
-        assert len(albp.precedence_relations) == len(albp2.precedence_relations) + 1, f"new number of precedence relations appear to be correct NvO:{len(albp.precedence_relations)}, v {len(albp2.precedence_relations) }"
-        assert len(albp.dir_suc[2]) > len( albp2.dir_suc[2]), "Wrong number of precedence constraints for copy after adding edge to original"
-        print(f"✅ tested copying")
-
-    def heads_and_tails(cycle_time, task_times_list, precedence_list,
-                ):
-        print("Here is what it  got", task_times_list, precedence_list)
-        try:
-            albp = SALBP1_heuristics.ALBP.type_1(cycle_time, len(task_times_list), task_times_list, precedence_list, False, False, False)
-            heads = SALBP1_heuristics.get_heads(albp, False)
-            tails = SALBP1_heuristics.get_tails(albp, False)
-            topo_sort = SALBP1_heuristics.get_topo_sort(albp.dir_pred,albp.dir_suc )
-            assert (sum(albp.task_time) == albp.total_time), f"task times { sum(albp.task_time)}should equal total time {albp.total_time}"
-            assert(len(topo_sort)== len(task_times_list)), "length of topological sort does not match "
-            assert(len(heads)==len(task_times_list)), "number of heads does not match the number of tasks"
-            assert(len(tails)==len(task_times_list)), "number of tails does not match the number of tasks"
-            print(f"✅ Tested heads and tails function of ALBP")
-            print("here are the heads", heads)
-            print("here are the tails", tails)
-            print("Here is a topo sort", topo_sort)
-            return True
-
-
-
-        except Exception as e:
-            print(f"❌Error calculating heads and tails SALBP1: {e}")
-            return None
-
-    alb_dict = {'num_tasks': 50, 'cycle_time': 1000,
-                'task_times': {'1': 141, '2': 137, '3': 51, '4': 439, '5': 125, '6': 330, '7': 255, '8': 62, '9': 33,
-                               '10': 490, '11': 58, '12': 91, '13': 115, '14': 211, '15': 392, '16': 158, '17': 537,
-                               '18': 66, '19': 345, '20': 563, '21': 211, '22': 466, '23': 215, '24': 228, '25': 568,
-                               '26': 477, '27': 88, '28': 41, '29': 482, '30': 92, '31': 136, '32': 174, '33': 523,
-                               '34': 125, '35': 52, '36': 26, '37': 516, '38': 533, '39': 123, '40': 617, '41': 503,
-                               '42': 263, '43': 528, '44': 106, '45': 172, '46': 110, '47': 39, '48': 108, '49': 76,
-                               '50': 323},
-                'precedence_relations': [['1', '4'], ['2', '5'], ['2', '8'], ['2', '9'], ['2', '10'], ['3', '6'],
-                                         ['3', '7'], ['3', '9'], ['3', '11'], ['4', '12'], ['5', '13'], ['6', '14'],
-                                         ['8', '16'], ['8', '18'], ['8', '28'], ['9', '15'], ['10', '17'], ['12', '20'],
-                                         ['13', '21'], ['14', '19'], ['15', '22'], ['18', '23'], ['19', '24'],
-                                         ['20', '28'], ['21', '26'], ['22', '25'], ['22', '27'], ['22', '33'],
-                                         ['24', '31'], ['25', '32'], ['26', '29'], ['26', '30'], ['26', '33'],
-                                         ['27', '34'], ['29', '35'], ['30', '36'], ['31', '39'], ['32', '37'],
-                                         ['33', '38'], ['33', '40'], ['33', '41'], ['33', '44'], ['34', '42'],
-                                         ['34', '43'], ['35', '48'], ['36', '48'], ['37', '45'], ['38', '46'],
-                                         ['39', '48'], ['40', '47'], ['41', '49'], ['42', '50']],
-                'instance': 'instance_n=50_210'}
-    C = alb_dict['cycle_time']
-    precs = alb_dict['precedence_relations']
-    print(precs)
-    t_times = [val for _, val in alb_dict['task_times'].items()]
-    print(t_times)
-    precs = [[int(child), int(parent)] for child, parent in alb_dict['precedence_relations']]
-    test_reverse(C, t_times, precs)
-    print(f"✅ Tested reverse function of ALBP")
-    heads_and_tails(C, t_times, precs)
-    test_add()
-    test_copy()
+def test_ils(salbp, C, t_times, precs):
     start = time.time()
-    results = ils_call(cycle_time=C, task_times_list=t_times, precedence_list=precs, show_verbose=False,
-                       max_iterations=1000)
-    end = time.time() - start
-    print(f"✅ Created ALBPSolution using ils with {results.n_stations} stations in {end} seconds")
+    results = ils_call(salbp, cycle_time=C, task_times_list=t_times, precedence_list=precs, max_iterations=1000)
+    print(f"✅ Created ALBPSolution using ils with {results.n_stations} stations in {time.time() - start} seconds")
+
+
+def test_tabu(salbp, C, t_times, precs):
+    start = time.time()
+    results = tabu_call(salbp, cycle_time=C, task_times_list=t_times, precedence_list=precs, time_limit=3)
+    print(f"✅ Created ALBPSolution using tabu with {results.n_stations} stations in {time.time() - start} seconds")
     print("here are the station loads", results.loads)
-    start = time.time()
-    results = priority_type1_call(C, task_times_list=t_times, precedence_list=precs)
-    end = time.time() - start
-    print(f"✅ Created ALBPSolution using priority with in {end} seconds")
-    for result in results:
-        print(f"    here is the method {result.method} here are the number of stations {result.n_stations}")
-        print("here are the station loads", result.loads)
-    start = time.time()
-    results = priority_type1_call(C, task_times_list=t_times, precedence_list=precs,n_random=1000000, time_limit=0.90)
-    end = time.time() - start
-    print(f"✅ Created  timed ALBPSolution using priority with in {end} seconds and {len(results)} results")
 
+
+def test_priority_type1(salbp, C, t_times, precs):
     start = time.time()
-    results = priority_type2_call(20, task_times_list=t_times, precedence_list=precs, move_target=True)
-    end = time.time() - start
-    print(f"✅ Created SALBP2 solutions using priority with in {end} seconds")
+    results = priority_type1_call(salbp, C, task_times_list=t_times, precedence_list=precs)
+    print(f"✅ Created ALBPSolution using priority in {time.time() - start} seconds")
+
+
+def test_priority_type1_timed(salbp, C, t_times, precs):
+    start = time.time()
+    results = priority_type1_call(salbp, C, task_times_list=t_times, precedence_list=precs,
+                                  n_random=1_000_000, time_limit=0.90)
+    print(f"✅ Created timed ALBPSolution using priority in {time.time() - start} seconds "
+          f"and {len(results)} results")
+
+
+def test_priority_type2(salbp, t_times, precs):
+    start = time.time()
+    results = priority_type2_call(salbp, 20, task_times_list=t_times, precedence_list=precs, move_target=True)
+    print(f"✅ Created SALBP2 solutions using priority in {time.time() - start} seconds")
     for result in results:
         print(f"    here is the method {result.method} with the cycle time {result.cycle_time}")
+
+
+def test_hoff(salbp, C, t_times, precs):
     start = time.time()
-    results = hoff_call(cycle_time=C, task_times_list=t_times, precedence_list=precs)
-    end = time.time() - start
-    print(f"✅ Created ALBPSolution using hoff with {results.n_stations} stations in {end} seconds")
+    results = hoff_call(salbp, cycle_time=C, task_times_list=t_times, precedence_list=precs)
+    print(f"✅ Created ALBPSolution using hoff with {results.n_stations} stations in {time.time() - start} seconds")
+
+
+def test_mhh(salbp, C, t_times, precs):
     start = time.time()
-    results = mhh_call(cycle_time=C, task_times_list=t_times, precedence_list=precs)
-    end = time.time() - start
-    print(f"✅ Created ALBPSolution using mhh with {results.n_stations} stations in {end} seconds")
+    results = mhh_call(salbp, cycle_time=C, task_times_list=t_times, precedence_list=precs)
+    print(f"✅ Created ALBPSolution using mhh with {results.n_stations} stations in {time.time() - start} seconds")
     print("here are the station loads", results.loads)
+
+
+def test_vdls(salbp, C, t_times, precs):
     start = time.time()
-    results = vdls_call(cycle_time=C, task_times_list=t_times, precedence_list=precs)
-    end = time.time() - start
-    print(f"✅ Created ALBPSolution using vdls with {results.n_stations} stations in {end} seconds")
+    results = vdls_call(salbp, cycle_time=C, task_times_list=t_times, precedence_list=precs)
+    print(f"✅ Created ALBPSolution using vdls with {results.n_stations} stations in {time.time() - start} seconds")
     print("here are the station loads", results.loads)
+
+
+def test_vdls_type2(salbp, t_times, precs):
     start = time.time()
     S = 4
-    my_lb = SALBP1_heuristics.calc_salbp_2_lbs(t_times, S)
-    my_ub = SALBP1_heuristics.calc_salbp_2_ub(t_times, S)
-    results = vdls_type2_call(S=S, task_times_list=t_times, precedence_list=precs)
-    end = time.time() - start
-    print(
-        f"✅ Created ALBPSolution using vdls with {results.cycle_time} cycle time in {end} seconds. The lower bound is {my_lb}, upperbound is {my_ub}")
+    my_lb = salbp.calc_salbp_2_lbs(t_times, S)
+    my_ub = salbp.calc_salbp_2_ub(t_times, S)
+    results = vdls_type2_call(salbp, S=S, task_times_list=t_times, precedence_list=precs)
+    print(f"✅ Created ALBPSolution using vdls with {results.cycle_time} cycle time in {time.time() - start} "
+          f"seconds. The lower bound is {my_lb}, upperbound is {my_ub}")
     print("here are the station loads", results.loads)
     print("Testing results to dict", results.to_dict())
 
 
+# ===========================================================================
+# Benchmark instance used by the regression tests
+# ===========================================================================
+
+def load_n50_instance():
+    """50-task benchmark instance ('instance_n=50_210')."""
+    alb_dict = {
+        'num_tasks': 50, 'cycle_time': 1000,
+        'task_times': {'1': 141, '2': 137, '3': 51, '4': 439, '5': 125, '6': 330, '7': 255, '8': 62, '9': 33,
+                       '10': 490, '11': 58, '12': 91, '13': 115, '14': 211, '15': 392, '16': 158, '17': 537,
+                       '18': 66, '19': 345, '20': 563, '21': 211, '22': 466, '23': 215, '24': 228, '25': 568,
+                       '26': 477, '27': 88, '28': 41, '29': 482, '30': 92, '31': 136, '32': 174, '33': 523,
+                       '34': 125, '35': 52, '36': 26, '37': 516, '38': 533, '39': 123, '40': 617, '41': 503,
+                       '42': 263, '43': 528, '44': 106, '45': 172, '46': 110, '47': 39, '48': 108, '49': 76,
+                       '50': 323},
+        'precedence_relations': [['1', '4'], ['2', '5'], ['2', '8'], ['2', '9'], ['2', '10'], ['3', '6'],
+                                 ['3', '7'], ['3', '9'], ['3', '11'], ['4', '12'], ['5', '13'], ['6', '14'],
+                                 ['8', '16'], ['8', '18'], ['8', '28'], ['9', '15'], ['10', '17'], ['12', '20'],
+                                 ['13', '21'], ['14', '19'], ['15', '22'], ['18', '23'], ['19', '24'],
+                                 ['20', '28'], ['21', '26'], ['22', '25'], ['22', '27'], ['22', '33'],
+                                 ['24', '31'], ['25', '32'], ['26', '29'], ['26', '30'], ['26', '33'],
+                                 ['27', '34'], ['29', '35'], ['30', '36'], ['31', '39'], ['32', '37'],
+                                 ['33', '38'], ['33', '40'], ['33', '41'], ['33', '44'], ['34', '42'],
+                                 ['34', '43'], ['35', '48'], ['36', '48'], ['37', '45'], ['38', '46'],
+                                 ['39', '48'], ['40', '47'], ['41', '49'], ['42', '50']],
+        'instance': 'instance_n=50_210',
+    }
+    C = alb_dict['cycle_time']
+    t_times = [val for _, val in alb_dict['task_times'].items()]
+    precs = [[int(child), int(parent)] for child, parent in alb_dict['precedence_relations']]
+    return C, t_times, precs
 
 
-except Exception as e:
-    print(f"❌ Error testing module: {e}")
-    import traceback
+# ===========================================================================
+# Runner: executes every test, isolating failures so one broken test
+# doesn't prevent the rest of the suite from reporting results.
+# ===========================================================================
 
-    traceback.print_exc()
+def run_test(name, func):
+    try:
+        func()
+        return True
+    except Exception as e:
+        print(f"❌ {name} failed: {e}")
+        import traceback
+        traceback.print_exc()
+        return False
+
+
+def main():
+    salbp = import_salbp()
+    if salbp is None:
+        print("❌ Cannot run tests: SALBP1_heuristics module is not available")
+        return
+
+    C, t_times, precs = load_n50_instance()
+
+    unit_tests = [
+        ("solution_manipulation", lambda: test_solution_manipulation(salbp)),
+        ("lower_bounds", lambda: test_lower_bounds(salbp)),
+        ("reverse_precedence_matrix", lambda: test_reverse_precedence_matrix(salbp, C, t_times, precs)),
+        ("add_precedence_relation", lambda: test_add_precedence_relation(salbp)),
+        ("deepcopy", lambda: test_deepcopy(salbp)),
+        ("heads_and_tails", lambda: test_heads_and_tails(salbp, C, t_times, precs)),
+    ]
+
+    regression_tests = [
+        ("ils", lambda: test_ils(salbp, C, t_times, precs)),
+        ("tabu", lambda: test_tabu(salbp, C, t_times, precs)),
+        ("priority_type1", lambda: test_priority_type1(salbp, C, t_times, precs)),
+        ("priority_type1_timed", lambda: test_priority_type1_timed(salbp, C, t_times, precs)),
+        ("priority_type2", lambda: test_priority_type2(salbp, t_times, precs)),
+        ("hoff", lambda: test_hoff(salbp, C, t_times, precs)),
+        ("mhh", lambda: test_mhh(salbp, C, t_times, precs)),
+        ("vdls", lambda: test_vdls(salbp, C, t_times, precs)),
+        ("vdls_type2", lambda: test_vdls_type2(salbp, t_times, precs)),
+    ]
+
+    print("\n=== Unit tests ===")
+    unit_results = [(name, run_test(name, func)) for name, func in unit_tests]
+
+    print("\n=== Regression tests ===")
+    regression_results = [(name, run_test(name, func)) for name, func in regression_tests]
+
+    all_results = unit_results + regression_results
+    passed = sum(1 for _, ok in all_results if ok)
+    print(f"\n=== Summary: {passed}/{len(all_results)} tests passed ===")
+    for name, ok in all_results:
+        print(f"  {'✅' if ok else '❌'} {name}")
+
+
+if __name__ == "__main__":
+    main()

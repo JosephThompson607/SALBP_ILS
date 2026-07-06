@@ -5,6 +5,8 @@
 #ifndef SALBP_BASICS_H
 #define SALBP_BASICS_H
 #include <optional>
+#include "../ALBP.h"
+#include "../albp_solution.h"
 int calc_salbp_1_bin_lbs(const std::vector<int> & task_times, int C);
 int calc_salbp_1_lbs(const ALBP& albp);
 int calc_lb_1(const std::vector<int>& task_time, int C);

@@ -21,7 +21,7 @@
 #include <stdexcept>  // For std::runtime_error
 
  void ALBPSolution::print() const {
-    std::cout << "ALBP Solution with S: " << n_stations << "  C: " <<cycle_time << "found with: " << method<<std::endl;
+    std::cout << "ALBP Solution with S: " << n_stations << "  C: " <<cycle_time << " found with: " << method<<std::endl;
     for (int i = 0; i < n_stations; ++i) {
         std::cout << "Station " << i + 1 <<" load "<< loads[i] << " assigned tasks : ";
         for (int j : station_assignments[i]) {

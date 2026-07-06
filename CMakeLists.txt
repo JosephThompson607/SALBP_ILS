@@ -18,6 +18,7 @@ set(COMMON_SOURCES
         heuristics/MultiHoff.cpp
         heuristics/vdls.cpp
         heuristics/salbp_basics.cpp
+        heuristics/tabu.cpp
 
 )
 

@@ -11,7 +11,10 @@
 #include "heuristics/vdls.h"
 #include "heuristics/salbp_basics.h"
 #include "heuristics/MultiHoff.h"
+#include "heuristics/tabu.h"
 #include <pybind11/chrono.h>
+
+#include "tabu.h"
 namespace py = pybind11;
 
 PYBIND11_MODULE(SALBP1_heuristics, m) {
@@ -496,7 +499,60 @@ PYBIND11_MODULE(SALBP1_heuristics, m) {
                                                       Precedence relationshions
                                                     Returns:
                                                     --------
-                                                    list(ALBPSolution)
+                                                    ALBPSolution
+                                                      The solved ALBP solution
+                                                    )pbdoc");
+
+    m.def("tabu_solve_salbp1",
+          [](int C, int N,
+             const std::vector<int> &task_times,
+             const std::vector<std::vector<int> > &raw_precedence,
+             const std::optional<double> &time_limit)
+             {
+              return tabu_solve_salbp1(C, N, task_times, raw_precedence, time_limit);
+          },
+            py::arg("C"),
+            py::arg("N"),
+            py::arg("task_times"),
+            py::arg("raw_precedence"),
+            py::arg("time_limit") = std::nullopt,
+
+          R"pbdoc(
+                                                  Solve SALBP1 using Simple Tabu (Pape 2015) heuristic
+                                                    Parameters:
+                                                    -----------
+                                                    C : int
+                                                      Cycle time
+                                                    N : int
+                                                      Number of tasks
+                                                    task_times : list of int
+                                                      Task processing times
+                                                    raw_precedence : list of list of int
+                                                      Precedence relationshions
+                                                    time limit (seconds)
+                                                    Returns:
+                                                    --------
+                                                    ALBPSolution
+                                                      The solved ALBP solution
+                                                    )pbdoc");
+    m.def("tabu_solve_salbp1",
+          [](const ALBP &albp,
+             const std::optional<double> &time_limit)
+             {
+              return tabu_solve_salbp1(albp, time_limit);
+          },
+            py::arg("albp"),
+            py::arg("time_limit") = std::nullopt,
+
+          R"pbdoc(
+                                                  Solve SALBP1 using Simple Tabu (Pape 2015) heuristic
+                                                    Parameters:
+                                                    -----------
+                                                    albp : ALBP (struct)
+                                                    time limit: (seconds)
+                                                    Returns:
+                                                    --------
+                                                    ALBPSolution
                                                       The solved ALBP solution
                                                     )pbdoc");
 }

@@ -24,16 +24,17 @@ public:
     int cycle_time{};//For SALBP-2
     int n_violations{}; //Number of violations
     int n_ranking_violations{}; // number of violations from ranking
+    int max_ovlo_;//Cycle time overloading
+    int tot_ovlo2_;
     bool optimal = false;
+    std::vector<int> overloads_;
+    std::vector<int> sq_overloads_;// squared overloads at each station
     // int num_cycles; //Number of cycles
     // std::vector<int> cycle_times; //Cycle times
     std::string method = "unspecified";
 
     //constructor
-    explicit ALBPSolution(const int n_tasks) : n_tasks(n_tasks), n_stations(n_tasks) {
-        task_assignment.resize(n_tasks,-1);
-        ranking.resize(n_tasks,-1);
-        task_ranking.resize(n_tasks,-1);
+    explicit ALBPSolution(const int n_tasks) : n_tasks(n_tasks), n_stations(n_tasks), task_assignment(n_tasks, -1), ranking(n_tasks, -1), task_ranking(n_tasks, -1), overloads_(0), sq_overloads_(0),max_ovlo_(0), tot_ovlo2_(0), elapsed_ms(0){
     }
 
     [[nodiscard]] int get_n_tasks() const { return n_tasks; }  // Read-only access
