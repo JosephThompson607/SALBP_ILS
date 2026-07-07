@@ -371,7 +371,7 @@ void Tabu::shift_and_swap(ALBPSolution& sol, int  s) {
         loc_move =swap_move;
     }
     //Do the best move
-    print_move(loc_move);
+   // print_move(loc_move);
     do_move(sol, loc_move, true);
     tabu_.step(); // Clear out tabu list if old moves are being stored
 
@@ -383,10 +383,10 @@ ALBPSolution Tabu::solve(){
     start_time_ = std::chrono::steady_clock::now();
     //Get initial SALBP-1 solution if one is not given
     if (best_.station_assignments.empty()) {
-        // best_= hoff_solve_salbp1(albp_);
-        // best_.method = "hoff(tabu start)";
-        best_= priority_solve_salbp_1(albp_, 4, 42);
-        best_.method = "priority ranking(tabu start)";
+        best_= hoff_solve_salbp1(albp_);
+        best_.method = "tabu: hoff-start";
+        // best_= priority_solve_salbp_1(albp_, 4, 42);
+        // best_.method = "priority ranking(tabu start)";
     }
     best_.overloads_.resize(best_.station_assignments.size(), 0);
     best_.sq_overloads_.resize(best_.station_assignments.size(), 0);
