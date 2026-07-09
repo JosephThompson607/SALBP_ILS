@@ -32,7 +32,7 @@ private:
     int lb_;
     int n_perts_ = 6;
     std::chrono::steady_clock::time_point start_time_;
-    std::chrono::seconds time_limit_;
+    std::chrono::duration<double> time_limit_;
     std::vector<int>  pw_{};
 
     //Methods
@@ -43,10 +43,16 @@ private:
     void perturbation(ALBPSolution& incumbent_solution);
 };
 
-ALBPSolution vdls_solve_salbp1(const ALBP &albp, std::optional<int> max_attempts = std::nullopt, std::optional<int> time_limit = std::nullopt);
+ALBPSolution vdls_solve_salbp1(const ALBP &albp, const std::vector<int> &initial_solution = std::vector<int>(), std::optional<int> max_attempts = std::nullopt, std::optional<double> time_limit = std::nullopt);
 
-ALBPSolution vdls_solve_salbp1( int C,int N, const std::vector<int>& task_times, const std::vector<std::vector<int>>& raw_precedence, const std::vector<int> &initial_solution = std::vector<int>(), std::optional<int> max_attempts = std::nullopt, std::optional<int> time_limit = std::nullopt);
-ALBPSolution vdls_solve_salbp2(const ALBP &albp, const std::vector<int> &initial_solution = std::vector<int>(), std::optional<int> max_attempts = std::nullopt, std::optional<int> time_limit = std::nullopt);
-ALBPSolution vdls_solve_salbp2( int S,int N, const std::vector<int>& task_times, const std::vector<std::vector<int>>& raw_precedence, const std::vector<int> &initial_solution = std::vector<int>(), std::optional<int> max_attempts = std::nullopt, std::optional<int> time_limit = std::nullopt);
+ALBPSolution vdls_solve_salbp1(int C, int N,
+    const std::vector<int>& task_times,
+    const std::vector<std::vector<int>>& raw_precedence,
+    const std::vector<int> &initial_solution = std::vector<int>(),
+    std::optional<int> max_attempts = std::nullopt, std::optional<double> time_limit = std::nullopt);
+ALBPSolution vdls_solve_salbp2(const ALBP &albp, const std::vector<int> &initial_solution = std::vector<int>(), std::optional<int> max_attempts = std::nullopt, std
+                               ::optional<double> time_limit = std::nullopt);
+ALBPSolution vdls_solve_salbp2(int S, int N, const std::vector<int>& task_times, const std::vector<std::vector<int>>& raw_precedence, const std::vector<int> &initial_solution = std::vector<int>(), std::optional<int> max_attempts = std::nullopt,
+    std::optional<double> time_limit = std::nullopt);
 
 #endif //VDLS_H

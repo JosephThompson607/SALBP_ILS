@@ -764,7 +764,7 @@ int main(int argc, char* argv[]) {
                 result.print();
 
             }else if (heuristic == "VDLS") {
-                ALBPSolution result =vdls_solve_salbp1(problem, max_attempts, time_limit);
+                ALBPSolution result =vdls_solve_salbp1(problem,{}, max_attempts, time_limit);
                 std::cout << "Here is the result" << std::endl;
                 result.print();
             }
