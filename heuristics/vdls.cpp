@@ -109,9 +109,6 @@ void VDLS::perform_shift(ALBPSolution &sol, int task, int task_idx, int old_stat
         //Changes the earliest and latest for parents and children
         sol.update_window(albp_,task);
 
-
-
-
 }
 /*Recursive DFS algorithm for exploring different task shifts up to a given depth. Returns true if there was a local
  * improvement to the solution
@@ -137,6 +134,7 @@ bool VDLS::local_search(ALBPSolution &local_best, ALBPSolution &incumbent, int d
                                         }
                                         improved = local_search(local_best,new_sol, depth + 1, task, improved);
                                         if (improved == true) return true;
+                                        if (improved ==false && time_exceeded()) return false;
                                 }
                         }
                 }
@@ -164,9 +162,6 @@ std::vector<int> get_max_indices(const std::vector<int> & station_load, const st
 
 /*randomly selects from a vector of integers */
 int VDLS::random_selection(const std::vector<int>& int_vec) {
-
-
-
         std::uniform_int_distribution<> dist(0, int_vec.size() - 1);
         return int_vec[dist(rng_)];
 }
