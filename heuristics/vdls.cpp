@@ -127,7 +127,7 @@ bool VDLS::local_search(ALBPSolution &local_best, ALBPSolution &incumbent, int d
         for (int i=0; i < incumbent.station_assignments[station_idx].size(); i++){
                 int task = incumbent.station_assignments[station_idx][i];
                 if (task != last_task) {
-                        for (int j = incumbent.earliest[task]; j < incumbent.latest[task]; j++ ) {
+                        for (int j = incumbent.earliest[task]; j <= incumbent.latest[task]; j++ ) {
                                 if( j != (station_idx)){
                                         ALBPSolution new_sol = incumbent;
                                         perform_shift(new_sol, task, i, station_idx, j);
@@ -163,18 +163,12 @@ std::vector<int> get_max_indices(const std::vector<int> & station_load, const st
 }
 
 /*randomly selects from a vector of integers */
-int random_selection(const std::vector<int>& int_vec, std::optional<unsigned int> seed = std::nullopt) {
-        std::mt19937 gen;
+int VDLS::random_selection(const std::vector<int>& int_vec) {
 
-        if (seed.has_value()) {
-                gen.seed(seed.value());
-        } else {
-                std::random_device rd;
-                gen.seed(rd());
-        }
+
 
         std::uniform_int_distribution<> dist(0, int_vec.size() - 1);
-        return int_vec[dist(gen)];
+        return int_vec[dist(rng_)];
 }
 
 
@@ -269,11 +263,12 @@ ALBPSolution VDLS::vdls_heuristic( int n_stations,  int lb) {
 }
 
 
-ALBPSolution vdls_solve_salbp1(const ALBP &albp, const std::vector<int> &initial_solution, std::optional<int> max_attempts, std::optional<double> time_limit) {
+ALBPSolution vdls_solve_salbp1(const ALBP &albp, const std::vector<int> &initial_solution, std::optional<int> max_attempts, std::optional<double> time_limit,
+        std::optional<unsigned> seed ) {
         int attempts = max_attempts.value_or(5000);  // default if not passed
         double limit = time_limit.value_or(7200.);
 
-        auto vdls= VDLS(albp, attempts, limit);
+        auto vdls= VDLS(albp, attempts, limit, seed);
         if (!initial_solution.empty()) {
                 vdls.add_init_solution(initial_solution);
         }
@@ -282,11 +277,11 @@ ALBPSolution vdls_solve_salbp1(const ALBP &albp, const std::vector<int> &initial
 }
 
 ALBPSolution vdls_solve_salbp2(const ALBP &albp, const std::vector<int> &initial_solution, std::optional<int> max_attempts, std::optional<double>
-                               time_limit) {
+                               time_limit, std::optional<unsigned> seed ) {
         int attempts = max_attempts.value_or(5000);  // default if not passed
         double limit = time_limit.value_or(7200.0);
 
-        auto vdls= VDLS(albp, attempts, limit);
+        auto vdls= VDLS(albp, attempts, limit, seed);
         if (!initial_solution.empty()) {
                 vdls.add_init_solution(initial_solution);
         }
@@ -294,15 +289,15 @@ ALBPSolution vdls_solve_salbp2(const ALBP &albp, const std::vector<int> &initial
         return result;
 }
 ALBPSolution vdls_solve_salbp2(const int S, const int N, const std::vector<int>& task_times, const std::vector<std::vector<int>>& raw_precedence, const std::vector<int> &initial_solution, std::optional<int> max_attempts,
-                               std::optional<double> time_limit) {
+                               std::optional<double> time_limit, std::optional<unsigned> seed ) {
 
         ALBP albp = ALBP::type_2(S, N, task_times, raw_precedence);
 
-        return vdls_solve_salbp2(albp, initial_solution, max_attempts, time_limit);
+        return vdls_solve_salbp2(albp, initial_solution, max_attempts, time_limit, seed);
 }
 
 ALBPSolution vdls_solve_salbp1(const int C, const int N, const std::vector<int>& task_times, const std::vector<std::vector<int>>& raw_precedence, const std::vector<int> &initial_solution, std::optional<int> max_attempts,
-                               std::optional<double> time_limit) {
+                               std::optional<double> time_limit, std::optional<unsigned> seed ) {
         ALBP albp = ALBP::type_1(C, N, task_times, raw_precedence);
-        return vdls_solve_salbp1(albp, initial_solution, max_attempts, time_limit);
+        return vdls_solve_salbp1(albp, initial_solution, max_attempts, time_limit, seed);
 }

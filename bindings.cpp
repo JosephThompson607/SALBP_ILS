@@ -360,13 +360,16 @@ PYBIND11_MODULE(SALBP1_heuristics, m) {
           [](const ALBP &albp,
           const std::vector<int> &initial_solution,
              const std::optional<int> &max_attempts,
-             const std::optional<double> &time_limit) {
-              return vdls_solve_salbp1(albp, initial_solution, max_attempts, time_limit);
+             const std::optional<double> &time_limit,
+             std::optional<unsigned> seed
+             ) {
+              return vdls_solve_salbp1(albp, initial_solution, max_attempts, time_limit, seed);
           },
           py::arg("albp"),
           py::arg("initial_solution") = std::vector<int>(),
           py::arg("max_attempts") = std::nullopt,
           py::arg("time_limit") = std::nullopt,
+          py::arg("seed") = std::nullopt,
           R"pbdoc(
               Solve SALBP1 using vdls heuristic
 
@@ -386,9 +389,10 @@ PYBIND11_MODULE(SALBP1_heuristics, m) {
              const std::vector<std::vector<int> > &raw_precedence,
              const std::vector<int> &initial_solution,
              const std::optional<int> &max_attempts,
-             const std::optional<double> &time_limit
+             const std::optional<double> &time_limit,
+             std::optional<unsigned> seed
   ) {
-              return vdls_solve_salbp2(S, N, task_times, raw_precedence, initial_solution, max_attempts, time_limit);
+              return vdls_solve_salbp2(S, N, task_times, raw_precedence, initial_solution, max_attempts, time_limit, seed);
           }, py::arg("S"),
           py::arg("N"),
           py::arg("task_times"),
@@ -396,6 +400,7 @@ PYBIND11_MODULE(SALBP1_heuristics, m) {
           py::arg("initial_solution") = std::vector<int>(),
           py::arg("max_attempts") = std::nullopt,
           py::arg("time_limit") = std::nullopt,
+          py::arg("seed") = std::nullopt,
           R"pbdoc(
                           Solve SALBP1 using vdls heuristic
 
