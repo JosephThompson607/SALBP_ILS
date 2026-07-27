@@ -302,6 +302,41 @@ PYBIND11_MODULE(SALBP1_heuristics, m) {
       list of int
           Nodes in topological order
       )pbdoc");
+
+    m.def("get_positional_weight", &get_positional_weight,
+      "Get positional weight for each task",
+      py::arg("albp"),
+      R"pbdoc(
+      Get positional weight for each task (own task time plus task times of all successors)
+
+      Parameters:
+      -----------
+      albp : ALBP
+          The assembly line balancing problem instance
+
+      Returns:
+      --------
+      list of int
+          Positional weight for each task
+      )pbdoc");
+
+    m.def("get_reverse_positional_weight", &get_reverse_positional_weight,
+          "Get reverse positional weight for each task",
+          py::arg("albp"),
+          R"pbdoc(
+      Get reverse positional weight for each task (own task time plus task times of all predecessors)
+
+      Parameters:
+      -----------
+      albp : ALBP
+          The assembly line balancing problem instance
+
+      Returns:
+      --------
+      list of int
+          Reverse positional weight for each task
+      )pbdoc");
+
     // Second overload using lambda
     m.def("hoff_solve_salbp1",
           [](const ALBP &albp) {

@@ -16,6 +16,7 @@ int calc_lb_6(const std::vector<int>& task_time, int C);
 int calc_salbp_2_lbs(const std::vector<int>& task_time, int S);
 int calc_salbp_2_ub(const std::vector<int>& task_time, int S);
 std::vector<int>  get_positional_weight(const ALBP &albp);
+std::vector<int>  get_reverse_positional_weight(const ALBP &albp);
 ALBPSolution generate_approx_solution( const ALBP&albp,  int n_random,  const std::vector<int> &initial_solution = std::vector<int>());
 ALBPSolution process_init_solution( const ALBP &albp, const std::vector<int> &initial_solution);
 std::vector<ALBPSolution> generate_priority_ranking_solutions(const ALBP&albp, int n_random, std::optional<unsigned int> seed =  std::nullopt, std::optional<double> time_limit=  std::nullopt);

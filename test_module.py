@@ -284,6 +284,53 @@ def test_add_precedence_relation(salbp):
     print("✅ tested precedence constraint insertion")
 
 
+def test_get_positional_weight(salbp):
+    """Positional weight should equal each task's own time plus the times
+    of all its transitive successors."""
+    task_times = [12, 7, 15, 9, 18]
+    N = len(task_times)
+    # Precedence relations [parent, child], one-indexed: 1 -> 3 -> 5, 2 -> 4
+    raw_precedence = [[1, 3], [2, 4], [3, 5]]
+
+    albp = salbp.ALBP.type_1(C=1000, N=N, task_times=task_times, raw_precedence=raw_precedence)
+    weights = salbp.get_positional_weight(albp)
+
+    # Task 1: own(12) + successors 3(15) and 5(18)
+    assert weights[0] == 45, "Task 1 positional weight incorrect"
+    # Task 2: own(7) + successor 4(9)
+    assert weights[1] == 16, "Task 2 positional weight incorrect"
+    # Task 3: own(15) + successor 5(18)
+    assert weights[2] == 33, "Task 3 positional weight incorrect"
+    # Task 4: own(9), no successors
+    assert weights[3] == 9, "Task 4 positional weight incorrect"
+    # Task 5: own(18), no successors
+    assert weights[4] == 18, "Task 5 positional weight incorrect"
+    print("✅ tested positional weight calculation")
+
+
+def test_get_reverse_positional_weight(salbp):
+    """Reverse positional weight should equal each task's own time plus the
+    times of all its transitive predecessors."""
+    task_times = [12, 7, 15, 9, 18]
+    N = len(task_times)
+    # Precedence relations [parent, child], one-indexed: 1 -> 3 -> 5, 2 -> 4
+    raw_precedence = [[1, 3], [2, 4], [3, 5]]
+
+    albp = salbp.ALBP.type_1(C=1000, N=N, task_times=task_times, raw_precedence=raw_precedence)
+    weights = salbp.get_reverse_positional_weight(albp)
+
+    # Task 1: own(12), no predecessors
+    assert weights[0] == 12, "Task 1 reverse positional weight incorrect"
+    # Task 2: own(7), no predecessors
+    assert weights[1] == 7, "Task 2 reverse positional weight incorrect"
+    # Task 3: own(15) + predecessor 1(12)
+    assert weights[2] == 27, "Task 3 reverse positional weight incorrect"
+    # Task 4: own(9) + predecessor 2(7)
+    assert weights[3] == 16, "Task 4 reverse positional weight incorrect"
+    # Task 5: own(18) + predecessors 1(12) and 3(15) (transitive)
+    assert weights[4] == 45, "Task 5 reverse positional weight incorrect"
+    print("✅ tested reverse positional weight calculation")
+
 def test_deepcopy(salbp):
     """deepcopy of an ALBP should be independent of the original."""
     task_times = [12, 7, 15, 9, 18]
@@ -456,6 +503,8 @@ def main():
         ("add_precedence_relation", lambda: test_add_precedence_relation(salbp)),
         ("deepcopy", lambda: test_deepcopy(salbp)),
         ("heads_and_tails", lambda: test_heads_and_tails(salbp, C, t_times, precs)),
+        ("positional weight", lambda: test_get_positional_weight(salbp)),
+        ("test reverse positional weight", lambda: test_get_reverse_positional_weight(salbp)),
     ]
 
     regression_tests = [
