@@ -197,7 +197,6 @@ void Tabu::elim_station(ALBPSolution &sol) {
     while (current_sol.station_assignments[s].size() >0) {
         for (int i=0; i < current_sol.station_assignments[s].size(); i++) {
             int task = current_sol.station_assignments[s][i];
-            std::cout << "station "<< s << "task" << task << " current assignment: " << current_sol.task_assignment[task] << " earliest" <<   current_sol.earliest[task] <<  " latest "<<  current_sol.latest[task] <<  std::endl;
             if (current_sol.task_assignment[task] != s || current_sol.earliest[task] == current_sol.latest[task]) continue; //If task was already reassigned or locked in, move on
             int target_c = std::numeric_limits<int>::max(); //Create a large objective value for minimization
             auto &tasks_at_s = current_sol.station_assignments[s];
