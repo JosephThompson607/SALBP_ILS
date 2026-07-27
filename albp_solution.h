@@ -49,9 +49,9 @@ public:
     void find_all_latest(const ALBP &albp);
     void find_latest(const ALBP &albp, int i);
     void find_earliest(const ALBP &albp, int i);
-    void update_pred_latest(const ALBP &albp, int i);
-    void update_suc_earliest(const ALBP &albp, int i);
-    void update_window(const ALBP &albp, int i);
+    void update_pred_latest(const ALBP &albp, int i, int old_station);
+    void update_suc_earliest(const ALBP &albp, int i, int old_station);
+    void update_window(const ALBP &albp, int i, int old_station);
     void find_windows(const ALBP &albp);
     void reverse();
     void ranking_to_task_ranking();

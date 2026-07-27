@@ -23,7 +23,7 @@ void VDLS::add_init_solution(std::vector<int>init_solution) {
 ALBPSolution VDLS::solve_type_1(  ) {
         if (best_.station_assignments.empty()) {
                 best_= hoff_solve_salbp1(albp_); //Get initial SALBP-1 solution
-                best_.method = "hoff(vdls start)";
+                best_.method = "VDLS: hoff start";
 
         }
         int n_stations = best_.n_stations;
@@ -42,7 +42,7 @@ ALBPSolution VDLS::solve_type_1(  ) {
 
 
                 ALBPSolution local_best = vdls_heuristic(n_stations, albp_.C);
-                local_best.method = "VDLS_SALBP1";
+                local_best.method = "VDLS: local search";
                 if (local_best.cycle_time <= albp_.C) {
                         best_ = local_best;
 
@@ -107,7 +107,7 @@ void VDLS::perform_shift(ALBPSolution &sol, int task, int task_idx, int old_stat
         //Update the cycle time (if applicable)
         sol.cycle_time = *std::max_element(sol.loads.begin(),sol.loads.end());
         //Changes the earliest and latest for parents and children
-        sol.update_window(albp_,task);
+        sol.update_window(albp_,task, old_station);
 
 }
 /*Recursive DFS algorithm for exploring different task shifts up to a given depth. Returns true if there was a local
@@ -226,11 +226,10 @@ void VDLS::perturbation(ALBPSolution &new_sol) {
                 const int task_idx = random_selection(filtered_tasks);
                 const int task = new_sol.station_assignments[station_idx][task_idx];
                 const int new_station = select_new_station(new_sol, task, station_idx);
-                perform_shift(new_sol, task, task_idx, station_idx, new_station);
-                can_change[new_station] = 0;
-
-
-
+                if (new_station != -1) {
+                        perform_shift(new_sol, task, task_idx, station_idx, new_station);
+                        can_change[new_station] = 0;
+                }
 
         }
 
@@ -245,6 +244,7 @@ ALBPSolution VDLS::vdls_heuristic( int n_stations,  int lb) {
                 do {//Perform local search, restarting if we find an improved solution with depth 0
                         improved = local_search(local_best,new_sol, 0, -1, improved);
                         if (improved == true) {
+                                local_best.method = "VDLS (local search)";
                                 new_sol = local_best;
                                 auto now = std::chrono::steady_clock::now();
 

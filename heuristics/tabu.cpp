@@ -156,7 +156,7 @@ void Tabu::perform_shift(ALBPSolution &sol, int task, int task_idx, int old_stat
     }
     //Changes the earliest and latest for parents and children
 
-    sol.update_window(albp_,task);
+    sol.update_window(albp_,task, old_station);
 
 
 
@@ -195,17 +195,16 @@ void Tabu::elim_station(ALBPSolution &sol) {
     ALBPSolution current_sol = sol;
     //Make sure that the station gets emptied
     while (current_sol.station_assignments[s].size() >0) {
-        for (int i=0; i < sol.station_assignments[s].size(); i++) {
-            int task = sol.station_assignments[s][i];
-            if (current_sol.task_assignment[task] != s) continue; //If task was reassigned already, move on
+        for (int i=0; i < current_sol.station_assignments[s].size(); i++) {
+            int task = current_sol.station_assignments[s][i];
+            std::cout << "station "<< s << "task" << task << " current assignment: " << current_sol.task_assignment[task] << " earliest" <<   current_sol.earliest[task] <<  " latest "<<  current_sol.latest[task] <<  std::endl;
+            if (current_sol.task_assignment[task] != s || current_sol.earliest[task] == current_sol.latest[task]) continue; //If task was already reassigned or locked in, move on
             int target_c = std::numeric_limits<int>::max(); //Create a large objective value for minimization
             auto &tasks_at_s = current_sol.station_assignments[s];
             auto it = std::find(tasks_at_s.begin(), tasks_at_s.end(), task);
             int cur_idx = static_cast<int>(std::distance(tasks_at_s.begin(), it));
-
-
             auto local_best = TabuMove(current_sol, target_c, std::pair(-1,-1), std::pair(-1,-1), -1);
-            for (int j = sol.earliest[task]; j <= sol.latest[task]; j++ ) {
+            for (int j = current_sol.earliest[task]; j <= current_sol.latest[task]; j++ ) {
                 if( j != (s)){
                     int obj = try_shift(current_sol, task, s, j);
                     if (obj < target_c) {
@@ -214,7 +213,9 @@ void Tabu::elim_station(ALBPSolution &sol) {
                     }
                 }
             }
+
             do_move(current_sol, local_best, false);
+            break;
         }
     }
     current_sol.n_stations = sol.n_stations-1;

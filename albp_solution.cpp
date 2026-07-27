@@ -114,25 +114,45 @@ void ALBPSolution::find_latest(const ALBP &albp, const int i) {
     }
 }
 /* updates the latest station of the predecessors of a task, in the case where the task is before all other successors*/
-void ALBPSolution::update_pred_latest(const ALBP &albp, const int i) {
+void ALBPSolution::update_pred_latest(const ALBP &albp, const int i, int old_station) {
     for (int j: albp.dir_pred[i]) {
         if (task_assignment[i] < latest[j]) {
             latest[j] = task_assignment[i];
         }
-    }
-}
-
-void ALBPSolution::update_suc_earliest(const ALBP &albp, const int i) {
-    for (int j: albp.dir_suc[i]) {
-        if (task_assignment[i] > earliest[j]) {
-            earliest[j] = task_assignment[i];
+        else if (task_assignment[i] > latest[j] && old_station == latest[j]) {
+            //Search for latest station by taking the minimum of all successor stations
+            int latest_st = task_assignment[albp.dir_suc[j][0]];
+            for (int suc=1; suc<albp.dir_suc[j].size(); suc++) {
+                if (task_assignment[albp.dir_suc[j][suc]] < latest_st) {
+                    latest_st = task_assignment[albp.dir_suc[j][suc]];
+                }
+            }
+            latest[j] = latest_st;
         }
     }
 }
 
-void ALBPSolution::update_window(const ALBP &albp, const int i) {
-    update_pred_latest(albp,i);
-    update_suc_earliest(albp,i);
+void ALBPSolution::update_suc_earliest(const ALBP &albp, const int i, int old_station) {
+    for (int j: albp.dir_suc[i]) {
+        if (task_assignment[i] > earliest[j]) {
+            earliest[j] = task_assignment[i];
+        }
+        else if (task_assignment[i] < earliest[j] && old_station == earliest[j]) {
+            //Search for earliest station by taking the maxiumum of all predecessor station assignments
+            int earliest_station = task_assignment[albp.dir_pred[j][0]];
+            for (int pred=1; pred<albp.dir_pred[j].size(); pred++) {
+                if (task_assignment[albp.dir_pred[j][pred]] > earliest_station) {
+                    earliest_station = task_assignment[albp.dir_pred[j][pred]];
+                }
+            }
+            earliest[j] = earliest_station;
+        }
+    }
+}
+
+void ALBPSolution::update_window(const ALBP &albp, const int i, int old_station) {
+    update_pred_latest(albp,i,old_station);
+    update_suc_earliest(albp,i, old_station);
 }
  void ALBPSolution::find_all_latest(const ALBP &albp){
      latest.clear();
