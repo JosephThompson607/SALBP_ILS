@@ -23,6 +23,16 @@ PYBIND11_MODULE(SALBP1_heuristics, m) {
             .def_readwrite("parent", &PrecedenceRelation::parent)
             .def_readwrite("child", &PrecedenceRelation::child);
 
+    py::class_<PathStats>(m, "PathStats")
+        .def(py::init<>())
+        .def_readwrite("total", &PathStats::total)
+        .def_readwrite("total_sq", &PathStats::total_sq)
+        .def_readwrite("min", &PathStats::min)
+        .def_readwrite("max", &PathStats::max)
+        .def_readwrite("mean", &PathStats::mean)
+        .def_readwrite("variance", &PathStats::variance);
+
+
     py::class_<CritPaths>(m, "CritPaths")
           .def(py::init<>())
           .def_readwrite("depth", &CritPaths::depth)
@@ -73,6 +83,21 @@ PYBIND11_MODULE(SALBP1_heuristics, m) {
                          CritPaths
                              Struct with fields: depth, height, depth_pred, height_suc
                          )pbdoc")
+             .def("get_path_stats", &ALBP::get_path_stats,
+                        py::arg("nodes"),
+                        R"pbdoc(
+                                 Get summary statistics for a set of tasks.
+
+                                 Parameters:
+                                 -----------
+                                 nodes : list of int
+                                     Task indices.
+
+                                 Returns:
+                                 --------
+                                 PathStats
+                                     Struct containing total, total_sq, min, max, mean, and variance.
+                             )pbdoc")
             .def_readwrite("name", &ALBP::name)
             .def_readwrite("C", &ALBP::C)
             .def_readwrite("N", &ALBP::N)

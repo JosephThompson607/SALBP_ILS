@@ -15,6 +15,15 @@ struct CritPaths {
     std::vector<int> height_suc;
 };
 
+struct PathStats {
+    int total;
+    int total_sq;
+    int min;
+    int max;
+    int mean;
+    int variance;
+};
+
 
 struct ALBP{
     std::string name; //Name of the ALBPß
@@ -43,7 +52,7 @@ struct ALBP{
     void add_precedence_relation(std::vector<int> prec);
 
     CritPaths get_critical_paths() const;
-
+    PathStats get_path_stats(const std::vector<int>& nodes) const;
     void calc_trans_closure();
     void calc_fast_trans_closure(bool is_topological=false);
 

@@ -316,7 +316,30 @@ def test_get_critical_paths(salbp):
     assert cp.height_suc == [2, 3, 4, -1, -1], "Height successor pointers incorrect"
 
     print("✅ tested critical path (depth/height) calculation")
+def test_get_path_stats(salbp):
+    """Check summary statistics for a subset of tasks."""
+    task_times = [12, 7, 15, 9, 18]
+    N = len(task_times)
+    raw_precedence = [[1, 3], [2, 4], [3, 5]]
 
+    albp = salbp.ALBP.type_1(
+        C=1000,
+        N=N,
+        task_times=task_times,
+        raw_precedence=raw_precedence
+    )
+
+    # Tasks 1, 3, 5 (0-indexed: 0, 2, 4)
+    stats = albp.get_path_stats([0, 2, 4])
+
+    assert stats.total == 45
+    assert stats.total_sq == 693
+    assert stats.min == 12
+    assert stats.max == 18
+    assert stats.mean == 15
+    assert stats.variance == 6
+
+    print("✅ tested path statistics calculation")
 
 def test_get_positional_weight(salbp):
     """Positional weight should equal each task's own time plus the times
@@ -540,6 +563,7 @@ def main():
         ("positional weight", lambda: test_get_positional_weight(salbp)),
         ("test reverse positional weight", lambda: test_get_reverse_positional_weight(salbp)),
         ("critical paths", lambda: test_get_critical_paths(salbp)),
+        ("path stats", lambda: test_get_path_stats(salbp)),
     ]
 
     regression_tests = [

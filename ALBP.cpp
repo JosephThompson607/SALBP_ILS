@@ -267,7 +267,31 @@ CritPaths ALBP::get_critical_paths() const {
     return CritPaths(depth, height, depth_pred, height_suc);
 }
 
+PathStats ALBP::get_path_stats(const std::vector<int>& nodes) const {
+ //For a set of nodes, gets some statistical information
+    int total = 0;
+    int total_sq = 0;
+    int min = INT_MAX;
+    int max = 0;
+    for (int node : nodes) {
+        total += task_time[node];
+        total_sq += task_time[node] * task_time[node];
+        if (min > task_time[node]) {
+            min = task_time[node];
+        }
+        if (max < task_time[node]) {
+            max = task_time[node];
+        }
+    }
+    int n = nodes.size();
+    int mean = total/n;
+    int variance = total_sq/n - mean*mean;
+    if (variance < 0) {
+        variance = 0;
+    }
+    return PathStats(total, total_sq, min, max, mean, variance);
 
+}
 
 
 void ALBP::calc_trans_closure() {
