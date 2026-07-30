@@ -8,7 +8,12 @@ struct PrecedenceRelation {
     int parent, child;
 };
 
-
+struct CritPaths {
+    std::vector<int> depth;
+    std::vector<int> height;
+    std::vector<int> depth_pred;
+    std::vector<int> height_suc;
+};
 
 
 struct ALBP{
@@ -36,6 +41,9 @@ struct ALBP{
     [[nodiscard]] ALBP reverse() const;
     void print(bool print_prec_mat);
     void add_precedence_relation(std::vector<int> prec);
+
+    CritPaths get_critical_paths() const;
+
     void calc_trans_closure();
     void calc_fast_trans_closure(bool is_topological=false);
 

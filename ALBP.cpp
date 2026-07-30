@@ -2,6 +2,7 @@
 #include "ALBP.h"
 #include <iostream>
 #include <fstream>
+#include <ranges>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -239,6 +240,33 @@ void ALBP::add_precedence_relation(std::vector<int> prec) {
     update_prec_and_suc(downstream, upstream);
 
 }
+
+CritPaths ALBP::get_critical_paths() const {
+    //Gets the heigth and depth information for each node along with the nodes in the critical path that determines it
+    std::vector<int> depth(N);
+    std::vector<int> height(N);
+    std::vector<int> depth_pred(N, -1);
+    std::vector<int> height_suc(N, -1);
+    std::vector<int> top_sort = get_topo_sort(dir_pred,dir_suc);
+    for (int node : top_sort) {
+        for (int suc: dir_suc[node]) {
+            if (depth[node] + 1 > depth[suc]) {
+                depth[suc] = depth[node] + 1;
+                depth_pred[suc] = node;
+            }
+        }
+    }
+    for (int node : std::ranges::reverse_view(top_sort)) {
+        for (int suc: dir_suc[node]) {
+            if (height[suc] + 1 > height[node]) {
+                height[node] = height[suc] + 1;
+                height_suc[node] = suc;
+            }
+        }
+        }
+    return CritPaths(depth, height, depth_pred, height_suc);
+}
+
 
 
 

@@ -283,6 +283,40 @@ def test_add_precedence_relation(salbp):
     assert albp.prec_mat[2 * 5 + 1] == 1, "3 did not get 2 as a successor is adjacency matrix"
     print("✅ tested precedence constraint insertion")
 
+def test_get_critical_paths(salbp):
+    """Depth/height should reflect the longest path (in edges) from any source
+    to each node and from each node to any sink, with depth_pred/height_suc
+    pointing to the neighbor that produced that longest path."""
+    task_times = [12, 7, 15, 9, 18]
+    N = len(task_times)
+    # Precedence relations [parent, child], one-indexed: 1 -> 3 -> 5, 2 -> 4
+    raw_precedence = [[1, 3], [2, 4], [3, 5]]
+
+    albp = salbp.ALBP.type_1(C=1000, N=N, task_times=task_times, raw_precedence=raw_precedence)
+    cp = albp.get_critical_paths()
+
+    # depth[i] = # edges on the longest path from any source down to task i+1
+    # Task1, Task2: sources -> depth 0
+    # Task3: via Task1 -> depth 1
+    # Task4: via Task2 -> depth 1
+    # Task5: via Task1->Task3 -> depth 2
+    assert cp.depth == [0, 0, 1, 1, 2], "Depth values incorrect"
+
+    # height[i] = # edges on the longest path from task i+1 down to any sink
+    # Task1: ->Task3->Task5 -> height 2
+    # Task2: ->Task4 -> height 1
+    # Task3: ->Task5 -> height 1
+    # Task4, Task5: sinks -> height 0
+    assert cp.height == [2, 1, 1, 0, 0], "Height values incorrect"
+
+    # depth_pred[i]: predecessor that gave task i+1 its depth (-1 = source)
+    assert cp.depth_pred == [-1, -1, 0, 1, 2], "Depth predecessor pointers incorrect"
+
+    # height_suc[i]: successor that gave task i+1 its height (-1 = sink)
+    assert cp.height_suc == [2, 3, 4, -1, -1], "Height successor pointers incorrect"
+
+    print("✅ tested critical path (depth/height) calculation")
+
 
 def test_get_positional_weight(salbp):
     """Positional weight should equal each task's own time plus the times
@@ -505,6 +539,7 @@ def main():
         ("heads_and_tails", lambda: test_heads_and_tails(salbp, C, t_times, precs)),
         ("positional weight", lambda: test_get_positional_weight(salbp)),
         ("test reverse positional weight", lambda: test_get_reverse_positional_weight(salbp)),
+        ("critical paths", lambda: test_get_critical_paths(salbp)),
     ]
 
     regression_tests = [

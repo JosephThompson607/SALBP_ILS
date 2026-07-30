@@ -23,6 +23,13 @@ PYBIND11_MODULE(SALBP1_heuristics, m) {
             .def_readwrite("parent", &PrecedenceRelation::parent)
             .def_readwrite("child", &PrecedenceRelation::child);
 
+    py::class_<CritPaths>(m, "CritPaths")
+          .def(py::init<>())
+          .def_readwrite("depth", &CritPaths::depth)
+          .def_readwrite("height", &CritPaths::height)
+          .def_readwrite("depth_pred", &CritPaths::depth_pred)
+          .def_readwrite("height_suc", &CritPaths::height_suc);
+
     py::class_<ALBP>(m, "ALBP")
             .def(py::init<>()) // default
             .def(py::init<const std::string &>()) // from filename
@@ -56,6 +63,16 @@ PYBIND11_MODULE(SALBP1_heuristics, m) {
                                      prec : list of int
                                          Two-element list [parent, child], one-indexed.
                                      )pbdoc")
+            .def("get_critical_paths", &ALBP::get_critical_paths,
+             R"pbdoc(
+                         Get the depth and height information for each node, along with the
+                         predecessor/successor that determines the longest path (critical path).
+
+                         Returns:
+                         --------
+                         CritPaths
+                             Struct with fields: depth, height, depth_pred, height_suc
+                         )pbdoc")
             .def_readwrite("name", &ALBP::name)
             .def_readwrite("C", &ALBP::C)
             .def_readwrite("N", &ALBP::N)
