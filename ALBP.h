@@ -50,6 +50,7 @@ struct ALBP{
     [[nodiscard]] ALBP reverse() const;
     void print(bool print_prec_mat);
     void add_precedence_relation(std::vector<int> prec);
+  //  void add_precedence_relations(const std::vector<std::vector<int>> &precs);
 
     CritPaths get_critical_paths() const;
     PathStats get_path_stats(const std::vector<int>& nodes) const;
@@ -70,7 +71,7 @@ struct ALBP{
         void initialize_precedence(int C_, int S_, int N_,
                            const std::vector<int>& task_times_,
                            bool reverse);
-        void update_prec_and_suc(std::vector<int> new_pred, std::vector<int> new_suc);
+        void update_prec_and_suc(const std::vector<int>& new_pred, const std::vector<int>& new_suc);
 
 
         void add_relation(int u, int v, bool reverse);

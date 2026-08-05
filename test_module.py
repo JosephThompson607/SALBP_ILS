@@ -228,8 +228,9 @@ def test_solution_manipulation(salbp):
         assert solution.ranking[i] == correct_ranking[i], "bad ranking"
 
     # Reverse functionality
+    #[1, 0, 3, 2, 1]
     solution.reverse()
-    assert solution.task_assignment == [1, 2, 3, 0, 1], f"Solution not reversed correctly {solution.task_assignment}"
+    assert solution.task_assignment == [2, 3, 0, 1, 2], f"Solution not reversed correctly {solution.task_assignment}"
     actual = solution.station_assignments
     expected.reverse()
     assert len(actual) == len(expected), (

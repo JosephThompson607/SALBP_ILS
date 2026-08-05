@@ -73,6 +73,16 @@ PYBIND11_MODULE(SALBP1_heuristics, m) {
                                      prec : list of int
                                          Two-element list [parent, child], one-indexed.
                                      )pbdoc")
+//             .def("add_precedence_relations", &ALBP::add_precedence_relations,
+//                     py::arg("precs"),
+//                     R"pbdoc(
+//                                              Add several precedence relations and update the transitive closure matrix, pred, and suc.
+//
+//                                              Parameters:
+//                                              -----------
+//                                              prec : list of lists of int
+//                                                  List of Two-element lists [parent, child], one-indexed.
+//                                              )pbdoc")
             .def("get_critical_paths", &ALBP::get_critical_paths,
              R"pbdoc(
                          Get the depth and height information for each node, along with the

@@ -197,7 +197,7 @@ void ALBP::print(bool print_prec_mat = false) {
 }
 
 
-void ALBP::update_prec_and_suc(std::vector<int> new_pred, std::vector<int> new_suc) {
+void ALBP::update_prec_and_suc(const std::vector<int>& new_pred, const std::vector<int>& new_suc) {
     // new_pred: nodes whose pred lists need updating (child and its successors)
     // new_suc:  nodes whose suc lists need updating (parent and its predecessors)
 
@@ -219,6 +219,33 @@ void ALBP::update_prec_and_suc(std::vector<int> new_pred, std::vector<int> new_s
         }
     }
 }
+
+// void ALBP::add_precedence_relations(const std::vector<std::vector<int>>& precs) {
+//     std::vector<int> upstreams;
+//     std::vector<int> downstreams;
+//     for (auto prec: precs) {
+//
+//         //assuming one indexed precedence relation
+//         int parent = prec[0]-1;
+//         int child = prec[1]-1;
+//         add_relation(parent+1, child+1, false);
+//         //Get rows that need to be updated for the matrix
+//         std::vector<int> upstream = pred[parent];
+//         upstream.push_back(parent);
+//         std::vector<int> downstream = suc[child];
+//         downstream.push_back(child);
+//         for (int a : upstream) {
+//             for (int b : downstream) {
+//                 t_close_mat[a * N + b] = 1;
+//             }
+//         }
+//         upstreams.insert(upstreams.end(), upstream.begin(), upstream.end());
+//         downstreams.insert(downstreams.end(), downstream.begin(), downstream.end());
+//     }
+//
+//     update_prec_and_suc(downstreams, upstreams);
+// }
+
 //Updates transitve closure info if precedence relation is added
 void ALBP::add_precedence_relation(std::vector<int> prec) {
     //assuming one indexed precedence relation

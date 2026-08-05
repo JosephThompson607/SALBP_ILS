@@ -34,8 +34,9 @@
 }
 
 void ALBPSolution::reverse()  {
-     std::reverse(task_assignment.begin(), task_assignment.end());
+
      std::reverse(station_assignments.begin(), station_assignments.end());
+     station_to_task();
      std::reverse(loads.begin(), loads.end());
  }
 
@@ -98,6 +99,7 @@ void ALBPSolution::find_earliest(const ALBP &albp, int i) {
 }
 
 void ALBPSolution::find_all_earliest(const ALBP &albp) {
+     earliest.clear();
     earliest.resize(albp.N,0);
     for (int i =0; i < albp.N; i++){
         find_earliest(albp, i);

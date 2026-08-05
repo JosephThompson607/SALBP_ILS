@@ -18,11 +18,9 @@
 
 
 
-void exchange_op(std::vector<int>& ranking, const ALBP& _) {
+void exchange_op(std::mt19937 gen, std::vector<int>& ranking, const ALBP& _) {
     /*changes the ranking of an ALBPSolution by swapping two elements in list*/
     // Set up random number generation
-    std::random_device rd;
-    std::mt19937 gen(rd());
     std::uniform_int_distribution<> dist(0, static_cast<int>(ranking.size()) - 1);
 
     // Pick two distinct random indices
@@ -67,14 +65,14 @@ void insertion(std::vector<int> &ranking, const int from, const int to) {
         std::rotate(ranking.begin()+ to, ranking.begin()+from, ranking.begin()+from+1);
     }
 }
-void float_shift_op(ALBPSolution &sol, const ALBP& albp) {
+void float_shift_op(std::mt19937 gen, ALBPSolution &sol, const ALBP& albp) {
     /*changes the ranking of an ALBPSolution using float shift operator*/
-    std::random_device rd;
-    std::mt19937 gen(rd());
+
     std::uniform_int_distribution<> dist(0, static_cast<int>(sol.ranking.size()) - 1);
     const int index1 = dist(gen);
+    const int task = sol.ranking[index1];
     //Gets the latest predecessor and earliest successor
-    auto [max_pred, min_suc] = get_task_bracket(sol, albp, index1);
+    auto [max_pred, min_suc] = get_task_bracket(sol, albp, task);
 
     //Note: allowing the float shift op to leave the thing in place if range is restricted
     std::uniform_int_distribution<> source_dist(max_pred, min_suc);
@@ -83,9 +81,7 @@ void float_shift_op(ALBPSolution &sol, const ALBP& albp) {
 }
 
 
-void inversion_op(std::vector<int>& ranking, const ALBP& albp) {
-    std::random_device rd;
-    std::mt19937 gen(rd());
+void inversion_op(std::mt19937 gen, std::vector<int>& ranking, const ALBP& albp) {
     std::uniform_int_distribution<> dist(0, albp.N - 1);
 
     // Pick two distinct random indices
@@ -105,13 +101,12 @@ void inversion_op(std::vector<int>& ranking, const ALBP& albp) {
 
 
 
-void insertion_op(std::vector<int>& ranking, const ALBP& albp, const int range_start =0, int range_end = 0) {
+void insertion_op(std::mt19937 gen, std::vector<int>& ranking, const ALBP& albp, const int range_start =0, int range_end = 0) {
     /*changes the ranking of an ALBPSolution by reinserting it into list*/
     if (range_end==0) {
         range_end = static_cast<int>(ranking.size()) - 1;
     }
-    std::random_device rd;
-    std::mt19937 gen(rd());
+
     std::uniform_int_distribution<> dist(range_start, range_end);
 
     // Pick two distinct random indices
@@ -127,24 +122,23 @@ bool time_exceeded(auto start, auto time_limit_s)  {
 
     return (now - start) >= time_limit_s;
 }
-void local_search(ALBPSolution& solution,const ALBP& albp,const float op_probs ,std::chrono::steady_clock::time_point start_time,std::chrono::seconds time_limit, const int n_tries=50) {
+void local_search(std::mt19937 gen, ALBPSolution& solution,const ALBP& albp,const float op_probs ,std::chrono::steady_clock::time_point start_time,std::chrono::seconds time_limit, const int n_tries=50) {
     //solution.station_to_ranking();
-    std::random_device rd;  // Uses hardware randomness if available
-    std::mt19937 generator(rd());
+
     std::uniform_real_distribution<float> distribution(0.0f, 1.0f);
     int ni = 0;
     while (ni  <= n_tries && !time_exceeded(start_time, time_limit)) {
         ALBPSolution new_solution =solution;
         if (new_solution.n_ranking_violations == 0) {
-            float_shift_op(new_solution, albp);
+            float_shift_op(gen, new_solution, albp);
         }
         else {
-            if (op_probs < distribution(generator)) {
-                exchange_op(new_solution.ranking, albp);
+            if (op_probs < distribution(gen)) {
+                exchange_op(gen, new_solution.ranking, albp);
 
             }
             else {
-                insertion_op(new_solution.ranking, albp);
+                insertion_op(gen, new_solution.ranking, albp);
             }
         }
         shallow_task_assignment(albp, new_solution);
@@ -163,7 +157,8 @@ void local_search(ALBPSolution& solution,const ALBP& albp,const float op_probs ,
 
 
 ALBPSolution iterated_local_search(const ALBP &albp, const int max_iter, const int time_limit, float op_probs, const bool verbose,const std::vector<int> &initial_solution) {
-
+    std::random_device rd;  // Uses hardware randomness if available
+    std::mt19937 gen(rd());
     auto start = std::chrono::steady_clock::now();
     auto time_limit_s = std::chrono::seconds(time_limit);
     // Initialize an initial (potentially infeasible) solution
@@ -172,35 +167,28 @@ ALBPSolution iterated_local_search(const ALBP &albp, const int max_iter, const i
     ALBPSolution candidate = best_solution;
     //Improves the solution with local search
     int iter = 0;
-    const int lb_1 = calc_lb_1(albp.task_time, albp.C);
-    const int lb_2 = calc_lb_2(albp.task_time, albp.C);
+    const int lb = calc_salbp_1_bin_lbs(albp.task_time, albp.C);
     if (verbose) std::cout << "Performing local search. first iter " << std::endl;
-    local_search(candidate, albp, op_probs, start, time_limit_s);
+    local_search(gen, candidate, albp, op_probs, start, time_limit_s);
     // std::cout << "assigning tasks deep" << std::endl;
     //task_oriented_assignment(albp, candidate);
 
-    //improves solution until iteration are reached or lower bound is reached
-    // while (iter < max_iter && candidate.n_stations > lb_1) {
-    while (iter < max_iter && !time_exceeded(start, time_limit_s) ) {
+    while (iter < max_iter && !time_exceeded(start, time_limit_s) && (candidate.n_stations == lb && candidate.n_violations == 0)) {
         if (verbose) {
             std::cout << "Performing local search. Iteration no: " << iter <<" n_violations: "<< candidate.n_violations << " n_stations " << candidate.n_stations << std::endl;
         }
         // Perform local search
         candidate.station_to_ranking();
-        inversion_op(candidate.ranking, albp);
+        inversion_op(gen, candidate.ranking, albp);
         shallow_task_assignment(albp, candidate);
-        local_search(candidate, albp, op_probs, start, time_limit_s);
+        local_search(gen, candidate, albp, op_probs, start, time_limit_s);
         if ((candidate.n_stations < best_solution.n_stations && candidate.n_violations  <= best_solution.n_violations) || (candidate.n_stations <= best_solution.n_stations && candidate.n_violations < best_solution.n_violations)) {
         //if (candidate.n_stations < best_solution.n_stations && candidate.n_violations == 0){
             if (verbose) std::cout << "found good solution . Iteration no: " << iter << " n_violations: " <<  candidate.n_violations <<" n_stations: " << candidate.n_stations << std::endl;
 
             best_solution = candidate;
-            if (candidate.n_stations == lb_1 && candidate.n_violations == 0) {
-               if (verbose) std::cout << "Found optimal solution, proven by lb_1. terminating search at: " << iter << std::endl;
-                break;
-            }
-            else if (candidate.n_stations == lb_2 && candidate.n_violations == 0) {
-                if (verbose) std::cout << "Found optimal solution, proven by lb_2. terminating search at: " << iter << std::endl;
+            if (candidate.n_stations == lb && candidate.n_violations == 0) {
+               if (verbose) std::cout << "Found optimal solution, proven by lb. terminating search at: " << iter << std::endl;
                 break;
             }
         }
