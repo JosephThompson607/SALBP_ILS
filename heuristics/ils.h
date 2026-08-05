@@ -9,7 +9,7 @@
 #include <optional>
 
 
-ALBPSolution iterated_local_search(const ALBP& albp, int max_iter, int time_limit, float op_probs, bool verbose=false,const std::vector<int> &initial_solution = std::vector<int>() );
-ALBPSolution ils_solve_SALBP1(int C, int N, const std::vector<int>& task_times, const std::vector<std::vector<int>>& raw_precedence, int max_iter, std::optional<int> time_limit, float op_probs, bool verbose=false,  const std::vector<int> &initial_solution = std::vector<int>());
+ALBPSolution iterated_local_search(const ALBP& albp, int max_iter, float time_limit, float op_probs, bool verbose=false,const std::vector<int> &initial_solution = std::vector<int>() );
+ALBPSolution ils_solve_SALBP1(int C, int N, const std::vector<int>& task_times, const std::vector<std::vector<int>>& raw_precedence, int max_iter, std::optional<float> time_limit, float op_probs, bool verbose=false,  const std::vector<int> &initial_solution = std::vector<int>());
 
 #endif //ILS_H

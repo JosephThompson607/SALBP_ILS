@@ -122,7 +122,7 @@ bool time_exceeded(auto start, auto time_limit_s)  {
 
     return (now - start) >= time_limit_s;
 }
-void local_search(std::mt19937& gen, ALBPSolution& solution,const ALBP& albp,const float op_probs ,std::chrono::steady_clock::time_point start_time,std::chrono::seconds time_limit, const int n_tries=50) {
+void local_search(std::mt19937& gen, ALBPSolution& solution,const ALBP& albp,const float op_probs ,std::chrono::steady_clock::time_point start_time, std::chrono::duration<double> time_limit, const int n_tries=50) {
     //solution.station_to_ranking();
 
     std::uniform_real_distribution<float> distribution(0.0f, 1.0f);
@@ -156,11 +156,11 @@ void local_search(std::mt19937& gen, ALBPSolution& solution,const ALBP& albp,con
 }
 
 
-ALBPSolution iterated_local_search(const ALBP &albp, const int max_iter, const int time_limit, float op_probs, const bool verbose,const std::vector<int> &initial_solution) {
+ALBPSolution iterated_local_search(const ALBP &albp, const int max_iter, const float time_limit, float op_probs, const bool verbose,const std::vector<int> &initial_solution) {
     std::random_device rd;  // Uses hardware randomness if available
     std::mt19937 gen(rd());
     auto start = std::chrono::steady_clock::now();
-    auto time_limit_s = std::chrono::seconds(time_limit);
+    auto time_limit_s = std::chrono::duration<double>(time_limit);
     // Initialize an initial (potentially infeasible) solution
     ALBPSolution best_solution = generate_approx_solution(albp, 800, initial_solution);
     //prints the best solution
@@ -206,9 +206,9 @@ ALBPSolution iterated_local_search(const ALBP &albp, const int max_iter, const i
 }
 
 
-ALBPSolution ils_solve_SALBP1(const int C,const int N, const std::vector<int> &task_times, const std::vector<std::vector<int> > &raw_precedence, const int max_iter, std::optional<int> time_limit, const float op_probs,const bool verbose,  const std::vector<int> &initial_solution) {
+ALBPSolution ils_solve_SALBP1(const int C,const int N, const std::vector<int> &task_times, const std::vector<std::vector<int> > &raw_precedence, const int max_iter, const std::optional<float> time_limit, const float op_probs,const bool verbose,  const std::vector<int> &initial_solution) {
     ALBP albp = ALBP::type_1(C, N, task_times, raw_precedence);
-    int time_l = time_limit.value_or(7200);
+    float time_l = time_limit.value_or(7200.);
     ALBPSolution result =iterated_local_search(albp, max_iter, time_l, op_probs, verbose, initial_solution);
     return result;
 }

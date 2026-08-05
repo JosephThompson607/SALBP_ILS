@@ -231,7 +231,7 @@ PYBIND11_MODULE(SALBP1_heuristics, m) {
               Precedence relationships
           max_iter : int
               Maximum iterations
-          time_limit : int
+          time_limit : float
             Number of seconds to run
           op_probs : float
               Operation probabilities
