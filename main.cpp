@@ -247,7 +247,7 @@ int mhh_test() {
     //std::vector<int> test_assignments = {0,1,2,3,4};
     ALBP albp = ALBP::type_1(C, N, task_times, precedence);
 
-    ALBPSolution result =  mhh_solve_salbp1(albp);
+    ALBPSolution result =  mhh_solve_salbp1(albp, TODO, TODO);
      std::cout << "Here is the result" << std::endl;
     result.print();
     // std::cout << "Name: " << albp.name << std::endl;
@@ -754,7 +754,7 @@ int main(int argc, char* argv[]) {
                 }
             }
             else if (heuristic == "MHH"){
-                ALBPSolution result = mhh_solve_salbp1(problem);
+                ALBPSolution result = mhh_solve_salbp1(problem, TODO, TODO);
                 std::cout << "Here is the result" << std::endl;
                 result.print();
 

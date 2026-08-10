@@ -580,13 +580,17 @@ PYBIND11_MODULE(SALBP1_heuristics, m) {
     m.def("mhh_solve_salbp1",
           [](int C, int N,
              const std::vector<int> &task_times,
-             const std::vector<std::vector<int> > &raw_precedence) {
-              return mhh_solve_salbp1(C, N, task_times, raw_precedence);
+             const std::vector<std::vector<int> > &raw_precedence,
+             const std::optional<std::vector<float>>& alpha_schedule ,
+                const std::optional<std::vector<float>>& beta_schedule) {
+              return mhh_solve_salbp1(C, N, task_times, raw_precedence, alpha_schedule, beta_schedule);
           },
             py::arg("C"),
             py::arg("N"),
             py::arg("task_times"),
             py::arg("raw_precedence"),
+            py::arg("alpha_schedule") = std::nullopt,
+            py::arg("beta_schedule") = std::nullopt,
           R"pbdoc(
                                                   Solve SALBP1 using multi-hoffman (Fleszar and Hindi 2003) heuristic
                                                     Parameters:
@@ -599,6 +603,10 @@ PYBIND11_MODULE(SALBP1_heuristics, m) {
                                                       Task processing times
                                                     raw_precedence : list of list of int
                                                       Precedence relationshions
+                                                    alpha_schedule : vector<float>
+                                                        optional vector of weights for positional weight solution eval
+                                                    beta_schedule : vector<float>
+                                                        optional vector of weights for number of successor solution eval
                                                     Returns:
                                                     --------
                                                     ALBPSolution

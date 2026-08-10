@@ -110,6 +110,8 @@ def mhh_call(salbp, cycle_time, task_times_list, precedence_list):
             N=len(task_times_list),
             task_times=task_times_list,
             raw_precedence=precedence_list,
+            alpha_schedule = [0.0,0.5],
+            beta_schedule = [0, 0.5]
         )
     except Exception as e:
         print(f"Error solving SALBP1 (mhh): {e}")

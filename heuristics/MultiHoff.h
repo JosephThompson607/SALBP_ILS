@@ -13,7 +13,9 @@
 
 class MultiHoff {
     public:
-        explicit MultiHoff(const ALBP& albp, int max_attempts = 5000);
+        explicit MultiHoff(const ALBP& albp, int max_attempts = 5000,
+                    const std::optional<std::vector<float>>& alpha_schedule = std::nullopt,
+                    const std::optional<std::vector<float>>& beta_schedule = std::nullopt);
         ALBPSolution solve( );
 
 private:
@@ -50,6 +52,10 @@ private:
     int n_attempts_;
     int max_attempts_;
     float  min_cost_=0;
+    float alpha_=0.0;
+    float beta_=0.0;
+    std::vector<float> alpha_sched_;
+    std::vector<float> beta_sched_;
     int ub_;
     int lb_;
     int forward_station_;
@@ -64,7 +70,9 @@ private:
 };
 inline void swap_and_pop(int item, std::vector<int> &vec);
 inline void remove_tasks_unordered(std::vector<int>& vec, const std::vector<int>& to_remove);
-ALBPSolution mhh_solve_salbp1(int C, int N, const std::vector<int>& task_times, const std::vector<std::vector<int>>& raw_precedence);
-ALBPSolution mhh_solve_salbp1(const ALBP &albp );
+ALBPSolution mhh_solve_salbp1(int C, int N, const std::vector<int>& task_times, const std::vector<std::vector<int>>& raw_precedence, const std::
+                              optional<std::vector<float>> &alpha_schedule, const std::optional<std::vector<float>> &beta_schedule);
+ALBPSolution mhh_solve_salbp1(const ALBP &albp, const std::optional<std::vector<float>> &alpha_schedule, const std::optional<std::vector<float>> &
+                              beta_schedule);
 
 #endif //MULTIHOFF_H
