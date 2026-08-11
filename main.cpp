@@ -247,7 +247,7 @@ int mhh_test() {
     //std::vector<int> test_assignments = {0,1,2,3,4};
     ALBP albp = ALBP::type_1(C, N, task_times, precedence);
 
-    ALBPSolution result =  mhh_solve_salbp1(albp, TODO, TODO);
+    ALBPSolution result =  mhh_solve_salbp1(albp );
      std::cout << "Here is the result" << std::endl;
     result.print();
     // std::cout << "Name: " << albp.name << std::endl;
@@ -754,7 +754,7 @@ int main(int argc, char* argv[]) {
                 }
             }
             else if (heuristic == "MHH"){
-                ALBPSolution result = mhh_solve_salbp1(problem, TODO, TODO);
+                ALBPSolution result = mhh_solve_salbp1(problem);
                 std::cout << "Here is the result" << std::endl;
                 result.print();
 
@@ -771,7 +771,7 @@ int main(int argc, char* argv[]) {
             else if (heuristic == "ILS") {
                 int n_iter =   max_attempts.value_or(50000);
                 int tl =   time_limit.value_or(10);
-                ALBPSolution result = iterated_local_search(problem, n_iter, tl, 0.5 );
+                ALBPSolution result = iterated_local_search(problem, n_iter, tl, 0.5, true );
                 std::cout << "Here is the result" << std::endl;
                 result.print();
             }

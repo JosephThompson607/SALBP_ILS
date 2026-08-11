@@ -67,7 +67,7 @@ int calc_lb_3(const std::vector<int>& task_time, const int C) {
 
 
 
-int insert_first_station(int task_time, std::vector<int> station_loads, const int C) {
+int insert_first_station(int task_time, std::vector<int>& station_loads, const int C) {
     for (int & station_load : station_loads) {
         if (station_load + task_time <=C) {
             station_load = station_load + task_time;
@@ -137,23 +137,23 @@ std::vector<float> get_heads(const ALBP& albp,const bool alreadyTopo) {
         for (int j: albp.pred[i]) {
             lb_1+=1.0*albp.task_time[j]/albp.C;
             suc_task_times.push_back(albp.task_time[j]);
-            lb_heads = std::max({lb_heads,  albp.task_time[j]/albp.C + heads[j]});
+            lb_heads = std::max({lb_heads,  static_cast<float>(albp.task_time[j])/albp.C + heads[j]});
 
 
         }
         float lb_2 = calc_lb_2(suc_task_times, albp.C);
         float lb_3 = calc_lb_3(suc_task_times, albp.C);
-        if (albp.task_time[i]/albp.C < 2.0/3) {
+        if (static_cast<float>(albp.task_time[i])/albp.C < 2.0/3) {
             lb_3 -= 1.0/3;
         }
-        else if (albp.task_time[i]/albp.C < 0.5) {
+        else if (static_cast<float>(albp.task_time[i])/albp.C < 0.5) {
             lb_2 -= 1.0/2;
         }
 
 
         heads[i] = std::max({lb_1,lb_2, lb_3, lb_heads});
 
-        if (albp.task_time[i]/albp.C + heads[i] > ceil(heads[i]) ){
+        if (static_cast<float>(albp.task_time[i]/albp.C )+ heads[i] > ceil(heads[i]) ){
             heads[i] = ceil(heads[i]);
 
         }
@@ -179,23 +179,23 @@ std::vector<float> get_tails(const ALBP& albp,const bool alreadyTopo) {
         for (int j: albp.suc[i]) {
             lb_1+=1.0*albp.task_time[j]/albp.C;
             suc_task_times.push_back(albp.task_time[j]);
-            lb_tails = std::max({lb_tails,  albp.task_time[j]/albp.C + tails[j]});
+            lb_tails = std::max({lb_tails,  static_cast<float>(albp.task_time[j])/albp.C + tails[j]});
 
 
         }
         float lb_2 = calc_lb_2(suc_task_times, albp.C);
         float lb_3 = calc_lb_3(suc_task_times, albp.C);
-        if (albp.task_time[i]/albp.C < 2.0/3) {
+        if (static_cast<float>(albp.task_time[i])/albp.C < 2.0/3) {
             lb_3 -= 1.0/3;
         }
-        else if (albp.task_time[i]/albp.C < 0.5) {
+        else if (static_cast<float>(albp.task_time[i])/albp.C < 0.5) {
             lb_2 -= 1.0/2;
         }
 
 
         tails[i] = std::max({lb_1,lb_2, lb_3, lb_tails});
 
-        if (albp.task_time[i]/albp.C + tails[i] > ceil(tails[i]) ){
+        if (static_cast<float>(albp.task_time[i])/albp.C + tails[i] > ceil(tails[i]) ){
             tails[i] = ceil(tails[i]);
 
         }
@@ -306,7 +306,7 @@ int calc_salbp_2_lb_1(const std::vector<int>& task_time, const int S) {
     return (std::accumulate(task_time.begin(), task_time.end(), 0)+ S-1)/ S;
 }
 
-int calc_salbp_2_lb_2(const std::vector<int>& task_time, const int S) {
+int calc_salbp_2_lb_2(const std::vector<int>& task_time) {
     return ( *std::max_element(task_time.begin(),task_time.end()));
 }
 
@@ -317,7 +317,7 @@ int calc_salb_2_lb_3(const std::vector<int>& task_time, const int S) {
     return std::accumulate(sorted.begin(), sorted.begin()+hole_size, 0) ;
 }
 int calc_salbp_2_lbs(const std::vector<int>& task_time, const int S) {
-    std::vector<int> lbs = {calc_salbp_2_lb_1(task_time,S), calc_salbp_2_lb_2(task_time,S), calc_salb_2_lb_3(task_time,S)};
+    std::vector<int> lbs = {calc_salbp_2_lb_1(task_time,S), calc_salbp_2_lb_2(task_time), calc_salb_2_lb_3(task_time,S)};
     return ( *std::max_element(lbs.begin(),lbs.end()));
 }
 
@@ -961,6 +961,26 @@ int count_violations(const ALBP&albp, const std::vector<int>& task_assignment) {
     return violations;
 }
 
+
+void shallow_insert(const ALBP& albp, ALBPSolution& solution, const int task, int& max_station ) {
+    for (int j = 0; j < solution.loads.size(); ++j) { //using upper bound of N stations
+        if (solution.loads[j] + albp.task_time[task] <=albp.C) {
+            solution.task_assignment[task] = j;
+            solution.station_assignments[j].push_back(task);
+            solution.loads[j] += albp.task_time[task];
+
+            return;
+        }
+
+    }
+    //No available station, assign to next station
+
+    solution.task_assignment[task] = max_station;
+    solution.station_assignments[max_station] = {task};
+    solution.loads.push_back(albp.task_time[task]);
+    max_station++;
+}
+
 void shallow_task_assignment( const ALBP&albp,  ALBPSolution& solution) {
     // Assign tasks to stations based on the ranking
     solution.n_stations = 0;
@@ -968,30 +988,22 @@ void shallow_task_assignment( const ALBP&albp,  ALBPSolution& solution) {
     solution.station_assignments.clear();
     solution.station_assignments.resize(albp.N); //using upper bound of N stations
     //creates a vector of size N with Cycle time
-    std::vector<int> station_times(albp.N, albp.C);
+    solution.loads.clear();
+    solution.loads.reserve(albp.N);
     int max_station = 0;
     for (int i = 0; i < albp.N; ++i) {
         int task = solution.ranking[i];
         // Find the first station that can accommodate the task
-
-        for (int j = 0; j <= albp.N; ++j) { //using upper bound of N stations
-            if (station_times[j] >= albp.task_time[task]) {
-                solution.task_assignment[task] = j;
-                solution.station_assignments[j].push_back(task);
-                station_times[j] -= albp.task_time[task];
-                if (j > max_station) {
-                    max_station = j;
-                }
-                break;
-            }
+        shallow_insert( albp, solution, task,  max_station );
         }
-        solution.n_stations = max_station + 1;
-        //calculates the number of violations
-        solution.n_violations = count_violations(albp, solution.task_assignment);
-        solution.n_ranking_violations = count_violations(albp, solution.task_ranking);
+    solution.n_stations = max_station + 1;
+    //calculates the number of violations
+    solution.n_violations = count_violations(albp, solution.task_assignment);
+    solution.n_ranking_violations = count_violations(albp, solution.task_ranking);
 
-    }
+
 }
+
 
 std::vector<std::vector<int> > generate_rankings(const ALBP &albp, const int n_random, std::optional<unsigned int> seed) {
 
@@ -1052,7 +1064,7 @@ std::vector<ALBPSolution> generate_solutions( const ALBP &albp, const int n_rand
         solutions.push_back(solution);
     }
     //Add in hoffman solution
-    solutions.push_back( hoff_solve_salbp1(albp));
+    //solutions.push_back( hoff_solve_salbp1(albp));
     return solutions;
 }
 

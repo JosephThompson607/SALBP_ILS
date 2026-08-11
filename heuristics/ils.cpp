@@ -18,10 +18,10 @@
 
 
 
-void exchange_op(std::mt19937& gen, std::vector<int>& ranking, const ALBP& _) {
+void exchange_op(std::mt19937& gen, ALBPSolution &sol, const ALBP& _) {
     /*changes the ranking of an ALBPSolution by swapping two elements in list*/
     // Set up random number generation
-    std::uniform_int_distribution<> dist(0, static_cast<int>(ranking.size()) - 1);
+    std::uniform_int_distribution<> dist(0, static_cast<int>(sol.ranking.size()) - 1);
 
     // Pick two distinct random indices
     const int index1 = dist(gen);
@@ -33,8 +33,10 @@ void exchange_op(std::mt19937& gen, std::vector<int>& ranking, const ALBP& _) {
 
 
     // Swap the selected elements
+    sol.task_ranking[sol.ranking[index1]] = index2;
+    sol.task_ranking[sol.ranking[index2]] = index1;
+    std::swap(sol.ranking[index1], sol.ranking[index2]);
 
-    std::swap(ranking[index1], ranking[index2]);
 
 }
 
@@ -57,12 +59,22 @@ std::tuple<int, int> get_task_bracket(const ALBPSolution &sol, const ALBP &albp,
     return std::make_tuple(max_pred, min_suc);
 }
 
-void insertion(std::vector<int> &ranking, const int from, const int to) {
+void insertion(ALBPSolution &sol, const int from, const int to) {
     if (from == to) return;
+    int lo, hi;
+
     if(from < to ) {
-        std::rotate(ranking.begin()+from, ranking.begin()+from+1,ranking.begin()+ to+1);
+        std::rotate(sol.ranking.begin()+from, sol.ranking.begin()+from+1,sol.ranking.begin()+ to+1);
+        lo = from;
+        hi = to;
     } else if (from > to) {
-        std::rotate(ranking.begin()+ to, ranking.begin()+from, ranking.begin()+from+1);
+        std::rotate(sol.ranking.begin()+ to, sol.ranking.begin()+from, sol.ranking.begin()+from+1);
+        lo = to;
+        hi = from;
+
+    }
+    for (int i = lo; i <= hi; ++i) {
+        sol.task_ranking[sol.ranking[i]] = i;
     }
 }
 void float_shift_op(std::mt19937& gen, ALBPSolution &sol, const ALBP& albp) {
@@ -73,15 +85,14 @@ void float_shift_op(std::mt19937& gen, ALBPSolution &sol, const ALBP& albp) {
     const int task = sol.ranking[index1];
     //Gets the latest predecessor and earliest successor
     auto [max_pred, min_suc] = get_task_bracket(sol, albp, task);
-
     //Note: allowing the float shift op to leave the thing in place if range is restricted
     std::uniform_int_distribution<> source_dist(max_pred, min_suc);
     const int to = std::min(static_cast<int>(sol.ranking.size()) - 1, source_dist(gen));
-    insertion( sol.ranking,  index1, to);
+    insertion( sol,  index1, to);
 }
 
 
-void inversion_op(std::mt19937& gen, std::vector<int>& ranking, const ALBP& albp) {
+void inversion_op(std::mt19937& gen, ALBPSolution &sol, const ALBP& albp) {
     std::uniform_int_distribution<> dist(0, albp.N - 1);
 
     // Pick two distinct random indices
@@ -95,18 +106,20 @@ void inversion_op(std::mt19937& gen, std::vector<int>& ranking, const ALBP& albp
         from = to;
         to = holder;
     }
-    std::reverse(ranking.begin()+from, ranking.begin()+to+1);
+    std::reverse(sol.ranking.begin()+from, sol.ranking.begin()+to+1);
+    for (int i = from; i <= to; ++i) {
+        sol.task_ranking[sol.ranking[i]] = i;
+    }
 
 }
 
 
 
-void insertion_op(std::mt19937& gen, std::vector<int>& ranking, const ALBP& albp, const int range_start =0, int range_end = 0) {
+void insertion_op(std::mt19937& gen, ALBPSolution &sol, const ALBP& albp, const int range_start =0, int range_end = 0) {
     /*changes the ranking of an ALBPSolution by reinserting it into list*/
     if (range_end==0) {
-        range_end = static_cast<int>(ranking.size()) - 1;
+        range_end = static_cast<int>(sol.ranking.size()) - 1;
     }
-
     std::uniform_int_distribution<> dist(range_start, range_end);
 
     // Pick two distinct random indices
@@ -115,7 +128,7 @@ void insertion_op(std::mt19937& gen, std::vector<int>& ranking, const ALBP& albp
     while (from == to) {
         to = dist(gen);
     }
-    insertion(ranking, from, to);
+    insertion(sol, from, to);
 }
 bool time_exceeded(auto start, auto time_limit_s)  {
     auto now = std::chrono::steady_clock::now();
@@ -129,21 +142,23 @@ void local_search(std::mt19937& gen, ALBPSolution& solution,const ALBP& albp,con
     int ni = 0;
     while (ni  <= n_tries && !time_exceeded(start_time, time_limit)) {
         ALBPSolution new_solution =solution;
+        //new_solution.n_violations = count_violations(albp, new_solution.task_assignment);
+        new_solution.n_ranking_violations = count_violations(albp,new_solution.task_ranking);
         if (new_solution.n_ranking_violations == 0) {
             float_shift_op(gen, new_solution, albp);
         }
         else {
             if (op_probs < distribution(gen)) {
-                exchange_op(gen, new_solution.ranking, albp);
+                exchange_op(gen, new_solution, albp);
 
             }
             else {
-                insertion_op(gen, new_solution.ranking, albp);
+                insertion_op(gen, new_solution, albp);
             }
         }
         shallow_task_assignment(albp, new_solution);
 
-        if (new_solution.n_violations <= solution.n_violations && new_solution.n_stations < solution.n_stations) {
+        if (new_solution.n_violations <= solution.n_violations && new_solution.n_stations < solution.n_stations|| (new_solution.n_stations <= solution.n_stations && new_solution.n_violations < solution.n_violations)) {
             task_oriented_assignment( albp, new_solution);
             solution = new_solution;
             solution.station_to_ranking();
@@ -178,8 +193,8 @@ ALBPSolution iterated_local_search(const ALBP &albp, const int max_iter, const f
             std::cout << "Performing local search. Iteration no: " << iter <<" n_violations: "<< candidate.n_violations << " n_stations " << candidate.n_stations << std::endl;
         }
         // Perform local search
-        candidate.station_to_ranking();
-        inversion_op(gen, candidate.ranking, albp);
+        // candidate.station_to_ranking();
+        inversion_op(gen, candidate, albp);
         shallow_task_assignment(albp, candidate);
         local_search(gen, candidate, albp, op_probs, start, time_limit_s);
         if ((candidate.n_stations < best_solution.n_stations && candidate.n_violations  <= best_solution.n_violations) || (candidate.n_stations <= best_solution.n_stations && candidate.n_violations < best_solution.n_violations)) {

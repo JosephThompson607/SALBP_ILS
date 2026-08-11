@@ -196,7 +196,7 @@ void ALBPSolution::station_to_ranking() {
 }
 
 void ALBPSolution::ranking_to_task_ranking() {
-    //Converts list of tasks ordered by rank to vector of ranks for each task ordered sequentially
+    //Gets a vector with index of task and value of rank
     task_ranking.clear();
     task_ranking.resize(n_tasks, 0);
     for (int i = 0; i < n_tasks; ++i) {

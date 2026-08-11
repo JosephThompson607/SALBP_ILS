@@ -39,8 +39,8 @@ MultiHoff::MultiHoff(const ALBP& albp, const int max_attempts,
     s_task_assign_.reserve(albp.N),
 
 
-    pw_ranking_ = pw_ranking(albp_) ;
-    rpw_ranking_ = rpw_ranking(albp_) ;
+    forw_ranking_ = pw_ranking(albp_) ; //Ranking of tasks in forward/backward direction for hoffman
+    back_ranking_ = rpw_ranking(albp_) ;
     initialize_current_s_assignments();
 
     //initialize counts of unassigned predecessors
@@ -173,7 +173,7 @@ int MultiHoff::one_packing_search( std::vector<int>&elig, const int station) {
         //Hoffman pass forward
         int last_task = std::numeric_limits<int>::max(); //-1 if ub violation, or last cached station to remove
         while (forward_station_ < mf && !eligible_tasks_forward.empty() && last_task != -1) {
-            sort_by_ranking(eligible_tasks_forward, pw_ranking_);
+            sort_by_ranking(eligible_tasks_forward, forw_ranking_);
             last_task =one_packing_search(eligible_tasks_forward, forward_station_);
             ++forward_station_;
         }
@@ -202,7 +202,7 @@ int MultiHoff::one_packing_search( std::vector<int>&elig, const int station) {
         }
         //hoffman pass packwards
         while (!eligible_tasks_backward.empty()&&last_task != -1) {
-            sort_by_ranking(eligible_tasks_backward, rpw_ranking_);
+            sort_by_ranking(eligible_tasks_backward, back_ranking_);
             last_task = one_packing_search(eligible_tasks_backward, backward_station_);
             ++backward_station_;
         }
@@ -262,7 +262,7 @@ void MultiHoff::reverse_solve_order() {
     back_pass_ = false;
     std::swap(dir_pred_, dir_suc_);
     std::swap(n_prec_orig_, n_suc_orig_);
-    std::swap(pw_ranking_, rpw_ranking_);
+    std::swap(forw_ranking_, back_ranking_);
     std::swap(no_prec_tasks_, no_suc_tasks_);
     initialize_current_s_assignments();
     s_forwards_.clear();
@@ -392,10 +392,10 @@ void MultiHoff::gen_load( int depth, int remaining_capacity,const int start, flo
                 int sub_remaining_capacity = remaining_capacity - albp_.task_time[task];
                 float sub_cost = cost - albp_.task_time[task];
                 if (back_pass_) { //Update costs with weighted values alpha_ and beta_. Alpha beta are determined at start of heuristic pass
-                    sub_cost = sub_cost - alpha_ * static_cast<float>(rpw_ranking_[task]) - beta_ * static_cast<float>(albp_.pred[task].size());
+                    sub_cost = sub_cost - alpha_ * static_cast<float>(back_ranking_[task]) - beta_ * static_cast<float>(albp_.pred[task].size());
                 }
                 else {
-                    sub_cost = sub_cost - alpha_ * static_cast<float>(pw_ranking_[task]) - beta_ * static_cast<float>(albp_.suc[task].size());
+                    sub_cost = sub_cost - alpha_ * static_cast<float>(forw_ranking_[task]) - beta_ * static_cast<float>(albp_.suc[task].size());
 
                 }
                 if (sub_cost < min_cost_) {
