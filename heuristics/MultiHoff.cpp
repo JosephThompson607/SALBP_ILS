@@ -9,6 +9,7 @@
 #include <algorithm>
 #include "salbp_basics.h"
 #include <map>
+#include <optional>
 #include <numeric>
 MultiHoff::MultiHoff(const ALBP& albp, const int max_attempts,
                     const std::optional<std::vector<float>>& alpha_schedule,

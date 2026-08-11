@@ -10,6 +10,7 @@
 #include "../ALBP.h"
 #include <deque>
 #include <map>
+#include <optional>
 
 class MultiHoff {
     public:
