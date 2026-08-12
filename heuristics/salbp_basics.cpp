@@ -793,7 +793,7 @@ std::vector<int>  pw_ranking(const ALBP&albp) {
 
     // Sort indices based on corresponding weights
     std::sort(indices.begin(),indices.end(), [&](const int a, const int b) {
-        return weights[a] > weights[b];  // Ascending order
+        return weights[a] > weights[b];  //descending order
     });
     for (int rank = 0; rank < indices.size(); ++rank) {
         ranking[indices[rank]] = rank;
@@ -1056,10 +1056,10 @@ std::vector<ALBPSolution> generate_solutions( const ALBP &albp, const int n_rand
     std::vector<ALBPSolution> solutions;
     std::cout << "generating initial solutions" << std::endl;
 
-    for (const std::vector<std::vector<int>> rankings = generate_rankings(albp, n_random, seed); const auto & ranking : rankings) {
+    for (const std::vector<std::vector<int>> rankings = generate_rankings(albp, n_random, seed); const auto & task_ranking : rankings) {
         ALBPSolution solution(albp.N);
-        solution.ranking = ranking;
-        solution.ranking_to_task_ranking();
+        solution.task_ranking = task_ranking;
+        solution.task_ranking_to_ranking();
         shallow_task_assignment(albp, solution);
         solutions.push_back(solution);
     }

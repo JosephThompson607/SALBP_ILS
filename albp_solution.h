@@ -55,6 +55,7 @@ public:
     void find_windows(const ALBP &albp);
     void reverse();
     void ranking_to_task_ranking();
+    void task_ranking_to_ranking();
 
 };
 

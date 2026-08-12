@@ -13,7 +13,8 @@
 #include <numeric>
 MultiHoff::MultiHoff(const ALBP& albp, const int max_attempts,
                     const std::optional<std::vector<float>>& alpha_schedule,
-                const std::optional<std::vector<float>>& beta_schedule):
+                const std::optional<std::vector<float>>& beta_schedule,
+                const std::optional<std::vector<int>>& rankings):
     albp_(albp),
     n_prec_(albp.N, 0),
     n_suc_(albp.N, 0),
@@ -37,11 +38,16 @@ MultiHoff::MultiHoff(const ALBP& albp, const int max_attempts,
     {
 
 
-    s_task_assign_.reserve(albp.N),
+    s_task_assign_.reserve(albp.N);
 
-
+    if (!rankings){
     forw_ranking_ = pw_ranking(albp_) ; //Ranking of tasks in forward/backward direction for hoffman
     back_ranking_ = rpw_ranking(albp_) ;
+        }
+    else {
+        forw_ranking_ = *rankings;
+        back_ranking_ = *rankings;
+    }
     initialize_current_s_assignments();
 
     //initialize counts of unassigned predecessors
@@ -429,9 +435,9 @@ inline void remove_tasks_unordered(std::vector<int>& vec, const std::vector<int>
 }
 
 ALBPSolution mhh_solve(const ALBP &albp, const std::optional<std::vector<float>> &alpha_schedule, const std::optional<std::vector<float>> &
-                       beta_schedule) {
+                       beta_schedule, const std::optional<std::vector<int>> &task_priorities) {
 
-    MultiHoff mhh= MultiHoff(albp, 5000, alpha_schedule, beta_schedule);
+    MultiHoff mhh= MultiHoff(albp, 5000, alpha_schedule, beta_schedule, task_priorities);
     ALBPSolution best_result =mhh.solve();
 
 
@@ -442,18 +448,19 @@ ALBPSolution mhh_solve(const ALBP &albp, const std::optional<std::vector<float>>
     return best_result;
 }
 ALBPSolution mhh_solve_salbp1(const ALBP &albp, const std::optional<std::vector<float>> &alpha_schedule, const std::optional<std::vector<float>> &
-                              beta_schedule) {
+                              beta_schedule, const std::optional<std::vector<int>> &task_priorities) {
 
-    ALBPSolution best_result  = mhh_solve(albp, alpha_schedule, beta_schedule);
+    ALBPSolution best_result  = mhh_solve(albp, alpha_schedule, beta_schedule, task_priorities);
     return best_result;
 }
 
 ALBPSolution mhh_solve_salbp1(const int C, const int N, const std::vector<int>& task_times, const std::vector<std::vector<int>>& raw_precedence, const
-                              std::optional<std::vector<float>> &alpha_schedule, const std::optional<std::vector<float>> &beta_schedule) {
+                              std::optional<std::vector<float>> &alpha_schedule, const std::optional<std::vector<float>> &beta_schedule, const std::
+                              optional<std::vector<int>> &task_priorities) {
     // print_vector(alpha_schedule.value_or(std::vector<float>{0.0f}));
     // print_vector(alpha_schedule.value_or(std::vector<float>{0.0f}));
     ALBP albp = ALBP::type_1(C, N, task_times, raw_precedence);
-    ALBPSolution best_result =mhh_solve(albp, alpha_schedule, beta_schedule);
+    ALBPSolution best_result =mhh_solve(albp, alpha_schedule, beta_schedule, task_priorities);
     return best_result;
 }
 

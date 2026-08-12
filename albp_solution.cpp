@@ -203,4 +203,12 @@ void ALBPSolution::ranking_to_task_ranking() {
         task_ranking[ranking[i]] = i;
     }
 }
+void ALBPSolution::task_ranking_to_ranking() {
+     //Gets a vecor with the index of the rank and the value of the task
+     ranking.clear();
+     ranking.resize(n_tasks, 0);
+     for (int i = 0; i < n_tasks; ++i) {
+         ranking[task_ranking[i]] = i;
+     }
+ }
 
