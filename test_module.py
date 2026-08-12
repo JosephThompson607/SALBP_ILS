@@ -117,7 +117,7 @@ def mhh_call(salbp, cycle_time, task_times_list, precedence_list):
         print(f"Error solving SALBP1 (mhh): {e}")
         return None
 
-def poke_mhh(salbp, cycle_time, task_times_list, precedence_list, alpha=None, beta=None):
+def poke_mhh(salbp, cycle_time, task_times_list, precedence_list, alpha=None, beta=None, ranking=None):
     """Solve SALBP-1 with MHH, using alpha and beta schedules. Returns None on error."""
     try:
         sol_1 = salbp.mhh_solve_salbp1(
@@ -126,7 +126,8 @@ def poke_mhh(salbp, cycle_time, task_times_list, precedence_list, alpha=None, be
             task_times=task_times_list,
             raw_precedence=precedence_list,
             alpha_schedule = alpha,
-            beta_schedule = beta
+            beta_schedule = beta,
+            task_priorities = ranking
         )
 
         print(f" solution alpha {alpha} beta {beta} {sol_1}")
@@ -135,7 +136,6 @@ def poke_mhh(salbp, cycle_time, task_times_list, precedence_list, alpha=None, be
     except Exception as e:
         print(f"Error solving SALBP1 (mhh): {e}")
         return None
-
 
 def vdls_call(salbp, cycle_time, task_times_list, precedence_list):
     """Solve SALBP-1 with VDLS. Returns None on error."""
@@ -498,16 +498,24 @@ def test_mhh(salbp, C, t_times, precs):
     print(f"✅ Created ALBPSolution using mhh with {results.n_stations} stations in {time.time() - start} seconds")
     print("here are the station loads", results.loads)
 
-def test_poke_mhh(salbp, C, t_times, precs):
+def test_alpha_beta_mhh(salbp, C, t_times, precs):
     start = time.time()
     results1 = poke_mhh(salbp, cycle_time=C, task_times_list=t_times, precedence_list=precs)
     results2 = poke_mhh(salbp, cycle_time=C, task_times_list=t_times, precedence_list=precs, alpha = [0.2], beta=[0.2])
     results3 = poke_mhh(salbp, cycle_time=C, task_times_list=t_times, precedence_list=precs, alpha = [0], beta=[1.0])
-
+    assert sum(results1.loads) == sum(results2.loads), "sum of loads does not match"
     print(f"✅ Created ALBPSolution using mhh with {results1.n_stations} , {results2.n_stations} , {results3.n_stations}  stations in {time.time() - start} seconds")
     print(f"here are the station assignments {results1.task_assignment} , {results2.task_assignment} , {results3.task_assignment}")
-    print(f"here are the station assignments {results1.loads} , {results2.loads} , {results3.loads}")
+    print(f"here are the station loads {results1.loads} , {results2.loads} , {results3.loads}")
 
+def test_priority_change_mhh(salbp, C, t_times, precs):
+    start = time.time()
+    results1 = poke_mhh(salbp, cycle_time=C, task_times_list=t_times, precedence_list=precs)
+    results2 = poke_mhh(salbp, cycle_time=C, task_times_list=t_times, precedence_list=precs, ranking = list(range(len(t_times), -1, -1)))
+    assert sum(results1.loads) == sum(results2.loads), "sum of loads does not match"
+    print(f"✅ Created ALBPSolution using mhh with {results1.n_stations} , {results2.n_stations} ,  stations in {time.time() - start} seconds")
+    print(f"here are the station assignments {results1.task_assignment} , {results2.task_assignment} , ")
+    print(f"here are the station loads {results1.loads} , {results2.loads} ,")
 
 
 def test_vdls(salbp, C, t_times, precs):
@@ -607,7 +615,8 @@ def main():
         ("priority_type2", lambda: test_priority_type2(salbp, t_times, precs)),
         ("hoff", lambda: test_hoff(salbp, C, t_times, precs)),
         ("mhh", lambda: test_mhh(salbp, C, t_times, precs)),
-        ("poke mhh", lambda: test_poke_mhh(salbp, C, t_times, precs)),
+        ("alpha beta mhh", lambda: test_alpha_beta_mhh(salbp, C, t_times, precs)),
+        ("priority change mhh", lambda: test_priority_change_mhh(salbp, C, t_times, precs)),
         ("vdls", lambda: test_vdls(salbp, C, t_times, precs)),
         ("vdls_type2", lambda: test_vdls_type2(salbp, t_times, precs)),
 
