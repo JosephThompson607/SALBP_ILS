@@ -1,6 +1,7 @@
 #ifndef ALBP_H
 #define ALBP_H
 
+#include <iostream>
 #include <string>
 #include <vector>
 
@@ -81,4 +82,13 @@ struct ALBP{
 
 
 std::vector<int>get_topo_sort(const std::vector<std::vector<int>>& dir_preds, const std::vector<std::vector<int>>& dir_sucs);
+
+//Printer helper
+template <typename T>
+void print_vector(const std::vector<T>& v) {
+    for (const T& x: v) {
+        std::cout << x << " ";
+    }
+    std::cout << "\n";
+}
 #endif // ALBP_H

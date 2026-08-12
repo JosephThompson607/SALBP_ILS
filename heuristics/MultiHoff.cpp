@@ -274,16 +274,18 @@ void MultiHoff::reverse_solve_order() {
 
 }
 
-
 ALBPSolution MultiHoff::solve() {
-    alpha_ = 0.0;
-    beta_ = 0.0;
+    float first_alpha = alpha_sched_.front();
+    float first_beta = beta_sched_.front();
+
+    alpha_ = first_alpha;
+    beta_ = first_beta;
     ALBPSolution best_result = solve_one_pass();
 
     if (ub_ != lb_) {
 
         reverse_solve_order();
-        ALBPSolution best_backward =solve_one_pass();
+        ALBPSolution best_backward = solve_one_pass();
         if (best_backward.n_stations < best_result.n_stations) {
             best_result = best_backward;
         }
@@ -292,9 +294,10 @@ ALBPSolution MultiHoff::solve() {
     if (ub_ != lb_) {
         for (float alpha:alpha_sched_) {
             for (float beta:beta_sched_) {
-                if (alpha == 0.0 && beta == 0.0) {
+                if (alpha == first_alpha && beta == first_beta) {
                     continue;
                 }
+
                 alpha_ = alpha;
                 beta_ = beta;
                 ALBPSolution try_forward = solve_one_pass();
@@ -447,7 +450,8 @@ ALBPSolution mhh_solve_salbp1(const ALBP &albp, const std::optional<std::vector<
 
 ALBPSolution mhh_solve_salbp1(const int C, const int N, const std::vector<int>& task_times, const std::vector<std::vector<int>>& raw_precedence, const
                               std::optional<std::vector<float>> &alpha_schedule, const std::optional<std::vector<float>> &beta_schedule) {
-
+    // print_vector(alpha_schedule.value_or(std::vector<float>{0.0f}));
+    // print_vector(alpha_schedule.value_or(std::vector<float>{0.0f}));
     ALBP albp = ALBP::type_1(C, N, task_times, raw_precedence);
     ALBPSolution best_result =mhh_solve(albp, alpha_schedule, beta_schedule);
     return best_result;
