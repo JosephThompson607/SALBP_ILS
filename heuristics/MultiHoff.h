@@ -11,13 +11,16 @@
 #include <deque>
 #include <map>
 #include <optional>
+#include <random>
 
 class MultiHoff {
     public:
         explicit MultiHoff(const ALBP& albp, int max_attempts = 5000,
                     const std::optional<std::vector<float>>& alpha_schedule = std::nullopt,
                     const std::optional<std::vector<float>>& beta_schedule = std::nullopt,
-                    const std::optional<std::vector<int>>& task_priorities = std::nullopt);
+                    std::optional<float> gamma= std::nullopt,
+                    const std::optional<std::vector<int>>& task_priorities = std::nullopt,
+                    const std::optional<unsigned int> seed= std::nullopt);
         ALBPSolution solve( );
 
 private:
@@ -49,13 +52,16 @@ private:
     std::vector<int> n_prec_orig_{}; //number of predecessor unassigned. 0 if available, 1 if not
     std::vector<int> n_suc_orig_{};
     std::map<int,  int> reverse_s_assignment_; //{task:(front, back)} note that back is starting counting from right.That won't cause a bug, won't it?
+    std::mt19937 rng_;
     bool back_pass_=false; //After mf forward station assigments, filling in rest of stations from back
     bool reverse_ = false;  //After filling in stations starting from forward, fill in stations from back (phase 2)
     int n_attempts_;
     int max_attempts_;
+    float pert_size_;
     float  min_cost_=0;
     float alpha_=0.0;
     float beta_=0.0;
+    float gamma_=0.0;
     std::vector<float> alpha_sched_;
     std::vector<float> beta_sched_;
     int ub_;
@@ -73,9 +79,10 @@ private:
 inline void swap_and_pop(int item, std::vector<int> &vec);
 inline void remove_tasks_unordered(std::vector<int>& vec, const std::vector<int>& to_remove);
 ALBPSolution mhh_solve_salbp1(int C, int N, const std::vector<int>& task_times, const std::vector<std::vector<int>>& raw_precedence, const std::
-                              optional<std::vector<float>> &alpha_schedule= std::nullopt, const std::optional<std::vector<float>> &beta_schedule= std::nullopt, const
-                              std::optional<std::vector<int>> &task_priorities = {});
+                              optional<std::vector<float>> &alpha_schedule= std::nullopt, const std::optional<std::vector<float>> &beta_schedule= std::nullopt, std::optional<float> gamma = std::nullopt, const
+                              std::optional<std::vector<int>> &task_priorities = {}, std::optional<unsigned> seed = std::nullopt);
 ALBPSolution mhh_solve_salbp1(const ALBP &albp, const std::optional<std::vector<float>> &alpha_schedule= std::nullopt, const std::optional<std::vector<float>> &
-                                      beta_schedule= std::nullopt, const std::optional<std::vector<int>> &task_priorities = {});
+                                      beta_schedule= std::nullopt, std::optional<float> gamma = std::nullopt, const std::optional<std::vector<int>> &task_priorities = {}, std::optional<
+                                  unsigned> seed = std::nullopt);
 
 #endif //MULTIHOFF_H

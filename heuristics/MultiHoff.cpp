@@ -14,26 +14,32 @@
 MultiHoff::MultiHoff(const ALBP& albp, const int max_attempts,
                     const std::optional<std::vector<float>>& alpha_schedule,
                 const std::optional<std::vector<float>>& beta_schedule,
-                const std::optional<std::vector<int>>& rankings):
+                const std::optional<float> gamma,
+                const std::optional<std::vector<int>>& rankings,
+                const std::optional<unsigned> seed):
+
     albp_(albp),
+    mhh_sol_(albp.N),
+    remaining_task_times_(albp.task_time),
+    dir_pred_(albp.dir_pred),
+    dir_suc_(albp.dir_suc),
     n_prec_(albp.N, 0),
     n_suc_(albp.N, 0),
     n_prec_orig_(albp.N, 0),
     n_suc_orig_(albp.N, 0),
+    rng_(seed ? *seed : std::random_device{}()),
     n_attempts_(0),
     max_attempts_(max_attempts),
     min_cost_(FLT_MAX),
-    remaining_task_times_(albp.task_time), //Will zero out task times if task is assigned
-    dir_pred_(albp.dir_pred),
-    dir_suc_(albp.dir_suc),
-    mhh_sol_(albp.N),
+
+
     alpha_sched_(alpha_schedule.value_or(std::vector<float>{0.0f})),
     beta_sched_(beta_schedule.value_or(std::vector<float>{0.0f})),
-    // Fill with 0 to N-1
-
+    gamma_(gamma.value_or(0.0)),
+    //Making gamma_ perturbation scale with smallest task time
+    pert_size_(static_cast<float>(*std::min_element(albp.task_time.begin(), albp.task_time.end()))),
 
     ub_(albp.N),
-    // Initialize to 0
      lb_(calc_salbp_1_bin_lbs(albp.task_time, albp.C))
     {
 
@@ -390,6 +396,9 @@ void MultiHoff::remove_new_available(std::vector<int> &eligible_tasks, const int
 
 }
 void MultiHoff::gen_load( int depth, int remaining_capacity,const int start, float cost, std::vector<int>eligible_tasks) {
+    std::uniform_real_distribution<double> dis(0.0, 1.0);
+
+    // 4. Generate the random number
 
         int full_load = 1;
         for(int i=start;i<eligible_tasks.size();i++) {
@@ -402,7 +411,8 @@ void MultiHoff::gen_load( int depth, int remaining_capacity,const int start, flo
                 int sub_remaining_capacity = remaining_capacity - albp_.task_time[task];
                 float sub_cost = cost - albp_.task_time[task];
                 if (back_pass_) { //Update costs with weighted values alpha_ and beta_. Alpha beta are determined at start of heuristic pass
-                    sub_cost = sub_cost - alpha_ * static_cast<float>(back_ranking_[task]) - beta_ * static_cast<float>(albp_.pred[task].size());
+                    auto random_num = static_cast<float>((dis(rng_)));
+                    sub_cost = sub_cost - alpha_ * static_cast<float>(back_ranking_[task]) - beta_ * static_cast<float>(albp_.pred[task].size()) -gamma_ *random_num * pert_size_ ;
                 }
                 else {
                     sub_cost = sub_cost - alpha_ * static_cast<float>(forw_ranking_[task]) - beta_ * static_cast<float>(albp_.suc[task].size());
@@ -435,9 +445,9 @@ inline void remove_tasks_unordered(std::vector<int>& vec, const std::vector<int>
 }
 
 ALBPSolution mhh_solve(const ALBP &albp, const std::optional<std::vector<float>> &alpha_schedule, const std::optional<std::vector<float>> &
-                       beta_schedule, const std::optional<std::vector<int>> &task_priorities) {
+                       beta_schedule,const std::optional<float> gamma, const std::optional<std::vector<int>> &task_priorities, const std::optional<unsigned int> seed) {
 
-    MultiHoff mhh= MultiHoff(albp, 5000, alpha_schedule, beta_schedule, task_priorities);
+    MultiHoff mhh= MultiHoff(albp, 5000, alpha_schedule, beta_schedule,gamma, task_priorities, seed);
     ALBPSolution best_result =mhh.solve();
 
 
@@ -448,19 +458,19 @@ ALBPSolution mhh_solve(const ALBP &albp, const std::optional<std::vector<float>>
     return best_result;
 }
 ALBPSolution mhh_solve_salbp1(const ALBP &albp, const std::optional<std::vector<float>> &alpha_schedule, const std::optional<std::vector<float>> &
-                              beta_schedule, const std::optional<std::vector<int>> &task_priorities) {
+                              beta_schedule, const std::optional<float> gamma , const std::optional<std::vector<int>> &task_priorities, const std::optional<unsigned> seed) {
 
-    ALBPSolution best_result  = mhh_solve(albp, alpha_schedule, beta_schedule, task_priorities);
+    ALBPSolution best_result  = mhh_solve(albp, alpha_schedule, beta_schedule,gamma, task_priorities, seed);
     return best_result;
 }
 
 ALBPSolution mhh_solve_salbp1(const int C, const int N, const std::vector<int>& task_times, const std::vector<std::vector<int>>& raw_precedence, const
-                              std::optional<std::vector<float>> &alpha_schedule, const std::optional<std::vector<float>> &beta_schedule, const std::
-                              optional<std::vector<int>> &task_priorities) {
+                              std::optional<std::vector<float>> &alpha_schedule, const std::optional<std::vector<float>> &beta_schedule, const std::optional<float> gamma , const std::
+                              optional<std::vector<int>> &task_priorities, const std::optional<unsigned> seed) {
     // print_vector(alpha_schedule.value_or(std::vector<float>{0.0f}));
     // print_vector(alpha_schedule.value_or(std::vector<float>{0.0f}));
     ALBP albp = ALBP::type_1(C, N, task_times, raw_precedence);
-    ALBPSolution best_result =mhh_solve(albp, alpha_schedule, beta_schedule, task_priorities);
+    ALBPSolution best_result =mhh_solve(albp, alpha_schedule, beta_schedule,gamma, task_priorities, seed);
     return best_result;
 }
 

@@ -194,7 +194,7 @@ void Tabu::elim_station(ALBPSolution &sol) {
     const long s = std::distance(sol.loads.begin(), it);
     ALBPSolution current_sol = sol;
     //Make sure that the station gets emptied
-    while (current_sol.station_assignments[s].size() >0) {
+    while (!current_sol.station_assignments[s].empty()) {
         for (int i=0; i < current_sol.station_assignments[s].size(); i++) {
             int task = current_sol.station_assignments[s][i];
             if (current_sol.task_assignment[task] != s || current_sol.earliest[task] == current_sol.latest[task]) continue; //If task was already reassigned or locked in, move on
