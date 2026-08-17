@@ -410,17 +410,16 @@ void MultiHoff::gen_load( int depth, int remaining_capacity,const int start, flo
                 add_new_available(eligible_tasks, task);
                 int sub_remaining_capacity = remaining_capacity - albp_.task_time[task];
                 float sub_cost = cost - albp_.task_time[task];
-
+                auto random_num = static_cast<float>((dis(rng_)));
                 if (back_pass_) { //Update costs with weighted values alpha_ and beta_. Alpha beta are determined at start of heuristic pass
 
-                    sub_cost = sub_cost - alpha_ * static_cast<float>(back_ranking_[task]) - beta_ * static_cast<float>(albp_.pred[task].size())  ;
+                    sub_cost = sub_cost - alpha_ * static_cast<float>(back_ranking_[task]) - beta_ * static_cast<float>(albp_.pred[task].size())  + gamma_ *random_num * pert_size_ ;
                 }
                 else {
-                    sub_cost = sub_cost - alpha_ * static_cast<float>(forw_ranking_[task]) - beta_ * static_cast<float>(albp_.suc[task].size());
+                    sub_cost = sub_cost - alpha_ * static_cast<float>(forw_ranking_[task]) - beta_ * static_cast<float>(albp_.suc[task].size()) + gamma_ *random_num * pert_size_;
 
                 }
-                auto random_num = static_cast<float>((dis(rng_)));
-                if ((sub_cost  + gamma_ *random_num * pert_size_)  < min_cost_) {
+                if (sub_cost < min_cost_) {
                     min_cost_ = sub_cost;
                     best_s_task_assign_ = s_task_assign_;
                 }

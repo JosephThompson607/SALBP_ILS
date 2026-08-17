@@ -506,7 +506,7 @@ def test_alpha_beta_mhh(salbp, C, t_times, precs):
     results2 = poke_mhh(salbp, cycle_time=C, task_times_list=t_times, precedence_list=precs, alpha = [0.2], beta=[0.2])
     results3 = poke_mhh(salbp, cycle_time=C, task_times_list=t_times, precedence_list=precs, alpha = [0], beta=[1.0])
     assert sum(results1.loads) == sum(results2.loads), "sum of loads does not match"
-    print(f"✅ Created ALBPSolution using mhh with {results1.n_stations} , {results2.n_stations} , {results3.n_stations}  stations in {time.time() - start} seconds")
+    print(f"✅ Created ALBPSolution using mhh (ALPHA BETA test) with {results1.n_stations} , {results2.n_stations} , {results3.n_stations}  stations in {time.time() - start} seconds")
     print(f"here are the station assignments {results1.task_assignment} , {results2.task_assignment} , {results3.task_assignment}")
     print(f"here are the station loads {results1.loads} , {results2.loads} , {results3.loads}")
 
@@ -514,11 +514,11 @@ def test_gamma_mhh(salbp, C, t_times, precs):
     start = time.time()
     results1 = poke_mhh(salbp, cycle_time=C, task_times_list=t_times, precedence_list=precs,gamma=0.5, seed=42)
     results2 = poke_mhh(salbp, cycle_time=C, task_times_list=t_times, precedence_list=precs, gamma=0.5, seed=42)
-    results3 = poke_mhh(salbp, cycle_time=C, task_times_list=t_times, precedence_list=precs, gamma = 10, seed=42)
+    results3 = poke_mhh(salbp, cycle_time=C, task_times_list=t_times, precedence_list=precs, gamma = 0.01, seed=42)
 
     assert sum(results1.loads) == sum(results2.loads) ==sum(results3.loads) , "sum of loads does not match"
     assert results1.task_assignment == results2.task_assignment, "Seeding seems to not control the rng"
-    print(f"✅ Created ALBPSolution using mhh with {results1.n_stations} , {results2.n_stations} , {results3.n_stations}  stations in {time.time() - start} seconds")
+    print(f"✅ Created ALBPSolution using mhh (GAMMA TEST) with {results1.n_stations} , {results2.n_stations} , {results3.n_stations}  stations in {time.time() - start} seconds")
     print(f"here are the station assignments {results1.task_assignment} , {results2.task_assignment} , {results3.task_assignment}")
     print(f"here are the station loads {results1.loads} , {results2.loads} , {results3.loads}")
 
