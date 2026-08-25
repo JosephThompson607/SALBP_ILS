@@ -29,7 +29,7 @@ std::vector<float> get_tails(const ALBP& albp, bool alreadyTopo);
 void shallow_task_assignment( const ALBP&albp,  ALBPSolution& solution);
 void sort_by_ranking(std::vector<int>& items, const std::vector<int>& ranking);
 void task_oriented_assignment( const ALBP& albp,ALBPSolution& solution);
-ALBPSolution station_oriented_assignment( const ALBP& albp,ALBPSolution& solution);
+ALBPSolution ranking_to_solution( int C, int N, const std::vector<int>& task_times, const std::vector<std::vector<int>>& raw_precedence, const std::vector<int>& ranking);
 int count_violations(const ALBP&albp, const std::vector<int>& task_assignment);
 std::vector<ALBPSolution>  priority_solve_salbp_2( int S, int N, const std::vector<int>& task_times, const std::vector<std::vector<int>>& raw_precedence,  int n_random =100, bool move_target = false, std::optional<unsigned int> seed =  std::nullopt) ;
 ALBPSolution  priority_solve_salbp_1( const ALBP& albp,  int n_random =100, std::optional<unsigned int> seed =  std::nullopt, std::optional<double> time_limit=  std::nullopt);

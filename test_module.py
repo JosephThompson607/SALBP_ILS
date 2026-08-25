@@ -340,6 +340,33 @@ def test_get_critical_paths(salbp):
     assert cp.height_suc == [2, 3, 4, -1, -1], "Height successor pointers incorrect"
 
     print("✅ tested critical path (depth/height) calculation")
+
+def test_ranking_solution(salbp):
+    """Depth/height should reflect the longest path (in edges) from any source
+    to each node and from each node to any sink, with depth_pred/height_suc
+    pointing to the neighbor that produced that longest path."""
+    task_times = [12, 7, 15, 9, 18]
+    N = len(task_times)
+    C = 18
+    # Precedence relations [parent, child], one-indexed: 1 -> 3 -> 5, 2 -> 4
+    raw_precedence = [[1, 3], [2, 4], [3, 5]]
+    ranking = [3, 1, 0, 4, 2]
+    sol = salbp.ranking_to_solution(C, N, task_times, raw_precedence, ranking )
+    # depth[i] = # edges on the longest path from any source down to task i+1
+    # Task1, Task2: sources -> depth 0
+    # Task3: via Task1 -> depth 1
+    # Task4: via Task2 -> depth 1
+    # Task5: via Task1->Task3 -> depth 2
+    assert sol.task_assignment == [1,0,2,0,3], "unexpected assignment"
+    assert max(sol.loads) <= C, "Cycle time exceeded"
+    # height[i] = # edges on the longest path from task i+1 down to any sink
+    # Task1: ->Task3->Task5 -> height 2
+    # Task2: ->Task4 -> height 1
+    # Task3: ->Task5 -> height 1
+    # Task4, Task5: sinks -> height 0
+
+
+    print("✅ tested ranking solutions")
 def test_get_path_stats(salbp):
     """Check summary statistics for a subset of tasks."""
     task_times = [12, 7, 15, 9, 18]
@@ -618,7 +645,9 @@ def main():
         ("positional weight", lambda: test_get_positional_weight(salbp)),
         ("test reverse positional weight", lambda: test_get_reverse_positional_weight(salbp)),
         ("critical paths", lambda: test_get_critical_paths(salbp)),
+        ("test_ranking_solution", lambda: test_ranking_solution(salbp)),
         ("path stats", lambda: test_get_path_stats(salbp)),
+
     ]
 
     regression_tests = [

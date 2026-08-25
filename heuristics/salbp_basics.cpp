@@ -496,6 +496,8 @@ ALBPSolution careless_station_oriented_assignment(const ALBP& albp, std::default
     return solution;
 }
 
+
+
 ALBPSolution station_oriented_assignment(const ALBP& albp,const std::vector<int>& ranking) {
 
     ALBPSolution solution(albp.N) ;
@@ -557,6 +559,13 @@ ALBPSolution station_oriented_assignment(const ALBP& albp,const std::vector<int>
     }
     return solution;
 }
+
+ALBPSolution ranking_to_solution(const int C, const int N, const std::vector<int>& task_times, const std::vector<std::vector<int>>& raw_precedence, const std::vector<int>& ranking) {
+    ALBP albp = ALBP::type_1(C, N, task_times, raw_precedence, false, true);
+    return station_oriented_assignment(albp, ranking);
+}
+
+
 
 
 ALBPSolution filler_heuristic(const ALBP& albp,const std::vector<int>& original_ranking, bool move_target) {

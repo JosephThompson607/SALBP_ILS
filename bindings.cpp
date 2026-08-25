@@ -548,6 +548,43 @@ PYBIND11_MODULE(SALBP1_heuristics, m) {
                   list(ALBPSolution)
                       The solved ALBP solution
                   )pbdoc");
+
+    m.def("ranking_to_solution",
+     [](int C, int N,
+        const std::vector<int> &task_times,
+        const std::vector<std::vector<int>> &raw_precedence,
+        const std::vector<int> &ranking
+        )
+         {
+         return ranking_to_solution(C, N, task_times, raw_precedence,ranking);
+     },
+         "Takes a ranking and returns a feasible solution based off of it",
+         py::arg("C"),
+         py::arg("N"),
+         py::arg("task_times"),
+         py::arg("raw_precedence"),
+         py::arg("ranking"),
+         R"pbdoc(
+                          Solve SALBP1 using different priority methods and station oriented task assignment
+
+                  Parameters:
+                  -----------
+                  C : int
+                      cycle time
+                  N : int
+                      Number of tasks
+                  task_times : list of int
+                      Task processing times
+                  raw_precedence : list of list of int
+                      Precedence relationships
+                ranking : list of int
+                      task rankings in form index-> ranking value-> task
+                  Returns:
+                  --------
+                  ALBPSolution
+                      The solved ALBP solution
+                  )pbdoc");
+
     m.def("priority_solve_salbp2", &priority_solve_salbp_2,
           "Solve SALBP-2 using priority methods",
           py::arg("S"),
