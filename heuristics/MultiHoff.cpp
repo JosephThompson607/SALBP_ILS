@@ -271,7 +271,7 @@ int MultiHoff::one_packing_search( std::vector<int>&elig, const int station) {
 
 void MultiHoff::reverse_solve_order() {
     /* This function reverses the elements necessary for a backwards solve. Note that it modifies some internal state*/
-    reverse_ = true;
+    reverse_ = !reverse_;
     back_pass_ = false;
     std::swap(dir_pred_, dir_suc_);
     std::swap(n_prec_orig_, n_suc_orig_);
@@ -309,7 +309,7 @@ ALBPSolution MultiHoff::solve() {
                 if (alpha == first_alpha && beta == first_beta) {
                     continue;
                 }
-
+                reverse_solve_order();//Need to reset the direction
                 alpha_ = alpha;
                 beta_ = beta;
                 ALBPSolution try_forward = solve_one_pass();
