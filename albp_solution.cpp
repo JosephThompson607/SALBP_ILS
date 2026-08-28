@@ -200,7 +200,7 @@ void ALBPSolution::station_to_ranking(bool sort_by_task) {
 
 void ALBPSolution::task_assignment_to_ranking() {
      ranking.clear();
-
+     ranking.resize(n_tasks);
 
      std::iota(ranking.begin(), ranking.end(), 0);
 
@@ -210,6 +210,7 @@ void ALBPSolution::task_assignment_to_ranking() {
                  return task_assignment[a] < task_assignment[b];
              return a < b;
          });
+     ranking_to_task_ranking();
 
  }
 

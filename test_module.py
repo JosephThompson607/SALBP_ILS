@@ -358,6 +358,7 @@ def test_ranking_solution(salbp):
     # Task4: via Task2 -> depth 1
     # Task5: via Task1->Task3 -> depth 2
     assert sol.task_assignment == [1,0,2,0,3], "unexpected assignment"
+    assert sol.ranking == [1,3,0,2,4], f"ranking is off: {ranking} "
     assert max(sol.loads) <= C, "Cycle time exceeded"
     # height[i] = # edges on the longest path from task i+1 down to any sink
     # Task1: ->Task3->Task5 -> height 2
