@@ -161,7 +161,7 @@ void local_search(std::mt19937& gen, ALBPSolution& solution,const ALBP& albp,con
         if (new_solution.n_violations <= solution.n_violations && new_solution.n_stations < solution.n_stations|| (new_solution.n_stations <= solution.n_stations && new_solution.n_violations < solution.n_violations)) {
             task_oriented_assignment( albp, new_solution);
             solution = new_solution;
-            solution.station_to_ranking();
+            solution.station_to_ranking(false);
             ni = 0;
         }
         else {

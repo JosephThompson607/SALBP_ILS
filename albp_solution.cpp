@@ -181,12 +181,15 @@ void ALBPSolution::station_to_task(){
     }
 }
 
-void ALBPSolution::station_to_ranking() {
+void ALBPSolution::station_to_ranking(bool sort_by_task) {
     // Convert task assignment to ranking
     ranking.clear();
     task_ranking.resize(n_tasks);
     int ranking_counter = 0;
     for (int i = 0; i < n_stations; ++i) {
+        if (sort_by_task) {
+            std::sort(station_assignments[i].begin(), station_assignments[i].end());
+        }
         for (int j : station_assignments[i]) {
             task_ranking[j] = ranking_counter;
             ranking.push_back(j);
@@ -194,6 +197,21 @@ void ALBPSolution::station_to_ranking() {
         }
     }
 }
+
+void ALBPSolution::task_assignment_to_ranking() {
+     ranking.clear();
+
+
+     std::iota(ranking.begin(), ranking.end(), 0);
+
+     std::sort(ranking.begin(), ranking.end(),
+         [&](int a, int b) {
+             if (task_assignment[a] != task_assignment[b])
+                 return task_assignment[a] < task_assignment[b];
+             return a < b;
+         });
+
+ }
 
 void ALBPSolution::ranking_to_task_ranking() {
     //Gets a vector with index of task and value of rank

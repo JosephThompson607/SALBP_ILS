@@ -563,7 +563,7 @@ ALBPSolution station_oriented_assignment(const ALBP& albp,const std::vector<int>
 ALBPSolution ranking_to_solution(const int C, const int N, const std::vector<int>& task_times, const std::vector<std::vector<int>>& raw_precedence, const std::vector<int>& ranking) {
     ALBP albp = ALBP::type_1(C, N, task_times, raw_precedence, false, true);
     ALBPSolution solution = station_oriented_assignment(albp, ranking);
-    solution.station_to_ranking(); //Gets the reconstructed ranking after station assignment
+    solution.task_assignment_to_ranking(); //Gets the reconstructed ranking after station assignment
     return solution;
 }
 
@@ -1085,7 +1085,7 @@ ALBPSolution process_init_solution( const ALBP &albp, const std::vector<int> &in
     solution.n_stations = *std::max_element(initial_solution.begin(), initial_solution.end()) + 1;
     solution.task_assignment = initial_solution;
     solution.task_to_station();
-    solution.station_to_ranking();
+    solution.station_to_ranking(false);
     solution.ranking_to_task_ranking();
     solution.station_to_load(albp);
     solution.find_windows(albp);

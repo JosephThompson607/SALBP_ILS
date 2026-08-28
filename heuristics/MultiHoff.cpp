@@ -261,7 +261,7 @@ int MultiHoff::one_packing_search( std::vector<int>&elig, const int station) {
         }
         mhh_sol_.n_stations = ub_;
         mhh_sol_.task_to_station_and_load(albp_);
-        mhh_sol_.station_to_ranking();
+        mhh_sol_.station_to_ranking(false);
         return mhh_sol_;
     }
         return mhh_sol_;

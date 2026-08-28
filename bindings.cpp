@@ -169,7 +169,8 @@ PYBIND11_MODULE(SALBP1_heuristics, m) {
             .def("station_to_task", &ALBPSolution::station_to_task,
                  "Convert station assignment to task assignment")
             .def("station_to_ranking", &ALBPSolution::station_to_ranking,
-                 "Convert station assignment to ranking")
+                 "Convert station assignment to ranking",
+                 py::arg("sort_by_task")=false)
             .def("ranking_to_task_ranking", &ALBPSolution::ranking_to_task_ranking,
                  "Convert ranking to task ranking")
 

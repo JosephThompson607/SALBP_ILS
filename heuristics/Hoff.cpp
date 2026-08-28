@@ -70,7 +70,7 @@ Hoff::Hoff(const ALBP& albp,  int alpha_iter, int beta_iter , float alpha_size, 
             }
 
         hoff_sol.task_to_station();
-        hoff_sol.station_to_ranking();
+        hoff_sol.station_to_ranking(false);
         hoff_sol.station_to_load(albp_);
         hoff_sol.find_windows(albp_);
         hoff_sol.cycle_time = *std::max_element(hoff_sol.loads.begin(), hoff_sol.loads.end());

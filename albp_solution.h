@@ -43,7 +43,8 @@ public:
     void task_to_station();
     void task_to_station_and_load(const ALBP &albp);
     void station_to_task();
-    void station_to_ranking();
+    void station_to_ranking(bool sort_by_task);
+    void task_assignment_to_ranking();
     void station_to_load(const ALBP &albp);
     void find_all_earliest(const ALBP &albp);
     void find_all_latest(const ALBP &albp);
