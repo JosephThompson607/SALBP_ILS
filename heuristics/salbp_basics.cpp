@@ -562,7 +562,9 @@ ALBPSolution station_oriented_assignment(const ALBP& albp,const std::vector<int>
 
 ALBPSolution ranking_to_solution(const int C, const int N, const std::vector<int>& task_times, const std::vector<std::vector<int>>& raw_precedence, const std::vector<int>& ranking) {
     ALBP albp = ALBP::type_1(C, N, task_times, raw_precedence, false, true);
-    return station_oriented_assignment(albp, ranking);
+    ALBPSolution solution = station_oriented_assignment(albp, ranking);
+    solution.station_to_ranking(); //Gets the reconstructed ranking after station assignment
+    return solution;
 }
 
 
