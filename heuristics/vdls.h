@@ -49,9 +49,9 @@ private:
 
     //Methods
     ALBPSolution vdls_heuristic(  int n_stations,   int lb);
-    ALBPSolution hoff_search(int n_stations);
+    ALBPSolution hoff_search(int n_stations) const;
     int random_selection(const std::vector<int>& int_vec);
-    bool local_search(ALBPSolution& local_best,ALBPSolution& prev_sol, int depth, int last_task=-1, bool improved = false);
+    bool local_search(ALBPSolution& local_best, ALBPSolution& prev_sol, int depth, int last_task=-1);
     void perform_shift(ALBPSolution &sol, int task, int task_idx, int old_station, int new_station);
     void perturbation(ALBPSolution& incumbent_solution);
 };
