@@ -229,10 +229,10 @@ def test_solution_manipulation(salbp):
     print(f"✅ Created ALBPSolution with {solution.n_tasks} tasks")
 
     print("Testing solution manipulation")
+
     solution.task_assignment = [1, 0, 3, 2, 1]
     solution.task_to_station()
     solution.station_to_ranking()
-
     actual = solution.station_assignments
     expected = [[1], [0, 4], [3], [2]]
     assert len(actual) == len(expected), (
@@ -263,13 +263,15 @@ def test_solution_manipulation(salbp):
         assert actual_sublist == expected_sublist, (
             f"Mismatch at index {i} between station assignments and task assignments: {actual_sublist} vs {expected_sublist}"
         )
+    solution.loads= [10,20,30,23, 45]
+    solution.reverse()
+    assert solution.loads[1] == 23, 'load in wrong spot'
 
     print("✅ basic solution manipulation passed!")
 
 
 def test_lower_bounds(salbp):
     """calc_salbp_1_lb6 sanity check."""
-    print("Testing salbp lower bounds")
     task_times = [8, 8, 7, 6, 5, 5, 3, 4, 3]
     C = 10
     lb_6 = salbp.calc_salbp_1_lb6(task_times, C)
@@ -484,12 +486,16 @@ def test_heads_and_tails(salbp, cycle_time, task_times_list, precedence_list):
 def test_ils(salbp, C, t_times, precs):
     start = time.time()
     results = ils_call(salbp, cycle_time=C, task_times_list=t_times, precedence_list=precs, max_iterations=1000)
+    assert sum(results.loads) == sum(t_times), 'Task times mismatched with loads'
+    assert max(results.loads) <= C, 'Max load greater than cycle time'
     print(f"✅ Created ALBPSolution using ils with {results.n_stations} stations in {time.time() - start} seconds")
 
 
 def test_tabu(salbp, C, t_times, precs):
     start = time.time()
     results = tabu_call(salbp, cycle_time=C, task_times_list=t_times, precedence_list=precs, time_limit=3)
+    assert sum(results.loads) == sum(t_times), 'Task times mismatched with loads'
+    assert max(results.loads) <= C, 'Max load greater than cycle time'
     print(f"✅ Created ALBPSolution using tabu with {results.n_stations} stations in {time.time() - start} seconds")
     print("here are the station loads", results.loads)
 
@@ -504,6 +510,9 @@ def test_priority_type1_timed(salbp, C, t_times, precs):
     start = time.time()
     results = priority_type1_call(salbp, C, task_times_list=t_times, precedence_list=precs,
                                   n_random=1_000_000, time_limit=0.90)
+    for result in results:
+        assert sum(result.loads) == sum(t_times), 'Task times mismatched with loads'
+        assert max(result.loads) <= C, 'Max load greater than cycle time'
     print(f"✅ Created timed ALBPSolution using priority in {time.time() - start} seconds "
           f"and {len(results)} results")
 
@@ -519,12 +528,16 @@ def test_priority_type2(salbp, t_times, precs):
 def test_hoff(salbp, C, t_times, precs):
     start = time.time()
     results = hoff_call(salbp, cycle_time=C, task_times_list=t_times, precedence_list=precs)
+    assert sum(results.loads) == sum(t_times), 'Task times mismatched with loads'
+    assert max(results.loads) <= C, 'Max load greater than cycle time'
     print(f"✅ Created ALBPSolution using hoff with {results.n_stations} stations in {time.time() - start} seconds")
 
 
 def test_mhh(salbp, C, t_times, precs):
     start = time.time()
     results = mhh_call(salbp, cycle_time=C, task_times_list=t_times, precedence_list=precs)
+    assert sum(results.loads) == sum(t_times), 'Task times mismatched with loads'
+    assert max(results.loads) <= C, 'Max load greater than cycle time'
     print(f"✅ Created ALBPSolution using mhh with {results.n_stations} stations in {time.time() - start} seconds")
     print("here are the station loads", results.loads)
 
@@ -543,7 +556,8 @@ def test_gamma_mhh(salbp, C, t_times, precs):
     results1 = poke_mhh(salbp, cycle_time=C, task_times_list=t_times, precedence_list=precs,gamma=0.5, seed=42)
     results2 = poke_mhh(salbp, cycle_time=C, task_times_list=t_times, precedence_list=precs, gamma=0.5, seed=42)
     results3 = poke_mhh(salbp, cycle_time=C, task_times_list=t_times, precedence_list=precs, gamma = 0.01, seed=42)
-
+    assert sum(results1.loads) == sum(t_times), 'Task times mismatched with loads'
+    assert max(results1.loads) <= C, 'Max load greater than cycle time'
     assert sum(results1.loads) == sum(results2.loads) ==sum(results3.loads) , "sum of loads does not match"
     assert results1.task_assignment == results2.task_assignment, "Seeding seems to not control the rng"
     print(f"✅ Created ALBPSolution using mhh (GAMMA TEST) with {results1.n_stations} , {results2.n_stations} , {results3.n_stations}  stations in {time.time() - start} seconds")
@@ -555,6 +569,8 @@ def test_priority_change_mhh(salbp, C, t_times, precs):
     results1 = poke_mhh(salbp, cycle_time=C, task_times_list=t_times, precedence_list=precs)
     results2 = poke_mhh(salbp, cycle_time=C, task_times_list=t_times, precedence_list=precs, ranking = list(range(len(t_times), -1, -1)))
     assert sum(results1.loads) == sum(results2.loads), "sum of loads does not match"
+    assert sum(results1.loads) == sum(t_times), 'Task times mismatched with loads'
+    assert max(results1.loads) <= C, 'Max load greater than cycle time'
     print(f"✅ Created ALBPSolution using mhh with {results1.n_stations} , {results2.n_stations} ,  stations in {time.time() - start} seconds")
     print(f"here are the station assignments {results1.task_assignment} , {results2.task_assignment} , ")
     print(f"here are the station loads {results1.loads} , {results2.loads} ,")
@@ -563,6 +579,8 @@ def test_priority_change_mhh(salbp, C, t_times, precs):
 def test_vdls(salbp, C, t_times, precs):
     start = time.time()
     results = vdls_call(salbp, cycle_time=C, task_times_list=t_times, precedence_list=precs)
+    assert sum(results.loads) == sum(t_times), 'Task times mismatched with loads'
+    assert max(results.loads) <= C, 'Max load greater than cycle time'
     print(f"✅ Created ALBPSolution using vdls with {results.n_stations} stations in {time.time() - start} seconds")
     print("here are the station loads", results.loads)
 
@@ -573,6 +591,7 @@ def test_vdls_type2(salbp, t_times, precs):
     my_lb = salbp.calc_salbp_2_lbs(t_times, S)
     my_ub = salbp.calc_salbp_2_ub(t_times, S)
     results = vdls_type2_call(salbp, S=S, task_times_list=t_times, precedence_list=precs)
+    assert sum(results.loads) == sum(t_times), 'Task times mismatched with loads'
     print(f"✅ Created ALBPSolution using vdls with {results.cycle_time} cycle time in {time.time() - start} "
           f"seconds. The lower bound is {my_lb}, upperbound is {my_ub}")
     print("here are the station loads", results.loads)

@@ -14,6 +14,7 @@ public:
     std::vector<int> task_assignment; //Solution
     std::vector<std::vector<int>> station_assignments; //Solution
     std::vector<int> loads;// how much time is used at each station (VDLS)
+    int max_station;
     std::vector<int> earliest; //Earliest station each task can be assigned to, based on predecessors/successors (VDLS)
     std::vector<int> latest; //Latest station each task can be assigned to, based on predecessors/successors (VDLS)
     milliseconds elapsed_ms; //Run time TODO implement for hoffman and ILS

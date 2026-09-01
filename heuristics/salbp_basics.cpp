@@ -14,6 +14,8 @@
 #include <functional>
 #include <stdexcept>  // For std::runtime_error
 #include "salbp_basics.h"
+
+#include <cassert>
 #include <optional>
 #include <map>
 #include <chrono>
@@ -1089,7 +1091,14 @@ ALBPSolution process_init_solution( const ALBP &albp, const std::vector<int> &in
     solution.ranking_to_task_ranking();
     solution.station_to_load(albp);
     solution.find_windows(albp);
-    solution.n_violations = 0;
+    solution.n_violations=count_violations(albp, solution.task_assignment);
+    if (solution.cycle_time > albp.C) {
+        std::cout << "SALBP-1 warning: It seems like the max load is greater than the problem cycle time " << std::endl;
+    }
+    if (solution.n_violations >0) {
+        throw std::invalid_argument( "Input solution has precedence constraint violations" );
+
+    }
 
     return solution;
 }
@@ -1200,11 +1209,6 @@ std::vector< ALBPSolution> generate_priority_ranking_solutions(const ALBP &albp,
         solution.station_to_load(albp);
         solutions.push_back( solution);
     }
-
-
-
-
-
     return solutions;
 }
 

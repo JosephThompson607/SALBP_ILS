@@ -37,7 +37,14 @@ void ALBPSolution::reverse()  {
 
      std::reverse(station_assignments.begin(), station_assignments.end());
      station_to_task();
-     std::reverse(loads.begin(), loads.end());
+     if (!loads.empty()) {
+         std::reverse(loads.begin(), loads.end());
+         auto max_it = std::max_element(loads.begin(),loads.end());
+         max_station = std::distance(loads.begin(), max_it);
+         cycle_time = *max_it;
+     }
+
+
  }
 
 
@@ -57,31 +64,31 @@ void ALBPSolution::task_to_station_and_load(const ALBP &albp) {
      station_assignments.resize(n_stations);
      loads.clear();
      loads.resize(n_stations);
-     int max_load = 0;
+     cycle_time= 0;
      for (int i = 0; i < n_tasks; ++i) {
          const int station = task_assignment[i];
          loads[station] += albp.task_time[i];
          station_assignments[station].push_back(i);
-         if (loads[station] > max_load) {
-             max_load = loads[station];
+         if (loads[station] > cycle_time) {
+             cycle_time = loads[station];
+             max_station=station;
          }
      }
-     cycle_time = max_load;
  }
 void ALBPSolution::station_to_load(const ALBP &albp) {
     loads.clear();
     loads.resize(n_stations);
-     int max_load = 0;
+     cycle_time = 0;
     for (int i = 0; i < n_stations; ++i) {
 
         for ( const int task: station_assignments[i]) {
             loads[i] += (albp.task_time[task]);
         }
-        if (loads[i] > max_load) {
-            max_load = loads[i];
+        if (loads[i] > cycle_time) {
+            cycle_time = loads[i];
+            max_station=i;
         }
     }
-     cycle_time = max_load;
 }
 /* Finds earliest and latest stations for all task **/
 void ALBPSolution::find_windows(const ALBP &albp) {

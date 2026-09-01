@@ -38,7 +38,6 @@ private:
     std::mt19937 rng_;
     int seed_;
     int max_attempts_;
-
     int max_depth_=6; //number of shifts to consider
     int lb_;
     int n_perts_ = 6;
@@ -52,7 +51,8 @@ private:
     ALBPSolution hoff_search(int n_stations) const;
     int random_selection(const std::vector<int>& int_vec);
     bool local_search(ALBPSolution& local_best, ALBPSolution& prev_sol, int depth, int last_task=-1);
-    void perform_shift(ALBPSolution &sol, int task, int task_idx, int old_station, int new_station);
+
+    bool perform_shift(ALBPSolution &sol, int task, int task_idx, int old_station, int new_station);
     void perturbation(ALBPSolution& incumbent_solution);
 };
 

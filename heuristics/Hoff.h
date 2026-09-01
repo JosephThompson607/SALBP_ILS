@@ -11,7 +11,7 @@
 
 class Hoff {
     public:
-        explicit Hoff(const ALBP& albp, int alpha_iter=4, int beta_iter =-1, float alpha_size = 0.005, float beta_size=0.005, bool reverse=true, int max_attempts = 5000);
+        explicit Hoff(const ALBP& albp, int alpha_iter=4, int beta_iter =-1, float alpha_size = 0.005, float beta_size=0.005,  int max_attempts = 5000);
         ALBPSolution solve( );
     ALBPSolution multi_solve() ;
 private:
@@ -22,7 +22,6 @@ private:
     int beta_iter_;
     float alpha_size_ ;
     float beta_size_;
-    bool reverse_;
     std::vector<int> eligible_tasks_{}; //tasks currently available for assignment
     std::vector<int> s_task_assign_{}; //task assignments to a given station
     std::vector<int> best_s_task_assign_{}; //task assignments to a given station
