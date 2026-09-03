@@ -657,10 +657,10 @@ int main(int argc, char* argv[]) {
         //default_run();
        // mhh_test();
         //lb_6_test();
-       //vdls_salbp_1_test();
+       vdls_salbp_1_test();
         //tails_test();
         //priority_methods_salbp_1_test();
-        tabu_test();
+        //tabu_test();
        // priority_methods_salbp_2_test();
         return 1;
     }
