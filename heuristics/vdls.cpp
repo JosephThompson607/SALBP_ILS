@@ -13,8 +13,8 @@
 
 bool VDLS::time_exceeded() const {
         auto now = std::chrono::steady_clock::now();
-
-        return (now - start_time_) >= time_limit_;
+        bool time_exceeded = (now - start_time_) >= time_limit_;
+        return time_exceeded;
 }
 void VDLS::add_init_solution(std::vector<int>init_solution) {
         std::cout<<"Initial solution added, processing"<<std::endl;
@@ -71,7 +71,7 @@ ALBPSolution VDLS::hoff_search(int n_stations) const {
                 albp.C = lb +a0 ;
                 test_sol = hoff_solve_salbp1(albp);
                 if (test_sol.n_stations > n_stations) {
-                        lb += a0;
+                        lb += a0 +1 ;
                         const int a2 = a0+a1;
                         a0 = a1;
                         a1 = a2;
@@ -80,6 +80,9 @@ ALBPSolution VDLS::hoff_search(int n_stations) const {
                         ub =lb + a0;
                         a0 = 0;
                         a1 = 1;
+                        // if (lb+1==ub) {
+                        //         lb=ub;
+                        // }
                 }
 
 
@@ -255,16 +258,17 @@ void VDLS::perturbation(ALBPSolution &new_sol) {
 ALBPSolution VDLS::vdls_heuristic( int n_stations,  int lb) {
         ALBPSolution current_solution = hoff_search(n_stations);
         ALBPSolution best_sol = current_solution;
-        while ((n_attempts_ < max_attempts_ ) && (current_solution.cycle_time > lb) &&(!time_exceeded())) {
-                bool improved = local_search(current_solution,best_sol, 0, -1);
+        while ((best_sol.cycle_time > lb) &&(!time_exceeded())) {
+                bool improved = local_search(best_sol,current_solution, 0, -1);
                 if (improved) {
                         current_solution.method = "VDLS (local search)";
                         best_sol = current_solution;
                         auto now = std::chrono::steady_clock::now();
                         best_sol.elapsed_ms = std::chrono::duration_cast<std::chrono::milliseconds>(now - start_time_);
-                        perturbation(current_solution);
-                        n_attempts_ ++;
+
+
                 }
+                perturbation(current_solution);
         }
         return best_sol;
 }
@@ -272,10 +276,10 @@ ALBPSolution VDLS::vdls_heuristic( int n_stations,  int lb) {
 
 ALBPSolution vdls_solve_salbp1(const ALBP &albp, const std::vector<int> &initial_solution, std::optional<int> max_attempts, std::optional<double> time_limit,
         std::optional<unsigned> seed ) {
-        int attempts = max_attempts.value_or(5000);  // default if not passed
+        int attempts = max_attempts.value_or(100000);  // default if not passed
         double limit = time_limit.value_or(7200.);
 
-        auto vdls= VDLS(albp, attempts, limit, seed);
+        auto vdls= VDLS(albp, limit, seed);
         if (!initial_solution.empty()) {
                 vdls.add_init_solution(initial_solution);
         }
@@ -288,7 +292,7 @@ ALBPSolution vdls_solve_salbp2(const ALBP &albp, const std::vector<int> &initial
         int attempts = max_attempts.value_or(5000);  // default if not passed
         double limit = time_limit.value_or(7200.0);
 
-        auto vdls= VDLS(albp, attempts, limit, seed);
+        auto vdls= VDLS(albp,  limit, seed);
         if (!initial_solution.empty()) {
                 vdls.add_init_solution(initial_solution);
         }

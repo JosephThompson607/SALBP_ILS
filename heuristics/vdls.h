@@ -17,9 +17,9 @@
 class VDLS {
 public:
     //explicit ALBP(const std::string& filename) { loadFromFile(filename); }
-    explicit VDLS(const ALBP& albp,  int max_attempts, double time_limit, std::optional<unsigned> seed = std::nullopt):
+    explicit VDLS(const ALBP& albp,  double time_limit, std::optional<unsigned> seed = std::nullopt):
     albp_(albp),
-    max_attempts_(max_attempts),
+
     time_limit_(time_limit),
     rng_(seed.value_or(std::random_device{}()))
     {
@@ -34,10 +34,8 @@ private:
     //Variables
     const ALBP& albp_;
     ALBPSolution best_{albp_.N};
-    int n_attempts_=0;
     std::mt19937 rng_;
     int seed_;
-    int max_attempts_;
     int max_depth_=6; //number of shifts to consider
     int lb_;
     int n_perts_ = 6;
@@ -63,6 +61,8 @@ ALBPSolution vdls_solve_salbp1(int C, int N,
     const std::vector<std::vector<int>>& raw_precedence,
     const std::vector<int> &initial_solution = std::vector<int>(),
     std::optional<int> max_attempts = std::nullopt, std::optional<double> time_limit = std::nullopt, std::optional<unsigned> seed = std::nullopt);
+
+
 ALBPSolution vdls_solve_salbp2(const ALBP &albp, const std::vector<int> &initial_solution = std::vector<int>(), std::optional<int> max_attempts = std::nullopt, std
                                ::optional<double> time_limit = std::nullopt, std::optional<unsigned> seed = std::nullopt);
 ALBPSolution vdls_solve_salbp2(int S, int N, const std::vector<int>& task_times, const std::vector<std::vector<int>>& raw_precedence, const std::vector<int> &initial_solution = std::vector<int>(), std::optional<int> max_attempts = std::nullopt,
