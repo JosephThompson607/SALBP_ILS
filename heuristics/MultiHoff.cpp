@@ -303,6 +303,7 @@ ALBPSolution MultiHoff::solve() {
         }
     }
 
+
     if (ub_ != lb_) {
         for (float alpha:alpha_sched_) {
             for (float beta:beta_sched_) {
@@ -316,6 +317,7 @@ ALBPSolution MultiHoff::solve() {
                 if (try_forward.n_stations < best_result.n_stations) {
                     best_result = try_forward;
                     if (ub_ == lb_) {
+                        best_result.optimal = true;
                         break;
                     }
                 }
@@ -325,12 +327,16 @@ ALBPSolution MultiHoff::solve() {
                     best_result = try_backward;
                 }
                 if (ub_ == lb_) {
+                    best_result.optimal = true;
                     break;
                 }
             }
 
         }
 
+    }
+    else {
+        best_result.optimal = true;
     }
 
     best_result.method = "MultiHoff";
@@ -475,7 +481,7 @@ ALBPSolution mhh_solve_salbp1(const int C, const int N, const std::vector<int>& 
     return best_result;
 }
 
-inline void swap_and_pop(int item, std::vector<int> &vec) {
+void swap_and_pop(int item, std::vector<int> &vec) {
     auto it = std::find(vec.begin(), vec.end(), item);
     if (it != vec.end()) {
         *it = vec.back();      // Replace with last element

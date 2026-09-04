@@ -14,7 +14,7 @@ public:
     std::vector<int> task_assignment; //Solution
     std::vector<std::vector<int>> station_assignments; //Solution
     std::vector<int> loads;// how much time is used at each station (VDLS)
-    int max_station;
+    std::vector<int> critical_stations; //for vdls
     std::vector<int> earliest; //Earliest station each task can be assigned to, based on predecessors/successors (VDLS)
     std::vector<int> latest; //Latest station each task can be assigned to, based on predecessors/successors (VDLS)
     milliseconds elapsed_ms; //Run time TODO implement for hoffman and ILS
@@ -40,7 +40,9 @@ public:
 
     [[nodiscard]] int get_n_tasks() const { return n_tasks; }  // Read-only access
     //utility functions
+
     void print() const;
+    void print_loads() const;
     void task_to_station();
     void task_to_station_and_load(const ALBP &albp);
     void station_to_task();
@@ -60,6 +62,6 @@ public:
     void task_ranking_to_ranking();
 
 };
-
+std::pair<int, std::vector<int>>  get_critical_stations( std::vector<int> loads);
 
 #endif

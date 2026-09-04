@@ -20,6 +20,8 @@
 #include <map>
 #include <stdexcept>  // For std::runtime_error
 
+
+
  void ALBPSolution::print() const {
     std::cout << "ALBP Solution with S: " << n_stations << "  C: " <<cycle_time << " found with: " << method<<std::endl;
     for (int i = 0; i < n_stations; ++i) {
@@ -33,21 +35,51 @@
 
 }
 
+
+
+void ALBPSolution::print_loads() const {
+     int max_value = *std::max_element(loads.begin(), loads.end());
+     std::cout << "Max Value: " << max_value << "\nFound at indexes: ";
+
+     // Loop through to find all positions matching the max value
+     auto it = std::find(loads.begin(), loads.end(), max_value);
+     while (it != loads.end()) {
+         std::cout << std::distance(loads.begin(), it) << " ";
+         // Advance iterator and search again
+         it = std::find(std::next(it), loads.end(), max_value);
+     }
+     std::cout << std::endl;
+}
+
 void ALBPSolution::reverse()  {
 
      std::reverse(station_assignments.begin(), station_assignments.end());
      station_to_task();
      if (!loads.empty()) {
          std::reverse(loads.begin(), loads.end());
-         auto max_it = std::max_element(loads.begin(),loads.end());
-         max_station = std::distance(loads.begin(), max_it);
-         cycle_time = *max_it;
+         auto res   = get_critical_stations(loads);
+         cycle_time = res.first;
+         critical_stations = res.second;
      }
 
 
  }
 
+std::pair<int, std::vector<int>> get_critical_stations( std::vector<int> loads) {
+     std::vector<int> max_indices = {0};
+     int cycle_time = loads.front();
+     for (int i = 1; i < loads.size(); ++i) {
 
+         if (loads[i] == cycle_time) {
+             max_indices.push_back(i);
+         }
+         if (loads[i] > cycle_time) {
+             cycle_time = loads[i];
+             max_indices = {i};
+         }
+     }
+     return {cycle_time, max_indices};
+}
 
 void ALBPSolution::task_to_station(){
     // Convert task assignment to station assignment
@@ -71,7 +103,10 @@ void ALBPSolution::task_to_station_and_load(const ALBP &albp) {
          station_assignments[station].push_back(i);
          if (loads[station] > cycle_time) {
              cycle_time = loads[station];
-             max_station=station;
+             critical_stations = {station};
+         }
+         else if (loads[station] == cycle_time) {
+             critical_stations.push_back(station);
          }
      }
  }
@@ -86,7 +121,10 @@ void ALBPSolution::station_to_load(const ALBP &albp) {
         }
         if (loads[i] > cycle_time) {
             cycle_time = loads[i];
-            max_station=i;
+           critical_stations = {i};
+        }
+        else if (loads[i] == cycle_time) {
+            critical_stations.push_back(i);
         }
     }
 }
@@ -158,6 +196,7 @@ void ALBPSolution::update_suc_earliest(const ALBP &albp, const int i, int old_st
         }
     }
 }
+
 
 void ALBPSolution::update_window(const ALBP &albp, const int i, int old_station) {
     update_pred_latest(albp,i,old_station);
