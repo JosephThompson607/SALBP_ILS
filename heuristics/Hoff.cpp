@@ -135,6 +135,9 @@ ALBPSolution hoff_solve_salbp1(const int C,const int N, const std::vector<int>& 
     if (alpha_iter < 0) {
         alpha_iter = 0;
     }
+    if (beta_iter < 0) {
+        beta_iter = 0;
+    }
     ALBP albp = ALBP::type_1(C, N, task_times, raw_precedence);
     ALBPSolution best_result =hoff_solve(albp, alpha_iter, beta_iter, alpha_size, beta_size, reverse);
     return best_result;

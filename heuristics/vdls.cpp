@@ -35,7 +35,7 @@ void VDLS::add_init_solution(std::vector<int>init_solution) {
 }
 ALBPSolution VDLS::solve_type_1(  ) {
         if (best_.station_assignments.empty()) {
-                best_= hoff_solve_salbp1(albp_); //Get initial SALBP-1 solution
+                best_= mhh_solve_salbp1(albp_); //Get initial SALBP-1 solution
                 best_.method = "VDLS: hoff start";
 
         }
